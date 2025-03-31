@@ -291,15 +291,15 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       {/* 3D Ship Model - with red color overlay for enemies */}
       {modelLoaded && shipModel ? (
         <group 
-          scale={[20, 20, 20]} 
+          scale={[3, 3, 3]} 
           rotation={[0, Math.PI, 0]}
-          position={[0, -1, 0]} 
+          position={[0, 1.5, 0]} 
         >
           <primitive object={shipModel} castShadow receiveShadow />
           
           {/* Red overlay to distinguish enemy ships */}
-          <mesh position={[0, 2, 0]} scale={[1, 1, 1.2]}>
-            <boxGeometry args={[0.3, 4, 0.8]} />
+          <mesh position={[0, 3, 0]} scale={[1, 1, 1.2]}>
+            <boxGeometry args={[0.3, 5, 0.8]} />
             <meshStandardMaterial 
               color="#B71C1C" 
               transparent={true} 
@@ -344,23 +344,28 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
         />
       </mesh>
       
-      {/* Cannons - port side (left) */}
-      {[-6, -3, 0, 3, 6].map((z, i) => (
-        <Cannon
-          key={`port-${i}`}
-          position={[-3.5, 0.8, z]}
-          rotation={[0, -Math.PI / 2, 0]}
-        />
-      ))}
-      
-      {/* Cannons - starboard side (right) */}
-      {[-6, -3, 0, 3, 6].map((z, i) => (
-        <Cannon
-          key={`starboard-${i}`}
-          position={[3.5, 0.8, z]}
-          rotation={[0, Math.PI / 2, 0]}
-        />
-      ))}
+      {/* Cannons are now part of the 3D model */}
+      {!modelLoaded && (
+        <>
+          {/* Cannons - port side (left) - shown only in fallback mode */}
+          {[-6, -3, 0, 3, 6].map((z, i) => (
+            <Cannon
+              key={`port-${i}`}
+              position={[-3.5, 0.8, z]}
+              rotation={[0, -Math.PI / 2, 0]}
+            />
+          ))}
+          
+          {/* Cannons - starboard side (right) - shown only in fallback mode */}
+          {[-6, -3, 0, 3, 6].map((z, i) => (
+            <Cannon
+              key={`starboard-${i}`}
+              position={[3.5, 0.8, z]}
+              rotation={[0, Math.PI / 2, 0]}
+            />
+          ))}
+        </>
+      )}
       
       {/* Render cannonballs */}
       {cannonBalls.current.map((ball) => (

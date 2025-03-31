@@ -344,9 +344,9 @@ const Ship = () => {
       {/* 3D Ship Model */}
       {modelLoaded && shipModel ? (
         <group 
-          scale={[20, 20, 20]} 
+          scale={[3, 3, 3]} 
           rotation={[0, Math.PI, 0]}
-          position={[0, -1, 0]} // Lower the model to match water level
+          position={[0, 1.5, 0]} // Raise the model to sit on water
         >
           <primitive object={shipModel} castShadow receiveShadow />
         </group>
@@ -364,23 +364,28 @@ const Ship = () => {
         </group>
       )}
       
-      {/* Cannons - port side (left) */}
-      {[-6, -3, 0, 3, 6].map((z, i) => (
-        <Cannon
-          key={`port-${i}`}
-          position={[-3.5, 0.8, z]}
-          rotation={[0, -Math.PI / 2, 0]}
-        />
-      ))}
-      
-      {/* Cannons - starboard side (right) */}
-      {[-6, -3, 0, 3, 6].map((z, i) => (
-        <Cannon
-          key={`starboard-${i}`}
-          position={[3.5, 0.8, z]}
-          rotation={[0, Math.PI / 2, 0]}
-        />
-      ))}
+      {/* Cannons are now part of the 3D model */}
+      {!modelLoaded && (
+        <>
+          {/* Cannons - port side (left) - shown only in fallback mode */}
+          {[-6, -3, 0, 3, 6].map((z, i) => (
+            <Cannon
+              key={`port-${i}`}
+              position={[-3.5, 0.8, z]}
+              rotation={[0, -Math.PI / 2, 0]}
+            />
+          ))}
+          
+          {/* Cannons - starboard side (right) - shown only in fallback mode */}
+          {[-6, -3, 0, 3, 6].map((z, i) => (
+            <Cannon
+              key={`starboard-${i}`}
+              position={[3.5, 0.8, z]}
+              rotation={[0, Math.PI / 2, 0]}
+            />
+          ))}
+        </>
+      )}
       
       {/* Health indicator (changes color based on health) */}
       <mesh position={[0, -2, 0]}>
