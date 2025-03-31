@@ -96,31 +96,37 @@ const GameUI = () => {
       <HUD />
       
       {/* Controls button */}
-      <div className="absolute top-5 right-5 pointer-events-auto">
-        <button
-          className="bg-gray-800 bg-opacity-70 hover:bg-opacity-90 text-white px-4 py-2 rounded-lg mr-2"
-          onClick={() => setShowControls(!showControls)}
-        >
-          Controls
-        </button>
+      <div className="absolute top-5 right-5 pointer-events-auto flex flex-col space-y-2">
+        <div className="flex space-x-2">
+          <button
+            className="bg-gray-800 bg-opacity-70 hover:bg-opacity-90 text-white px-4 py-2 rounded-lg"
+            onClick={() => setShowControls(!showControls)}
+          >
+            Controls
+          </button>
+          
+          <button
+            className="bg-gray-800 bg-opacity-70 hover:bg-opacity-90 text-white px-4 py-2 rounded-lg"
+            onClick={() => setShowDebug(!showDebug)}
+          >
+            Debug
+          </button>
+          
+          <button
+            className="bg-gray-800 bg-opacity-70 hover:bg-opacity-90 text-white px-4 py-2 rounded-lg"
+            onClick={toggleMute}
+          >
+            {isMuted ? (
+              <i className="fas fa-volume-mute"></i>
+            ) : (
+              <i className="fas fa-volume-up"></i>
+            )}
+          </button>
+        </div>
         
-        <button
-          className="bg-gray-800 bg-opacity-70 hover:bg-opacity-90 text-white px-4 py-2 rounded-lg mr-2"
-          onClick={() => setShowDebug(!showDebug)}
-        >
-          Debug
-        </button>
-        
-        <button
-          className="bg-gray-800 bg-opacity-70 hover:bg-opacity-90 text-white px-4 py-2 rounded-lg"
-          onClick={toggleMute}
-        >
-          {isMuted ? (
-            <i className="fas fa-volume-mute"></i>
-          ) : (
-            <i className="fas fa-volume-up"></i>
-          )}
-        </button>
+        <div className="px-2 py-1 bg-gray-900 bg-opacity-70 text-white text-sm rounded-lg">
+          Press 'C' to toggle camera control mode
+        </div>
       </div>
       
       {/* Controls overlay */}

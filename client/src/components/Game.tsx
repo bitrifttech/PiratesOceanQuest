@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Sky, Environment, OrbitControls, Text } from "@react-three/drei";
 import * as THREE from "three";
@@ -162,9 +162,30 @@ const Game = () => {
     }
   }, [playerHealth, setGameOver]);
 
-  // Camera follows player ship
+  // State to track if we're using orbit controls
+  const [useOrbitControls, setUseOrbitControls] = useState(false);
+  
+  // Toggle between automatic camera following and manual orbit controls
+  const toggleCameraControls = () => {
+    setUseOrbitControls(prev => !prev);
+    console.log("Camera controls toggled, useOrbitControls:", !useOrbitControls);
+  };
+  
+  // Effect to add keyboard shortcut for toggling camera mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'c' || e.key === 'C') {
+        toggleCameraControls();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [useOrbitControls]); // Need to include the current state to correctly toggle
+  
+  // Camera follows player ship (only when orbit controls are disabled)
   useFrame(() => {
-    if (playerPosition) {
+    if (playerPosition && !useOrbitControls) {
       // Update target position based on player's position
       cameraTargetRef.current.set(
         playerPosition.x,
@@ -260,8 +281,31 @@ const Game = () => {
         />
       ))}
       
-      {/* Debug controls - uncomment for debugging */}
-      {/* <OrbitControls /> */}
+      {/* Interactive orbit controls for click-and-drag camera movement */}
+      <OrbitControls 
+        enabled={useOrbitControls}
+        enablePan={true}
+        enableZoom={true}
+        enableRotate={true}
+        target={playerPosition ? new THREE.Vector3(playerPosition.x, 0, playerPosition.z) : new THREE.Vector3(0, 0, 0)}
+        minDistance={10}
+        maxDistance={100}
+        minPolarAngle={0.1} 
+        maxPolarAngle={Math.PI / 2 - 0.1} // Restrict to avoid going below ground
+      />
+      
+      {/* Camera mode indicator */}
+      {useOrbitControls && (
+        <Text
+          position={[0, 20, 0]}
+          fontSize={3}
+          color="white"
+          anchorX="center"
+          anchorY="middle"
+        >
+          ORBIT CAMERA MODE
+        </Text>
+      )}
     </>
   );
 };
