@@ -88,8 +88,8 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     enemyRef.current.position.copy(position);
     enemyRef.current.rotation.copy(rotation);
     
-    // Ship bobbing on waves with ship raised 50% higher
-    enemyRef.current.position.y = Math.sin(Date.now() * 0.0006 + parseInt(id)) * 0.3 + 1.5;
+    // Ship bobbing on waves with ship raised even higher
+    enemyRef.current.position.y = Math.sin(Date.now() * 0.0006 + parseInt(id)) * 0.3 + 2.25;
     enemyRef.current.rotation.x = Math.sin(Date.now() * 0.0005 + parseInt(id)) * 0.01;
     enemyRef.current.rotation.z = Math.cos(Date.now() * 0.0005 + parseInt(id)) * 0.01;
     
@@ -250,7 +250,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
         cannonBalls.current.push({
           position: new THREE.Vector3(
             position.x + direction.z * sideOffset,
-            1.5, // Adjusted cannon height to match raised ship
+            2.25, // Adjusted cannon height to match raised ship
             position.z - direction.x * sideOffset
           ),
           direction: directionToPlayer.clone(),
@@ -293,7 +293,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
         <group 
           scale={[32, 16, 32]} 
           rotation={[0, Math.PI, 0]}
-          position={[0, 1.5, 0]} // Position adjusted to raise ship 50% higher
+          position={[0, 2.25, 0]} // Position adjusted to raise ship even higher
         >
           <primitive object={shipModel} castShadow receiveShadow />
           
