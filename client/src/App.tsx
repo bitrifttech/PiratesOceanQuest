@@ -32,6 +32,9 @@ const controlsMap = [
   { name: Controls.board, keys: ["KeyB"] },
 ];
 
+// Log the control map configuration
+console.log("Control map configured:", controlsMap);
+
 // Main App component
 function App() {
   const gameState = useGameState((state) => state.gameState);

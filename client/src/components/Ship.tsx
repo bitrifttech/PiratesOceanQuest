@@ -42,22 +42,39 @@ const Ship = () => {
   // Audio
   const playHit = useAudio((state) => state.playHit);
   
-  // Get keyboard controls
-  const forward = useKeyboardControls<Controls>((state) => state.forward);
-  const backward = useKeyboardControls<Controls>((state) => state.backward);
-  const leftward = useKeyboardControls<Controls>((state) => state.leftward);
-  const rightward = useKeyboardControls<Controls>((state) => state.rightward);
-  const fire = useKeyboardControls<Controls>((state) => state.fire);
-  const board = useKeyboardControls<Controls>((state) => state.board);
+  // Direct access to keyboard controls through subscribe (more reliable)
+  const [subscribeKeys, getKeys] = useKeyboardControls<Controls>();
   
-  // Log key state changes for debugging
+  // Set up subscriptions to key states for better debugging
   useEffect(() => {
-    console.log("Forward key state:", forward);
-  }, [forward]);
-  
-  useEffect(() => {
-    console.log("Backward key state:", backward);
-  }, [backward]);
+    const unsubForward = subscribeKeys(
+      (state) => state.forward,
+      (pressed) => console.log("Forward key:", pressed)
+    );
+    
+    const unsubBackward = subscribeKeys(
+      (state) => state.backward,
+      (pressed) => console.log("Backward key:", pressed)
+    );
+    
+    const unsubLeft = subscribeKeys(
+      (state) => state.leftward,
+      (pressed) => console.log("Left key:", pressed)
+    );
+    
+    const unsubRight = subscribeKeys(
+      (state) => state.rightward,
+      (pressed) => console.log("Right key:", pressed)
+    );
+    
+    // Clean up subscriptions
+    return () => {
+      unsubForward();
+      unsubBackward();
+      unsubLeft();
+      unsubRight();
+    };
+  }, [subscribeKeys]);
   
   // Cannon balls
   const cannonBalls = useRef<{
@@ -68,8 +85,8 @@ const Ship = () => {
   }[]>([]);
   let cannonBallId = useRef(0);
   
+  // Initialize ship position if needed
   useEffect(() => {
-    // Initialize ship position if needed
     if (!position) {
       setPosition(new THREE.Vector3(0, 0, 0));
       setRotation(new THREE.Euler(0, 0, 0));
@@ -81,7 +98,10 @@ const Ship = () => {
   
   // Check fire control input
   useEffect(() => {
-    if (fire && cannonReady) {
+    // Get current key states directly
+    const keys = getKeys();
+    
+    if (keys.fire && cannonReady) {
       fireCannon();
       
       // Ensure position is not null
@@ -119,11 +139,14 @@ const Ship = () => {
       
       console.log("Cannon fired!", cannonBalls.current.length);
     }
-  }, [fire, cannonReady, position, rotation, fireCannon]);
+  }, [cannonReady, position, rotation, fireCannon, getKeys]);
   
   // Check boarding initiation
   useEffect(() => {
-    if (board && position) {
+    // Get current key states directly
+    const keys = getKeys();
+    
+    if (keys.board && position) {
       console.log("Attempting to board");
       
       // Check if any enemy is close enough to board
@@ -151,19 +174,29 @@ const Ship = () => {
         }
       });
     }
-  }, [board, enemies, position, damageEnemy, takeDamage]);
+  }, [enemies, position, damageEnemy, takeDamage, getKeys]);
   
   // Update ship position and rotation
   useFrame((_, delta) => {
     if (!position || !shipRef.current) return;
+    
+    // Get current key states directly
+    const keys = getKeys();
     
     // Current rotation (yaw only)
     const currentRotation = rotation.y;
     
     // Apply rotation from steering
     let rotationDelta = 0;
-    if (leftward) rotationDelta += 1 * delta;
-    if (rightward) rotationDelta -= 1 * delta;
+    if (keys.leftward) {
+      rotationDelta += 1 * delta;
+      console.log("Turning left");
+    }
+    
+    if (keys.rightward) {
+      rotationDelta -= 1 * delta;
+      console.log("Turning right");
+    }
     
     // Update ship rotation
     const newRotation = new THREE.Euler(
@@ -183,12 +216,13 @@ const Ship = () => {
     // Apply acceleration from controls
     const acceleration = new THREE.Vector3(0, 0, 0);
     
-    if (forward) {
+    // Check key states and apply acceleration
+    if (keys.forward) {
       acceleration.add(direction.clone().multiplyScalar(5 * delta));
       console.log("Accelerating forward:", direction, "Acceleration:", acceleration);
     }
     
-    if (backward) {
+    if (keys.backward) {
       acceleration.add(direction.clone().multiplyScalar(-2 * delta));
       console.log("Accelerating backward:", direction, "Acceleration:", acceleration);
     }
