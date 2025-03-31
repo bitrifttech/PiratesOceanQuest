@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Sky, Environment, OrbitControls } from "@react-three/drei";
+import { Sky, Environment, OrbitControls, Text } from "@react-three/drei";
 import * as THREE from "three";
 
 import Ocean from "./Ocean";
@@ -12,6 +12,93 @@ import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
 import { useGameState } from "../lib/stores/useGameState";
 import { useAudio } from "../lib/stores/useAudio";
+
+// A reference ship that doesn't move - used to help with orientation
+const ReferenceShip = () => {
+  return (
+    <group position={[20, 0, 0]}>
+      {/* Ship hull */}
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[6, 3, 12]} />
+        <meshStandardMaterial color="#FF5722" roughness={0.8} />
+      </mesh>
+      
+      {/* Ship Deck */}
+      <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
+        <boxGeometry args={[5.5, 0.5, 11.5]} />
+        <meshStandardMaterial color="#E64A19" roughness={0.7} />
+      </mesh>
+      
+      {/* Main mast */}
+      <mesh position={[0, 8, 0]} castShadow>
+        <cylinderGeometry args={[0.3, 0.3, 14]} />
+        <meshStandardMaterial color="#795548" roughness={0.7} />
+      </mesh>
+      
+      {/* Main sail */}
+      <mesh position={[0, 8, 2]} castShadow>
+        <planeGeometry args={[8, 10]} />
+        <meshStandardMaterial
+          color="#FFEB3B"
+          side={THREE.DoubleSide}
+          roughness={0.8}
+        />
+      </mesh>
+      
+      {/* Reference label */}
+      <Text
+        position={[0, 10, 0]}
+        fontSize={2}
+        color="#FF5722"
+        anchorX="center"
+        anchorY="middle"
+      >
+        REFERENCE
+      </Text>
+    </group>
+  );
+};
+
+// Direction indicators for debugging
+const DirectionIndicators = () => {
+  return (
+    <group>
+      {/* North marker */}
+      <group position={[0, 0, -50]}>
+        <mesh>
+          <boxGeometry args={[5, 5, 5]} />
+          <meshStandardMaterial color="red" />
+        </mesh>
+        <Text
+          position={[0, 10, 0]}
+          fontSize={5}
+          color="red"
+          anchorX="center"
+          anchorY="middle"
+        >
+          NORTH
+        </Text>
+      </group>
+      
+      {/* East marker */}
+      <group position={[50, 0, 0]}>
+        <mesh>
+          <boxGeometry args={[5, 5, 5]} />
+          <meshStandardMaterial color="blue" />
+        </mesh>
+        <Text
+          position={[0, 10, 0]}
+          fontSize={5}
+          color="blue"
+          anchorX="center"
+          anchorY="middle"
+        >
+          EAST
+        </Text>
+      </group>
+    </group>
+  );
+};
 
 // Main game component that sets up the 3D scene
 const Game = () => {
@@ -51,7 +138,7 @@ const Game = () => {
     initializePlayer();
     
     // Spawn initial enemies
-    spawnEnemies(5);
+    spawnEnemies(3); // Reduced number of enemies to make debugging easier
     
     // Play background music
     playBackgroundMusic();
@@ -121,6 +208,10 @@ const Game = () => {
       {/* Ocean */}
       <Ocean />
       
+      {/* Reference elements */}
+      <ReferenceShip />
+      <DirectionIndicators />
+      
       {/* Player ship */}
       <Ship />
       
@@ -144,7 +235,7 @@ const Game = () => {
         />
       ))}
       
-      {/* Debug controls - disabled in production */}
+      {/* Debug controls - uncomment for debugging */}
       {/* <OrbitControls /> */}
     </>
   );

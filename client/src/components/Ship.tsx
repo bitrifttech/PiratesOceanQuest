@@ -183,18 +183,30 @@ const Ship = () => {
     // Get current key states directly
     const keys = getKeys();
     
+    // Debug: Show current key states
+    console.log("Current key states:", 
+      JSON.stringify({
+        forward: keys.forward,
+        backward: keys.backward,
+        leftward: keys.leftward,
+        rightward: keys.rightward,
+        fire: keys.fire,
+        board: keys.board
+      })
+    );
+    
     // Current rotation (yaw only)
     const currentRotation = rotation.y;
     
     // Apply rotation from steering
     let rotationDelta = 0;
     if (keys.leftward) {
-      rotationDelta += 1 * delta;
+      rotationDelta += 1.5 * delta;
       console.log("Turning left");
     }
     
     if (keys.rightward) {
-      rotationDelta -= 1 * delta;
+      rotationDelta -= 1.5 * delta;
       console.log("Turning right");
     }
     
@@ -218,13 +230,17 @@ const Ship = () => {
     
     // Check key states and apply acceleration
     if (keys.forward) {
-      acceleration.add(direction.clone().multiplyScalar(5 * delta));
-      console.log("Accelerating forward:", direction, "Acceleration:", acceleration);
+      // Apply acceleration in the direction the ship is facing
+      const forwardForce = direction.clone().multiplyScalar(10 * delta);
+      acceleration.add(forwardForce);
+      console.log("Accelerating forward:", direction, "Force:", forwardForce);
     }
     
     if (keys.backward) {
-      acceleration.add(direction.clone().multiplyScalar(-2 * delta));
-      console.log("Accelerating backward:", direction, "Acceleration:", acceleration);
+      // Apply acceleration in the opposite direction the ship is facing
+      const backwardForce = direction.clone().multiplyScalar(-5 * delta);
+      acceleration.add(backwardForce);
+      console.log("Accelerating backward:", direction, "Force:", backwardForce);
     }
     
     // Log current velocity for debugging
