@@ -1,6 +1,6 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { useKeyboardControls, useTexture } from "@react-three/drei";
+import { useKeyboardControls, useTexture, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
 import { Controls } from "../App";
@@ -10,7 +10,8 @@ import { checkCollision } from "../lib/helpers/collisionDetection";
 import Cannon from "./Cannon";
 import { useAudio } from "../lib/stores/useAudio";
 
-// Ship component uses geometries instead of a GLB model
+// Pre-load the ship model
+useGLTF.preload("/models/pirate_ship.glb");
 
 const Ship = () => {
   // Get player state and controls
@@ -312,64 +313,45 @@ const Ship = () => {
     }
   });
 
-  // Use a simplified model approach
+  // Load the 3D model
+  const { scene: model } = useGLTF("/models/pirate_ship.glb") as any;
+  const [modelLoaded, setModelLoaded] = useState(false);
   const shipModelRef = useRef<THREE.Group>(null);
+
+  // Make sure model is loaded
+  useEffect(() => {
+    if (model) {
+      console.log("Ship model loaded successfully");
+      setModelLoaded(true);
+    }
+  }, [model]);
+
+  // Deep clone the model to prevent issues
+  const shipModel = modelLoaded ? model.clone() : null;
 
   return (
     <group ref={shipRef} position={position || [0, 0, 0]}>
-      {/* Ship hull (main body) */}
-      <mesh
-        ref={hullRef}
-        position={[0, 0, 0]}
-        castShadow
-        receiveShadow
-      >
-        <boxGeometry args={[6, 3, 12]} />
-        <meshStandardMaterial map={woodTexture} roughness={0.7} />
-      </mesh>
-      
-      {/* Ship deck */}
-      <mesh
-        position={[0, 1.5, 0]}
-        castShadow
-      >
-        <boxGeometry args={[5.5, 0.5, 11.5]} />
-        <meshStandardMaterial map={woodTexture} roughness={0.6} />
-      </mesh>
-      
-      {/* Mast */}
-      <mesh
-        position={[0, 7, 0]}
-        castShadow
-      >
-        <cylinderGeometry args={[0.5, 0.5, 11]} />
-        <meshStandardMaterial map={woodTexture} roughness={0.8} />
-      </mesh>
-      
-      {/* Sail */}
-      <mesh
-        ref={sailRef}
-        position={[0, 7, -3]}
-        rotation={[0, 0, 0]}
-        castShadow
-      >
-        <planeGeometry args={[8, 9]} />
-        <meshStandardMaterial 
-          color="#EEE8AA" 
-          side={THREE.DoubleSide}
-          roughness={0.6}
-        />
-      </mesh>
-      
-      {/* Ship bow (front) */}
-      <mesh
-        position={[0, 0, -6.5]}
-        rotation={[0, 0, 0]}
-        castShadow
-      >
-        <coneGeometry args={[3, 5, 4, 1, false, Math.PI / 4]} />
-        <meshStandardMaterial map={woodTexture} roughness={0.7} />
-      </mesh>
+      {/* 3D Ship Model */}
+      {modelLoaded && shipModel ? (
+        <group 
+          scale={[2.5, 2.5, 2.5]} 
+          rotation={[0, Math.PI, 0]}
+        >
+          <primitive object={shipModel} castShadow receiveShadow />
+        </group>
+      ) : (
+        /* Fallback if model fails to load */
+        <group>
+          <mesh
+            position={[0, 0, 0]}
+            castShadow
+            receiveShadow
+          >
+            <boxGeometry args={[6, 3, 12]} />
+            <meshStandardMaterial map={woodTexture} roughness={0.7} />
+          </mesh>
+        </group>
+      )}
       
       {/* Cannons - port side (left) */}
       {[-4, -2, 0, 2, 4].map((z, i) => (
