@@ -5,6 +5,7 @@ import * as THREE from "three";
 
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
+import { useGameState } from "../lib/stores/useGameState";
 import { checkCollision } from "../lib/helpers/collisionDetection";
 import Cannon from "./Cannon";
 
@@ -88,10 +89,11 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     enemyRef.current.position.copy(position);
     enemyRef.current.rotation.copy(rotation);
     
-    // Ship bobbing on waves with ship raised even higher
-    enemyRef.current.position.y = Math.sin(Date.now() * 0.0006 + parseInt(id)) * 0.3 + 2.25;
-    enemyRef.current.rotation.x = Math.sin(Date.now() * 0.0005 + parseInt(id)) * 0.01;
-    enemyRef.current.rotation.z = Math.cos(Date.now() * 0.0005 + parseInt(id)) * 0.01;
+    // Ship bobbing on waves with configurable height
+    const { shipHeight, waveHeight, waveSpeed } = useGameState.getState();
+    enemyRef.current.position.y = Math.sin(Date.now() * waveSpeed + parseInt(id)) * waveHeight + shipHeight;
+    enemyRef.current.rotation.x = Math.sin(Date.now() * (waveSpeed - 0.0001) + parseInt(id)) * 0.01;
+    enemyRef.current.rotation.z = Math.cos(Date.now() * (waveSpeed - 0.0001) + parseInt(id)) * 0.01;
     
     // Calculate distance to player
     const distanceToPlayer = new THREE.Vector3()
@@ -293,7 +295,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
         <group 
           scale={[32, 16, 32]} 
           rotation={[0, Math.PI, 0]}
-          position={[0, 2.25, 0]} // Position adjusted to raise ship even higher
+          position={[0, useGameState.getState().shipHeight, 0]} // Use dynamic ship height
         >
           <primitive object={shipModel} castShadow receiveShadow />
           

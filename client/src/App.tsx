@@ -10,6 +10,7 @@ import SettingsMenu from "./components/SettingsMenu";
 import HelpMenu from "./components/HelpMenu";
 import UpgradeMenu from "./components/UpgradeMenu";
 import GameUI from "./components/GameUI";
+import DebugControls from "./components/DebugControls";
 import "@fontsource/inter";
 
 // Define control keys for the game
@@ -119,6 +120,15 @@ function App() {
             
             {/* Game UI overlay */}
             <GameUI />
+            
+            {/* Debug Controls */}
+            <DebugControls 
+              onUpdateShipHeight={(height) => useGameState.getState().setShipHeight(height)} 
+              onUpdateWaterParams={(params) => useGameState.getState().setWaveParameters(params)}
+              initialShipHeight={useGameState.getState().shipHeight}
+              initialWaveHeight={useGameState.getState().waveHeight}
+              initialWaveSpeed={useGameState.getState().waveSpeed}
+            />
           </>
         )}
       </KeyboardControls>

@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { Controls } from "../App";
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
+import { useGameState } from "../lib/stores/useGameState";
 import { checkCollision } from "../lib/helpers/collisionDetection";
 import Cannon from "./Cannon";
 import { useAudio } from "../lib/stores/useAudio";
@@ -274,11 +275,12 @@ const Ship = () => {
     shipRef.current.position.copy(newPosition);
     shipRef.current.rotation.copy(newRotation);
     
-    // Make ship bob on the waves with ship raised even higher
+    // Make ship bob on the waves with configurable height
     if (shipRef.current) {
-      shipRef.current.position.y = Math.sin(Date.now() * 0.0006) * 0.3 + 2.25;
-      shipRef.current.rotation.x = Math.sin(Date.now() * 0.0005) * 0.01;
-      shipRef.current.rotation.z = Math.cos(Date.now() * 0.0005) * 0.01;
+      const { shipHeight, waveHeight, waveSpeed } = useGameState.getState();
+      shipRef.current.position.y = Math.sin(Date.now() * waveSpeed) * waveHeight + shipHeight;
+      shipRef.current.rotation.x = Math.sin(Date.now() * (waveSpeed - 0.0001)) * 0.01;
+      shipRef.current.rotation.z = Math.cos(Date.now() * (waveSpeed - 0.0001)) * 0.01;
     }
     
     // Update cannon balls
@@ -346,7 +348,7 @@ const Ship = () => {
         <group 
           scale={[32, 16, 32]} 
           rotation={[0, Math.PI, 0]}
-          position={[0, 2.25, 0]} // Position adjusted to raise ship even higher
+          position={[0, useGameState.getState().shipHeight, 0]} // Use dynamic ship height
         >
           <primitive object={shipModel} castShadow receiveShadow />
         </group>

@@ -2,6 +2,7 @@ import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { MeshStandardMaterial } from "three";
 import * as THREE from "three";
+import { useGameState } from "../lib/stores/useGameState";
 
 const Ocean = () => {
   const meshRef = useRef<THREE.Mesh>(null);
@@ -63,6 +64,9 @@ const Ocean = () => {
   useFrame((_, delta) => {
     if (!meshRef.current) return;
     
+    // Get wave parameters from game state
+    const { waveHeight, waveSpeed } = useGameState.getState();
+    
     timeRef.current += delta * 0.5;
     
     // Animate the wave displacement
@@ -73,10 +77,10 @@ const Ocean = () => {
       const x = vertices[i];
       const z = vertices[i + 2];
       
-      // Create wave effect
+      // Create wave effect with configurable height and speed
       vertices[i + 1] = 
-        Math.sin(x / 20 + timeRef.current) * 
-        Math.cos(z / 20 + timeRef.current) * 1.5;
+        Math.sin(x / 20 + timeRef.current * (waveSpeed * 1000)) * 
+        Math.cos(z / 20 + timeRef.current * (waveSpeed * 1000)) * (waveHeight * 5);
     }
     
     positionAttr.needsUpdate = true;

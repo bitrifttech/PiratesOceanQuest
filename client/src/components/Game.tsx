@@ -7,6 +7,7 @@ import Ocean from "./Ocean";
 import Ship from "./Ship";
 import Enemy from "./Enemy";
 import Island from "./Island";
+import DebugControls from "./DebugControls";
 
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
