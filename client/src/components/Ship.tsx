@@ -1,7 +1,6 @@
 import { useRef, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
-import { useKeyboardControls } from "@react-three/drei";
-import { useTexture } from "@react-three/drei";
+import { useKeyboardControls, useGLTF, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 
 import { Controls } from "../App";
@@ -10,6 +9,9 @@ import { useEnemies } from "../lib/stores/useEnemies";
 import { checkCollision } from "../lib/helpers/collisionDetection";
 import Cannon from "./Cannon";
 import { useAudio } from "../lib/stores/useAudio";
+
+// Pre-load the ship model
+useGLTF.preload("/models/pirate_ship.glb");
 
 const Ship = () => {
   // Get player state and controls
@@ -311,67 +313,23 @@ const Ship = () => {
     }
   });
 
+  // Load the GLTF model
+  const { nodes, materials } = useGLTF("/models/pirate_ship.glb");
+  // Using any type for GLTF model to avoid TypeScript issues
+  const shipModelRef = useRef<any>();
+
   return (
     <group ref={shipRef} position={position || [0, 0, 0]}>
-      {/* Ship hull */}
-      <mesh ref={hullRef} castShadow receiveShadow>
-        <boxGeometry args={[6, 3, 12]} />
-        <meshStandardMaterial
-          map={woodTexture}
-          color="#8B4513"
-          roughness={0.8}
-        />
-      </mesh>
-      
-      {/* Ship Deck */}
-      <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
-        <boxGeometry args={[5.5, 0.5, 11.5]} />
-        <meshStandardMaterial
-          map={woodTexture}
-          color="#9c6b30"
-          roughness={0.7}
-        />
-      </mesh>
-      
-      {/* Main mast */}
-      <mesh position={[0, 8, 0]} castShadow>
-        <cylinderGeometry args={[0.3, 0.3, 14]} />
-        <meshStandardMaterial
-          map={woodTexture}
-          color="#6d4c41"
-          roughness={0.7}
-        />
-      </mesh>
-      
-      {/* Main sail */}
-      <mesh ref={sailRef} position={[0, 8, 2]} castShadow>
-        <planeGeometry args={[8, 10]} />
-        <meshStandardMaterial
-          color="#F5F5F5"
-          side={THREE.DoubleSide}
-          roughness={0.8}
-        />
-      </mesh>
-      
-      {/* Ship stern */}
-      <mesh position={[0, 2, -5.5]} castShadow>
-        <boxGeometry args={[5, 2, 1]} />
-        <meshStandardMaterial
-          map={woodTexture}
-          color="#8B4513"
-          roughness={0.8}
-        />
-      </mesh>
-      
-      {/* Ship bow */}
-      <mesh position={[0, 1, 6.5]} castShadow>
-        <coneGeometry args={[2.5, 2, 4, 1, false, Math.PI/4]} />
-        <meshStandardMaterial
-          map={woodTexture}
-          color="#8B4513"
-          roughness={0.8}
-        />
-      </mesh>
+      {/* Detailed 3D ship model */}
+      <group
+        ref={shipModelRef}
+        rotation={[0, Math.PI, 0]} // Rotate to face forward in our coordinate system
+        scale={[2.5, 2.5, 2.5]} // Scale up the model (generated models are small)
+        castShadow
+        receiveShadow
+      >
+        {nodes.Scene && <primitive object={nodes.Scene} />}
+      </group>
       
       {/* Health indicator (changes color based on health) */}
       <mesh position={[0, -1.6, 0]}>
@@ -384,16 +342,6 @@ const Ship = () => {
           opacity={0.7}
         />
       </mesh>
-      
-      {/* Left side cannons */}
-      <Cannon position={[-3, 1, -2]} rotation={[0, -Math.PI/2, 0]} />
-      <Cannon position={[-3, 1, 0]} rotation={[0, -Math.PI/2, 0]} />
-      <Cannon position={[-3, 1, 2]} rotation={[0, -Math.PI/2, 0]} />
-      
-      {/* Right side cannons */}
-      <Cannon position={[3, 1, -2]} rotation={[0, Math.PI/2, 0]} />
-      <Cannon position={[3, 1, 0]} rotation={[0, Math.PI/2, 0]} />
-      <Cannon position={[3, 1, 2]} rotation={[0, Math.PI/2, 0]} />
       
       {/* Render cannonballs */}
       {cannonBalls.current.map((ball) => (
