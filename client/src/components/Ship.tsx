@@ -11,7 +11,7 @@ import Cannon from "./Cannon";
 import { useAudio } from "../lib/stores/useAudio";
 
 // Pre-load the ship model
-useGLTF.preload("/models/pirate_ship.glb");
+useGLTF.preload("/models/base_pirate_ship.glb");
 
 const Ship = () => {
   // Get player state and controls
@@ -314,7 +314,7 @@ const Ship = () => {
   });
 
   // Load the 3D model
-  const { scene: model } = useGLTF("/models/pirate_ship.glb") as any;
+  const { scene: model } = useGLTF("/models/base_pirate_ship.glb") as any;
   const [modelLoaded, setModelLoaded] = useState(false);
   const shipModelRef = useRef<THREE.Group>(null);
 

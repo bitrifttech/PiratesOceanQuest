@@ -9,7 +9,7 @@ import { checkCollision } from "../lib/helpers/collisionDetection";
 import Cannon from "./Cannon";
 
 // Preload the ship model
-useGLTF.preload("/models/pirate_ship.glb");
+useGLTF.preload("/models/base_pirate_ship.glb");
 
 interface EnemyProps {
   id: string;
@@ -28,7 +28,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
   });
   
   // Load ship model
-  const { scene: model } = useGLTF("/models/pirate_ship.glb") as any;
+  const { scene: model } = useGLTF("/models/base_pirate_ship.glb") as any;
   const [modelLoaded, setModelLoaded] = useState(false);
   
   // Textures
