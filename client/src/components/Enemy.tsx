@@ -88,10 +88,10 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     enemyRef.current.position.copy(position);
     enemyRef.current.rotation.copy(rotation);
     
-    // Ship bobbing on waves
-    enemyRef.current.position.y = Math.sin(Date.now() * 0.001 + parseInt(id)) * 1.0 + 1.0;
-    enemyRef.current.rotation.x = Math.sin(Date.now() * 0.001 + parseInt(id)) * 0.05;
-    enemyRef.current.rotation.z = Math.cos(Date.now() * 0.002 + parseInt(id)) * 0.05;
+    // Ship bobbing on waves (adjusted for larger ship size)
+    enemyRef.current.position.y = Math.sin(Date.now() * 0.0006 + parseInt(id)) * 2.0 + 2.0;
+    enemyRef.current.rotation.x = Math.sin(Date.now() * 0.0005 + parseInt(id)) * 0.03;
+    enemyRef.current.rotation.z = Math.cos(Date.now() * 0.0005 + parseInt(id)) * 0.03;
     
     // Calculate distance to player
     const distanceToPlayer = new THREE.Vector3()
@@ -291,21 +291,21 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       {/* 3D Ship Model - with red color overlay for enemies */}
       {modelLoaded && shipModel ? (
         <group 
-          scale={[16, 8, 16]} 
+          scale={[64, 32, 64]} 
           rotation={[0, Math.PI, 0]}
           position={[0, 3, 0]} 
         >
           <primitive object={shipModel} castShadow receiveShadow />
           
           {/* Red overlay to distinguish enemy ships */}
-          <mesh position={[0, 0.8, 0]} scale={[0.5, 2, 0.5]}>
+          <mesh position={[0, 0.2, 0]} scale={[0.5, 2, 0.5]}>
             <boxGeometry args={[0.3, 5, 0.8]} />
             <meshStandardMaterial 
               color="#B71C1C" 
               transparent={true} 
-              opacity={0.9} 
+              opacity={1.0} 
               emissive="#B71C1C"
-              emissiveIntensity={0.7}
+              emissiveIntensity={1.0}
             />
           </mesh>
         </group>
@@ -332,16 +332,16 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
         </group>
       )}
       
-      {/* Health indicator (only shown when damaged) */}
+      {/* Health indicator (only shown when damaged) - positioned above ship */}
       {health < 100 && (
-        <mesh position={[0, -1, 0]}>
-          <boxGeometry args={[5, 0.05, 10]} />
+        <mesh position={[0, 35, 0]} rotation={[0, 0, 0]}>
+          <boxGeometry args={[20, 0.5, 3]} />
           <meshStandardMaterial 
             color={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
             emissive={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
-            emissiveIntensity={0.5}
+            emissiveIntensity={0.8}
             transparent={true}
-            opacity={0.5}
+            opacity={0.8}
           />
         </mesh>
       )}
