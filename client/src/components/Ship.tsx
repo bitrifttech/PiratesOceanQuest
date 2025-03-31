@@ -276,9 +276,9 @@ const Ship = () => {
     
     // Make ship bob on the waves
     if (shipRef.current) {
-      shipRef.current.position.y = Math.sin(Date.now() * 0.001) * 0.5 + 0.5;
-      shipRef.current.rotation.x = Math.sin(Date.now() * 0.001) * 0.03;
-      shipRef.current.rotation.z = Math.cos(Date.now() * 0.002) * 0.03;
+      shipRef.current.position.y = Math.sin(Date.now() * 0.001) * 1.0 + 1.0;
+      shipRef.current.rotation.x = Math.sin(Date.now() * 0.001) * 0.05;
+      shipRef.current.rotation.z = Math.cos(Date.now() * 0.002) * 0.05;
     }
     
     // Update cannon balls
@@ -344,9 +344,9 @@ const Ship = () => {
       {/* 3D Ship Model */}
       {modelLoaded && shipModel ? (
         <group 
-          scale={[8, 8, 8]} 
+          scale={[16, 8, 16]} 
           rotation={[0, Math.PI, 0]}
-          position={[0, 1.5, 0]} // Raise the model to sit on water
+          position={[0, 3, 0]} // Raise the model to sit on water
         >
           <primitive object={shipModel} castShadow receiveShadow />
         </group>
@@ -389,7 +389,7 @@ const Ship = () => {
       
       {/* Health indicator (changes color based on health) */}
       <mesh position={[0, -2, 0]}>
-        <boxGeometry args={[15, 0.1, 30]} />
+        <boxGeometry args={[30, 0.1, 60]} />
         <meshStandardMaterial 
           color={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
           emissive={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
