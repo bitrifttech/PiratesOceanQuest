@@ -107,7 +107,8 @@ const Ship = () => {
       // Ensure position is not null
       if (!position) return;
       
-      // Create a new cannon ball
+      // Create a new cannon ball - using the direction vector
+      // Ship model faces -Z direction by default
       const direction = new THREE.Vector3(
         Math.sin(rotation.y),
         0,
@@ -121,7 +122,7 @@ const Ship = () => {
           1,
           position.z - direction.x * 2
         ),
-        direction: direction.clone(),
+        direction: new THREE.Vector3(-direction.z, 0, direction.x), // Perpendicular to ship direction (right)
         life: 2, // Seconds of life
         id: cannonBallId.current++
       });
@@ -132,7 +133,7 @@ const Ship = () => {
           1,
           position.z + direction.x * 2
         ),
-        direction: direction.clone(),
+        direction: new THREE.Vector3(direction.z, 0, -direction.x), // Perpendicular to ship direction (left)
         life: 2, // Seconds of life
         id: cannonBallId.current++
       });
@@ -219,6 +220,7 @@ const Ship = () => {
     setRotation(newRotation);
     
     // Calculate direction vector based on rotation
+    // Ship model faces -Z direction by default, so direction vector should reflect that
     const direction = new THREE.Vector3(
       Math.sin(newRotation.y),
       0,
@@ -230,15 +232,15 @@ const Ship = () => {
     
     // Check key states and apply acceleration
     if (keys.forward) {
-      // Apply acceleration in the direction the ship is facing
-      const forwardForce = direction.clone().multiplyScalar(10 * delta);
+      // Apply acceleration in the direction the ship is facing (W key should move forward)
+      const forwardForce = direction.clone().multiplyScalar(-10 * delta);
       acceleration.add(forwardForce);
       console.log("Accelerating forward:", direction, "Force:", forwardForce);
     }
     
     if (keys.backward) {
-      // Apply acceleration in the opposite direction the ship is facing
-      const backwardForce = direction.clone().multiplyScalar(-5 * delta);
+      // Apply acceleration in the opposite direction the ship is facing (S key should move backward)
+      const backwardForce = direction.clone().multiplyScalar(5 * delta);
       acceleration.add(backwardForce);
       console.log("Accelerating backward:", direction, "Force:", backwardForce);
     }
