@@ -314,7 +314,7 @@ const Ship = () => {
   });
 
   // Load the 3D model
-  const { scene: model } = useGLTF("/models/base_pirate_ship.glb") as any;
+  const { scene: model } = useGLTF("/models/pirate_ship.glb") as any;
   const [modelLoaded, setModelLoaded] = useState(false);
   const shipModelRef = useRef<THREE.Group>(null);
 
@@ -389,7 +389,7 @@ const Ship = () => {
       
       {/* Health indicator (changes color based on health) */}
       <mesh position={[0, -2, 0]}>
-        <boxGeometry args={[30, 0.1, 60]} />
+        <boxGeometry args={[12, 0.1, 24]} />
         <meshStandardMaterial 
           color={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
           emissive={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}

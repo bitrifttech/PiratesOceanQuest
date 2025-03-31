@@ -9,7 +9,7 @@ import { checkCollision } from "../lib/helpers/collisionDetection";
 import Cannon from "./Cannon";
 
 // Preload the ship model
-useGLTF.preload("/models/base_pirate_ship.glb");
+useGLTF.preload("/models/pirate_ship.glb");
 
 interface EnemyProps {
   id: string;
@@ -28,7 +28,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
   });
   
   // Load ship model
-  const { scene: model } = useGLTF("/models/base_pirate_ship.glb") as any;
+  const { scene: model } = useGLTF("/models/pirate_ship.glb") as any;
   const [modelLoaded, setModelLoaded] = useState(false);
   
   // Textures
@@ -334,7 +334,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       
       {/* Health indicator (changes color based on health) */}
       <mesh position={[0, -2, 0]}>
-        <boxGeometry args={[30, 0.1, 60]} />
+        <boxGeometry args={[12, 0.1, 24]} />
         <meshStandardMaterial 
           color={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
           emissive={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
