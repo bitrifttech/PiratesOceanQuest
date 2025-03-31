@@ -10,8 +10,8 @@ import { checkCollision } from "../lib/helpers/collisionDetection";
 import Cannon from "./Cannon";
 import { useAudio } from "../lib/stores/useAudio";
 
-// Pre-load the ship model
-useGLTF.preload("/models/base_pirate_ship.glb");
+// Pre-load the cartoony ship model
+useGLTF.preload("/models/cartoon_pirate_ship.glb");
 
 const Ship = () => {
   // Get player state and controls
@@ -313,8 +313,8 @@ const Ship = () => {
     }
   });
 
-  // Load the 3D model
-  const { scene: model } = useGLTF("/models/pirate_ship.glb") as any;
+  // Load the new cartoony 3D model
+  const { scene: model } = useGLTF("/models/cartoon_pirate_ship.glb") as any;
   const [modelLoaded, setModelLoaded] = useState(false);
   const shipModelRef = useRef<THREE.Group>(null);
 
