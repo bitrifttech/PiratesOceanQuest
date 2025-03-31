@@ -344,7 +344,7 @@ const Ship = () => {
       {/* 3D Ship Model */}
       {modelLoaded && shipModel ? (
         <group 
-          scale={[3, 3, 3]} 
+          scale={[8, 8, 8]} 
           rotation={[0, Math.PI, 0]}
           position={[0, 1.5, 0]} // Raise the model to sit on water
         >
@@ -389,7 +389,7 @@ const Ship = () => {
       
       {/* Health indicator (changes color based on health) */}
       <mesh position={[0, -2, 0]}>
-        <boxGeometry args={[8, 0.1, 15]} />
+        <boxGeometry args={[15, 0.1, 30]} />
         <meshStandardMaterial 
           color={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
           emissive={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}

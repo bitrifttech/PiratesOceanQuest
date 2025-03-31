@@ -291,14 +291,14 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       {/* 3D Ship Model - with red color overlay for enemies */}
       {modelLoaded && shipModel ? (
         <group 
-          scale={[3, 3, 3]} 
+          scale={[8, 8, 8]} 
           rotation={[0, Math.PI, 0]}
           position={[0, 1.5, 0]} 
         >
           <primitive object={shipModel} castShadow receiveShadow />
           
           {/* Red overlay to distinguish enemy ships */}
-          <mesh position={[0, 3, 0]} scale={[1, 1, 1.2]}>
+          <mesh position={[0, 1.2, 0]} scale={[0.5, 1, 0.5]}>
             <boxGeometry args={[0.3, 5, 0.8]} />
             <meshStandardMaterial 
               color="#B71C1C" 
@@ -334,7 +334,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       
       {/* Health indicator (changes color based on health) */}
       <mesh position={[0, -2, 0]}>
-        <boxGeometry args={[8, 0.1, 15]} />
+        <boxGeometry args={[15, 0.1, 30]} />
         <meshStandardMaterial 
           color={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
           emissive={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
