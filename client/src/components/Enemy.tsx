@@ -88,10 +88,10 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     enemyRef.current.position.copy(position);
     enemyRef.current.rotation.copy(rotation);
     
-    // Ship bobbing on waves (adjusted for larger ship size)
-    enemyRef.current.position.y = Math.sin(Date.now() * 0.0006 + parseInt(id)) * 1.0 + 1.5;
-    enemyRef.current.rotation.x = Math.sin(Date.now() * 0.0005 + parseInt(id)) * 0.015;
-    enemyRef.current.rotation.z = Math.cos(Date.now() * 0.0005 + parseInt(id)) * 0.015;
+    // Ship bobbing on waves with 10% underwater
+    enemyRef.current.position.y = Math.sin(Date.now() * 0.0006 + parseInt(id)) * 0.3 + 0.85;
+    enemyRef.current.rotation.x = Math.sin(Date.now() * 0.0005 + parseInt(id)) * 0.01;
+    enemyRef.current.rotation.z = Math.cos(Date.now() * 0.0005 + parseInt(id)) * 0.01;
     
     // Calculate distance to player
     const distanceToPlayer = new THREE.Vector3()
@@ -291,9 +291,9 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       {/* 3D Ship Model - with red color overlay for enemies */}
       {modelLoaded && shipModel ? (
         <group 
-          scale={[64, 32, 64]} 
+          scale={[32, 16, 32]} 
           rotation={[0, Math.PI, 0]}
-          position={[0, 2, 0]} // Raise the model to sit on water with the larger scale
+          position={[0, 0.85, 0]} // Position adjusted so only ~10% of hull is underwater
         >
           <primitive object={shipModel} castShadow receiveShadow />
           
@@ -334,8 +334,8 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       
       {/* Health indicator (only shown when damaged) - positioned above ship */}
       {health < 100 && (
-        <mesh position={[0, 15, 0]} rotation={[0, 0, 0]}>
-          <boxGeometry args={[20, 0.5, 3]} />
+        <mesh position={[0, 8, 0]} rotation={[0, 0, 0]}>
+          <boxGeometry args={[10, 0.4, 2]} />
           <meshStandardMaterial 
             color={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
             emissive={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
