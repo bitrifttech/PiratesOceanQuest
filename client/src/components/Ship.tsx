@@ -121,7 +121,7 @@ const Ship = () => {
       cannonBalls.current.push({
         position: new THREE.Vector3(
           position.x + direction.z * 2, // Right side of ship
-          1,
+          1.5, // Adjusted cannon height to match raised ship
           position.z - direction.x * 2
         ),
         direction: new THREE.Vector3(-direction.z, 0, direction.x), // Perpendicular to ship direction (right)
@@ -132,7 +132,7 @@ const Ship = () => {
       cannonBalls.current.push({
         position: new THREE.Vector3(
           position.x - direction.z * 2, // Left side of ship
-          1,
+          1.5, // Adjusted cannon height to match raised ship
           position.z + direction.x * 2
         ),
         direction: new THREE.Vector3(direction.z, 0, -direction.x), // Perpendicular to ship direction (left)
@@ -274,9 +274,9 @@ const Ship = () => {
     shipRef.current.position.copy(newPosition);
     shipRef.current.rotation.copy(newRotation);
     
-    // Make ship bob on the waves with 10% underwater
+    // Make ship bob on the waves with ship raised 50% higher
     if (shipRef.current) {
-      shipRef.current.position.y = Math.sin(Date.now() * 0.0006) * 0.3 + 0.85;
+      shipRef.current.position.y = Math.sin(Date.now() * 0.0006) * 0.3 + 1.5;
       shipRef.current.rotation.x = Math.sin(Date.now() * 0.0005) * 0.01;
       shipRef.current.rotation.z = Math.cos(Date.now() * 0.0005) * 0.01;
     }
@@ -346,7 +346,7 @@ const Ship = () => {
         <group 
           scale={[32, 16, 32]} 
           rotation={[0, Math.PI, 0]}
-          position={[0, 0.85, 0]} // Position adjusted so only ~10% of hull is underwater
+          position={[0, 1.5, 0]} // Position adjusted to raise ship 50% higher
         >
           <primitive object={shipModel} castShadow receiveShadow />
         </group>
