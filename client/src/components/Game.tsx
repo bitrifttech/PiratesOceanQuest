@@ -122,6 +122,11 @@ const Game = () => {
   // Game state
   const setGameOver = useGameState((state) => state.setGameOver);
   const playerHealth = usePlayer((state) => state.health);
+  const shipHeight = useGameState((state) => state.shipHeight);
+  const waveHeight = useGameState((state) => state.waveHeight);
+  const waveSpeed = useGameState((state) => state.waveSpeed);
+  const setShipHeight = useGameState((state) => state.setShipHeight);
+  const setWaveParameters = useGameState((state) => state.setWaveParameters);
   
   // Island positions (pre-calculated for consistency)
   const islandPositions = useRef([
@@ -185,6 +190,25 @@ const Game = () => {
       camera.lookAt(playerPosition.x, 0, playerPosition.z);
     }
   });
+
+  // Add the DebugControls UI overlay
+  useEffect(() => {
+    // Create container for debug controls
+    const container = document.createElement('div');
+    container.id = 'debug-controls-container';
+    document.body.appendChild(container);
+    
+    // Render the DebugControls component into the container
+    const root = document.createElement('div');
+    container.appendChild(root);
+    
+    // Clean up on unmount
+    return () => {
+      if (document.body.contains(container)) {
+        document.body.removeChild(container);
+      }
+    };
+  }, []);
 
   return (
     <>

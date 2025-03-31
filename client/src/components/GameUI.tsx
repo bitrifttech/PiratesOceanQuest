@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useKeyboardControls } from "@react-three/drei";
 import { Controls } from "../App";
 import HUD from "./HUD";
+import DebugControls from "./DebugControls";
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
 import { useGameState } from "../lib/stores/useGameState";
@@ -10,12 +11,18 @@ import { useAudio } from "../lib/stores/useAudio";
 
 const GameUI = () => {
   const [showControls, setShowControls] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
   const [showVictory, setShowVictory] = useState(false);
   
   // Game state
   const gameState = useGameState((state) => state.gameState);
   const setGameState = useGameState((state) => state.setGameState);
+  const shipHeight = useGameState((state) => state.shipHeight);
+  const waveHeight = useGameState((state) => state.waveHeight);
+  const waveSpeed = useGameState((state) => state.waveSpeed);
+  const setShipHeight = useGameState((state) => state.setShipHeight);
+  const setWaveParameters = useGameState((state) => state.setWaveParameters);
   
   // Player state
   const playerHealth = usePlayer((state) => state.health);
@@ -95,6 +102,13 @@ const GameUI = () => {
           onClick={() => setShowControls(!showControls)}
         >
           Controls
+        </button>
+        
+        <button
+          className="bg-gray-800 bg-opacity-70 hover:bg-opacity-90 text-white px-4 py-2 rounded-lg mr-2"
+          onClick={() => setShowDebug(!showDebug)}
+        >
+          Debug
         </button>
         
         <button
@@ -197,6 +211,19 @@ const GameUI = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      
+      {/* Debug Controls Overlay */}
+      {showDebug && (
+        <div className="absolute pointer-events-auto" style={{ zIndex: 1000 }}>
+          <DebugControls
+            onUpdateShipHeight={setShipHeight}
+            onUpdateWaterParams={setWaveParameters}
+            initialShipHeight={shipHeight}
+            initialWaveHeight={waveHeight}
+            initialWaveSpeed={waveSpeed}
+          />
         </div>
       )}
     </div>

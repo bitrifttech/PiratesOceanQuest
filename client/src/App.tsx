@@ -121,14 +121,7 @@ function App() {
             {/* Game UI overlay */}
             <GameUI />
             
-            {/* Debug Controls */}
-            <DebugControls 
-              onUpdateShipHeight={(height) => useGameState.getState().setShipHeight(height)} 
-              onUpdateWaterParams={(params) => useGameState.getState().setWaveParameters(params)}
-              initialShipHeight={useGameState.getState().shipHeight}
-              initialWaveHeight={useGameState.getState().waveHeight}
-              initialWaveSpeed={useGameState.getState().waveSpeed}
-            />
+            {/* Game provides its own debug controls */}
           </>
         )}
       </KeyboardControls>
