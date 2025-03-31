@@ -89,9 +89,9 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     enemyRef.current.rotation.copy(rotation);
     
     // Ship bobbing on waves (adjusted for larger ship size)
-    enemyRef.current.position.y = Math.sin(Date.now() * 0.0006 + parseInt(id)) * 2.0 + 2.0;
-    enemyRef.current.rotation.x = Math.sin(Date.now() * 0.0005 + parseInt(id)) * 0.03;
-    enemyRef.current.rotation.z = Math.cos(Date.now() * 0.0005 + parseInt(id)) * 0.03;
+    enemyRef.current.position.y = Math.sin(Date.now() * 0.0006 + parseInt(id)) * 3.0 + 12.0;
+    enemyRef.current.rotation.x = Math.sin(Date.now() * 0.0005 + parseInt(id)) * 0.02;
+    enemyRef.current.rotation.z = Math.cos(Date.now() * 0.0005 + parseInt(id)) * 0.02;
     
     // Calculate distance to player
     const distanceToPlayer = new THREE.Vector3()
@@ -293,7 +293,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
         <group 
           scale={[64, 32, 64]} 
           rotation={[0, Math.PI, 0]}
-          position={[0, 3, 0]} 
+          position={[0, 18, 0]} // Raise the model to sit on water with the larger scale
         >
           <primitive object={shipModel} castShadow receiveShadow />
           

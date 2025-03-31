@@ -276,9 +276,9 @@ const Ship = () => {
     
     // Make ship bob on the waves
     if (shipRef.current) {
-      shipRef.current.position.y = Math.sin(Date.now() * 0.0006) * 2.0 + 2.0;
-      shipRef.current.rotation.x = Math.sin(Date.now() * 0.0005) * 0.03;
-      shipRef.current.rotation.z = Math.cos(Date.now() * 0.0005) * 0.03;
+      shipRef.current.position.y = Math.sin(Date.now() * 0.0006) * 3.0 + 12.0;
+      shipRef.current.rotation.x = Math.sin(Date.now() * 0.0005) * 0.02;
+      shipRef.current.rotation.z = Math.cos(Date.now() * 0.0005) * 0.02;
     }
     
     // Update cannon balls
@@ -346,7 +346,7 @@ const Ship = () => {
         <group 
           scale={[64, 32, 64]} 
           rotation={[0, Math.PI, 0]}
-          position={[0, 3, 0]} // Raise the model to sit on water
+          position={[0, 18, 0]} // Raise the model to sit on water with the larger scale
         >
           <primitive object={shipModel} castShadow receiveShadow />
         </group>
