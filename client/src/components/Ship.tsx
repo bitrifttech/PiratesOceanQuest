@@ -50,6 +50,15 @@ const Ship = () => {
   const fire = useKeyboardControls<Controls>((state) => state.fire);
   const board = useKeyboardControls<Controls>((state) => state.board);
   
+  // Log key state changes for debugging
+  useEffect(() => {
+    console.log("Forward key state:", forward);
+  }, [forward]);
+  
+  useEffect(() => {
+    console.log("Backward key state:", backward);
+  }, [backward]);
+  
   // Cannon balls
   const cannonBalls = useRef<{
     position: THREE.Vector3;
@@ -74,6 +83,9 @@ const Ship = () => {
   useEffect(() => {
     if (fire && cannonReady) {
       fireCannon();
+      
+      // Ensure position is not null
+      if (!position) return;
       
       // Create a new cannon ball
       const direction = new THREE.Vector3(
@@ -111,7 +123,7 @@ const Ship = () => {
   
   // Check boarding initiation
   useEffect(() => {
-    if (board) {
+    if (board && position) {
       console.log("Attempting to board");
       
       // Check if any enemy is close enough to board
@@ -170,13 +182,26 @@ const Ship = () => {
     
     // Apply acceleration from controls
     const acceleration = new THREE.Vector3(0, 0, 0);
-    if (forward) acceleration.add(direction.clone().multiplyScalar(5 * delta));
-    if (backward) acceleration.add(direction.clone().multiplyScalar(-2 * delta));
+    
+    if (forward) {
+      acceleration.add(direction.clone().multiplyScalar(5 * delta));
+      console.log("Accelerating forward:", direction, "Acceleration:", acceleration);
+    }
+    
+    if (backward) {
+      acceleration.add(direction.clone().multiplyScalar(-2 * delta));
+      console.log("Accelerating backward:", direction, "Acceleration:", acceleration);
+    }
+    
+    // Log current velocity for debugging
+    console.log("Current velocity before update:", velocity);
     
     // Update velocity with acceleration and apply drag
     const newVelocity = velocity.clone()
       .add(acceleration)
       .multiplyScalar(0.95); // Apply drag
+    
+    console.log("New velocity after update:", newVelocity);
     
     setVelocity(newVelocity);
     
