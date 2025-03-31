@@ -1,12 +1,15 @@
 import { useRef, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { useTexture } from "@react-three/drei";
+import { useTexture, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
 import { checkCollision } from "../lib/helpers/collisionDetection";
 import Cannon from "./Cannon";
+
+// Preload the ship model
+useGLTF.preload("/models/pirate_ship.glb");
 
 interface EnemyProps {
   id: string;
@@ -24,8 +27,23 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     state: "patrol" as "patrol" | "chase" | "attack"
   });
   
+  // Load ship model
+  const { scene: model } = useGLTF("/models/pirate_ship.glb") as any;
+  const [modelLoaded, setModelLoaded] = useState(false);
+  
   // Textures
   const woodTexture = useTexture("/textures/wood.jpg");
+  
+  // Make sure model is loaded
+  useEffect(() => {
+    if (model) {
+      console.log("Enemy ship model loaded successfully");
+      setModelLoaded(true);
+    }
+  }, [model]);
+  
+  // Deep clone the model to prevent issues
+  const shipModel = modelLoaded ? model.clone() : null;
   
   // Get player state
   const playerPosition = usePlayer((state) => state.position);
@@ -270,69 +288,53 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
   
   return (
     <group ref={enemyRef} position={position} rotation={rotation}>
-      {/* Enemy Ship Hull */}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[6, 3, 12]} />
-        <meshStandardMaterial
-          map={woodTexture}
-          color="#5D4037"
-          roughness={0.8}
-        />
-      </mesh>
-      
-      {/* Ship Deck */}
-      <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
-        <boxGeometry args={[5.5, 0.5, 11.5]} />
-        <meshStandardMaterial
-          map={woodTexture}
-          color="#795548"
-          roughness={0.7}
-        />
-      </mesh>
-      
-      {/* Main mast */}
-      <mesh position={[0, 8, 0]} castShadow>
-        <cylinderGeometry args={[0.3, 0.3, 14]} />
-        <meshStandardMaterial
-          map={woodTexture}
-          color="#5D4037"
-          roughness={0.7}
-        />
-      </mesh>
-      
-      {/* Main sail - red sail for enemy ships */}
-      <mesh position={[0, 8, 2]} castShadow>
-        <planeGeometry args={[8, 10]} />
-        <meshStandardMaterial
-          color="#B71C1C"
-          side={THREE.DoubleSide}
-          roughness={0.8}
-        />
-      </mesh>
-      
-      {/* Ship stern */}
-      <mesh position={[0, 2, -5.5]} castShadow>
-        <boxGeometry args={[5, 2, 1]} />
-        <meshStandardMaterial
-          map={woodTexture}
-          color="#5D4037"
-          roughness={0.8}
-        />
-      </mesh>
-      
-      {/* Ship bow */}
-      <mesh position={[0, 1, 6.5]} castShadow>
-        <coneGeometry args={[2.5, 2, 4, 1, false, Math.PI/4]} />
-        <meshStandardMaterial
-          map={woodTexture}
-          color="#5D4037"
-          roughness={0.8}
-        />
-      </mesh>
+      {/* 3D Ship Model - with red color overlay for enemies */}
+      {modelLoaded && shipModel ? (
+        <group 
+          scale={[20, 20, 20]} 
+          rotation={[0, Math.PI, 0]}
+          position={[0, -1, 0]} 
+        >
+          <primitive object={shipModel} castShadow receiveShadow />
+          
+          {/* Red overlay to distinguish enemy ships */}
+          <mesh position={[0, 2, 0]} scale={[1, 1, 1.2]}>
+            <boxGeometry args={[0.3, 4, 0.8]} />
+            <meshStandardMaterial 
+              color="#B71C1C" 
+              transparent={true} 
+              opacity={0.8} 
+              emissive="#B71C1C"
+              emissiveIntensity={0.5}
+            />
+          </mesh>
+        </group>
+      ) : (
+        /* Fallback geometry if model fails to load */
+        <group>
+          <mesh castShadow receiveShadow>
+            <boxGeometry args={[6, 3, 12]} />
+            <meshStandardMaterial
+              map={woodTexture}
+              color="#5D4037"
+              roughness={0.8}
+            />
+          </mesh>
+          
+          <mesh position={[0, 8, 2]} castShadow>
+            <planeGeometry args={[8, 10]} />
+            <meshStandardMaterial
+              color="#B71C1C"
+              side={THREE.DoubleSide}
+              roughness={0.8}
+            />
+          </mesh>
+        </group>
+      )}
       
       {/* Health indicator (changes color based on health) */}
-      <mesh position={[0, -1.6, 0]}>
-        <boxGeometry args={[6, 0.1, 12]} />
+      <mesh position={[0, -2, 0]}>
+        <boxGeometry args={[8, 0.1, 15]} />
         <meshStandardMaterial 
           color={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
           emissive={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
@@ -342,11 +344,23 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
         />
       </mesh>
       
-      {/* Cannons on the sides */}
-      <Cannon position={[-3, 1, -2]} rotation={[0, -Math.PI/2, 0]} />
-      <Cannon position={[-3, 1, 2]} rotation={[0, -Math.PI/2, 0]} />
-      <Cannon position={[3, 1, -2]} rotation={[0, Math.PI/2, 0]} />
-      <Cannon position={[3, 1, 2]} rotation={[0, Math.PI/2, 0]} />
+      {/* Cannons - port side (left) */}
+      {[-6, -3, 0, 3, 6].map((z, i) => (
+        <Cannon
+          key={`port-${i}`}
+          position={[-3.5, 0.8, z]}
+          rotation={[0, -Math.PI / 2, 0]}
+        />
+      ))}
+      
+      {/* Cannons - starboard side (right) */}
+      {[-6, -3, 0, 3, 6].map((z, i) => (
+        <Cannon
+          key={`starboard-${i}`}
+          position={[3.5, 0.8, z]}
+          rotation={[0, Math.PI / 2, 0]}
+        />
+      ))}
       
       {/* Render cannonballs */}
       {cannonBalls.current.map((ball) => (
@@ -355,8 +369,8 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
           position={ball.position}
           castShadow
         >
-          <sphereGeometry args={[0.5, 16, 16]} />
-          <meshStandardMaterial color="#333" roughness={0.8} />
+          <sphereGeometry args={[0.8, 16, 16]} />
+          <meshStandardMaterial color="#222" roughness={0.7} metalness={0.5} />
         </mesh>
       ))}
     </group>

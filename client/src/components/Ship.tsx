@@ -321,7 +321,17 @@ const Ship = () => {
   // Make sure model is loaded
   useEffect(() => {
     if (model) {
-      console.log("Ship model loaded successfully");
+      console.log("Ship model loaded successfully", model);
+      
+      // Debug model structure
+      if (model.children) {
+        console.log("Model children:", model.children.length);
+        // Use a regular for loop to avoid TypeScript errors
+        for (let i = 0; i < model.children.length; i++) {
+          console.log(`Child ${i}:`, model.children[i]);
+        }
+      }
+      
       setModelLoaded(true);
     }
   }, [model]);
@@ -334,8 +344,9 @@ const Ship = () => {
       {/* 3D Ship Model */}
       {modelLoaded && shipModel ? (
         <group 
-          scale={[2.5, 2.5, 2.5]} 
+          scale={[20, 20, 20]} 
           rotation={[0, Math.PI, 0]}
+          position={[0, -1, 0]} // Lower the model to match water level
         >
           <primitive object={shipModel} castShadow receiveShadow />
         </group>
@@ -354,26 +365,26 @@ const Ship = () => {
       )}
       
       {/* Cannons - port side (left) */}
-      {[-4, -2, 0, 2, 4].map((z, i) => (
+      {[-6, -3, 0, 3, 6].map((z, i) => (
         <Cannon
           key={`port-${i}`}
-          position={[-3.1, 0.5, z]}
+          position={[-3.5, 0.8, z]}
           rotation={[0, -Math.PI / 2, 0]}
         />
       ))}
       
       {/* Cannons - starboard side (right) */}
-      {[-4, -2, 0, 2, 4].map((z, i) => (
+      {[-6, -3, 0, 3, 6].map((z, i) => (
         <Cannon
           key={`starboard-${i}`}
-          position={[3.1, 0.5, z]}
+          position={[3.5, 0.8, z]}
           rotation={[0, Math.PI / 2, 0]}
         />
       ))}
       
       {/* Health indicator (changes color based on health) */}
-      <mesh position={[0, -1.6, 0]}>
-        <boxGeometry args={[6, 0.1, 12]} />
+      <mesh position={[0, -2, 0]}>
+        <boxGeometry args={[8, 0.1, 15]} />
         <meshStandardMaterial 
           color={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
           emissive={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
@@ -390,8 +401,8 @@ const Ship = () => {
           position={ball.position}
           castShadow
         >
-          <sphereGeometry args={[0.5, 16, 16]} />
-          <meshStandardMaterial color="#333" roughness={0.8} />
+          <sphereGeometry args={[0.8, 16, 16]} />
+          <meshStandardMaterial color="#222" roughness={0.7} metalness={0.5} />
         </mesh>
       ))}
     </group>
