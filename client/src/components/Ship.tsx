@@ -387,17 +387,19 @@ const Ship = () => {
         </>
       )}
       
-      {/* Health indicator (changes color based on health) */}
-      <mesh position={[0, -2, 0]}>
-        <boxGeometry args={[12, 0.1, 24]} />
-        <meshStandardMaterial 
-          color={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
-          emissive={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
-          emissiveIntensity={0.5}
-          transparent={true}
-          opacity={0.7}
-        />
-      </mesh>
+      {/* Health indicator (only shown when damaged) */}
+      {health < 100 && (
+        <mesh position={[0, -1, 0]}>
+          <boxGeometry args={[5, 0.05, 10]} />
+          <meshStandardMaterial 
+            color={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
+            emissive={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
+            emissiveIntensity={0.5}
+            transparent={true}
+            opacity={0.5}
+          />
+        </mesh>
+      )}
       
       {/* Render cannonballs */}
       {cannonBalls.current.map((ball) => (
