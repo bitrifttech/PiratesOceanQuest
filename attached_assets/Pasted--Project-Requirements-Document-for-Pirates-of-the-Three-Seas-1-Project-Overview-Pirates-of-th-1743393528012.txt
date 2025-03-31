@@ -1,0 +1,113 @@
+# Project Requirements Document for Pirates of the Three Seas
+
+## 1. Project Overview
+
+Pirates of the Three Seas is a browser-based, 3D pirate adventure game that offers players an easy-to-pick-up yet engaging naval combat experience. In the game, you control a single pirate ship sailing across a vast, procedurally generated ocean, engaging enemy pirate ships in action-packed battles. The game focuses on simple mechanics such as steering your ship, broadside cannon fire, and initiating boarding actions to capture or sink enemy vessels. With a blend of exploration, combat, and ship upgrades, the game creates an immersive and continuously evolving maritime adventure.
+
+The primary purpose of this game is to offer a fun and accessible pirate-themed experience without getting bogged down by overly complex controls or strategies. By emphasizing straightforward gameplay—fast-paced naval battles, dynamic encounters, and meaningful progression—the game aims to satisfy players looking for casual yet deep pirate adventures directly within their web browsers. Success will be measured by player engagement, user satisfaction with smooth controls, and the replayability driven by procedural ocean generation and progressive ship upgrades.
+
+## 2. In-Scope vs. Out-of-Scope
+
+**In-Scope:**
+
+*   A browser-based 3D game built on Three.js for rendering the visual experience.
+*   Gameplay that includes exploration, naval combat, and boarding for capturing enemy ships.
+*   Intuitive ship controls using keyboard, mouse, and mobile touch (W/S, A/D for movement; spacebar/mouse click for firing; B for boarding).
+*   A procedurally generated ocean environment with islands, reefs, and dynamic weather elements.
+*   A simple progression system where players collect loot to upgrade ship attributes like hull strength, cannon performance, and maneuverability.
+*   A minimal HUD displaying ship health, cannon reload status, and a mini-map.
+*   Local saving of player progress, ship upgrades, and loot.
+*   Basic enemy AI with straightforward behaviors such as patrolling and broadside combat engagement.
+
+**Out-of-Scope:**
+
+*   Multiplayer functionality and online leaderboards for the initial release (to be considered as a future expansion).
+*   Advanced tactical AI that involves complex strategies like flanking or advanced retreats.
+*   Extensive land exploration or any onshore gameplay; focus remains purely on naval encounters.
+*   Cloud-based saving features in the initial build; progress will be stored locally.
+*   Integration of additional control inputs beyond the specified keyboard, mouse, and mobile controls (no gamepad support for now).
+*   Overly realistic ocean physics; visuals and controls will favor simplicity over high-end simulation.
+
+## 3. User Flow
+
+When a player loads Pirates of the Three Seas in their web browser, they are first greeted by a themed title screen that exudes a classic pirate feel using deep blues, warm browns, and vintage fonts. This entry point offers clear interactive buttons for "Start Game," "Settings," and "Help." Using simple controls (keyboard, mouse, or touch), the user can easily navigate the menu options and begin their adventure with minimal hassle.
+
+After selecting "Start Game," the user is transitioned to a straightforward main menu where they can manage their ship customization, view local saved progress, or adjust settings. Once the gameplay begins, players find themselves immersed in a vast, procedurally generated ocean dotted with islands and dynamic weather. During their journey, they encounter enemy ships, maneuver their vessel to attack with cannons, and, when given the chance, initiate boarding actions using a designated button. Post-battle, players enter an upgrade menu to improve ship capabilities, providing continuous feedback and a robust, looping gameplay experience.
+
+## 4. Core Features (Bullet Points)
+
+*   **Navigator and Procedural Generation:**\
+    • Open ocean environment generated procedurally to ensure every playthrough is unique.\
+    • Dynamic scenery including islands, reefs, and optional weather effects.
+*   **Ship Controls:**\
+    • Intuitive keyboard controls (W/S for speed, A/D for steering) and mobile touch inputs.\
+    • Mouse-driven broadside cannon firing, with automatic side selection based on enemy positioning.\
+    • Simple camera controls for rotation and zoom to optimize the battle view.
+*   **Naval Combat Mechanics:**\
+    • Engaging combat where players position their ship, fire cannons, and manage reload times.\
+    • Visual damage indicators such as broken sails, smoking hulls, and visible hull damage.
+*   **Boarding and Capture System:**\
+    • Ability to initiate boarding (using a button press) when enemy ships are sufficiently weakened.\
+    • Quick calculation of boarding success based on ship health, crew capacity, and upgrades.\
+    • Capturing enemy ships adds them to the player’s fleet for alternate tactical advantages.
+*   **Progression and Upgrade System:**\
+    • Loot rewards (gold, materials, supplies) collected from sinking or capturing enemy ships.\
+    • Upgrades available for hull strength, cannon performance, and ship maneuverability.\
+    • Fleet management through capturing enemy vessels and swapping ships.
+*   **HUD and UI Design:**\
+    • Minimal yet informative HUD showing ship HP, cannon reload status, and a mini-map.\
+    • Accessible upgrades menu for real-time decisions and strategic gameplay enhancements.
+*   **Enemy AI Behavior:**\
+    • Basic enemy AI that patrols preset areas and engages the player aggressively on detection.\
+    • Simple tactical maneuvers to attempt broadside attacks, ensuring a fair and challenging combat experience.
+
+## 5. Tech Stack & Tools
+
+*   **Frontend:** • HTML, CSS, and JavaScript for building the web-based game interface.\
+    • Three.js for rendering the 3D graphics and generating the ocean environment.\
+    • WebGL for hardware-accelerated graphics within the browser.
+*   **Backend/Local Storage:** • Local storage for saving player progress, ship upgrades, and loot (for the initial release).
+*   **AI & Libraries:** • Utilize AI code assistance tools such as GPT o1, Claude 3.5 Sonnet, and Gemini 2.0 Flash to optimize code generation and debugging.
+*   **Development and Collaboration Tools:** • Cursor and Windsurf as advanced IDEs for real-time AI coding suggestions.\
+    • Lovable.dev and Replit as collaborative platforms for front-end and full-stack development.
+
+## 6. Non-Functional Requirements
+
+*   **Performance:**\
+    • The game should load quickly in modern browsers with minimal waiting time.\
+    • Ensure smooth navigation and rendering (aim for 60 FPS in standard web browser environments).
+*   **Security:**\
+    • Basic security measures for local storage; no sensitive user data will be handled initially.\
+    • Safe rendering of 3D content without exposing vulnerabilities in Three.js or WebGL.
+*   **Usability:**\
+    • Intuitive game controls with clear visual cues for actions such as firing, boarding, and upgrading ships.\
+    • The minimal HUD should allow players to focus on gameplay without confusion.
+*   **Compatibility:**\
+    • The game must work across modern web browsers, including Chrome, Firefox, Safari, and Edge.\
+    • Mobile touch support must be seamless for casual handheld play.
+
+## 7. Constraints & Assumptions
+
+*   **Constraints:**\
+    • The initial build is limited to a browser-based experience using Three.js, meaning reliance on modern browser capabilities and WebGL support.\
+    • Local storage will be used to save progress, limiting multi-device synchronization until a later cloud-based saving feature is implemented.\
+    • Enemy AI and physics are simplified for ease of play and development, potentially restricting deeper tactical complexity.
+*   **Assumptions:**\
+    • Players are expected to have basic familiarity with keyboard and mouse controls (or touch controls on mobile devices).\
+    • The game is designed primarily for casual play, meaning advanced simulations or hyper-realistic ship physics are not required.\
+    • Future multiplayer integration is a known extension and is not to burden the initial scope, but design choices should consider future expansion possibilities.
+
+## 8. Known Issues & Potential Pitfalls
+
+*   **Potential Performance Bottlenecks:**\
+    • Rendering a procedurally generated ocean with dynamic elements might stress lower-end devices. Regular profiling and optimization of Three.js scenes are essential to maintain a smooth frame rate.
+*   **Browser Compatibility Concerns:**\
+    • Different browsers may handle WebGL and local storage differently. Early testing across multiple platforms is necessary to mitigate these issues.
+*   **Simplified AI Limitations:**\
+    • Enemy AI behaviors are intentionally simple, which could result in repetitive battles or lackluster challenge over time. Balancing difficulty will require continuous testing and possible tweaks in future updates.
+*   **User Input Robustness:**\
+    • Handling simultaneous inputs (especially on mobile and browser environments) may lead to unexpected interactions. Implementing a robust input management system is crucial.
+*   **Expansion Readiness:**\
+    • While multiplayer and cloud saving are out-of-scope for the initial release, laying a minimal architectural foundation now for future integrations (like modular code structure) is important to avoid heavy refactoring later.
+
+This Project Requirements Document encompasses all the necessary details for the AI model to reference during subsequent project phases, ensuring there is no ambiguity in the intended gameplay, technical considerations, and future scalability for Pirates of the Three Seas.
