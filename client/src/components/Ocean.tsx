@@ -1,15 +1,10 @@
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
-import { MeshStandardMaterial, Vector3 } from "three";
-import { useTexture } from "@react-three/drei";
+import { MeshStandardMaterial } from "three";
 import * as THREE from "three";
 
 const Ocean = () => {
   const meshRef = useRef<THREE.Mesh>(null);
-  const waterTexture = useTexture("/textures/water.jpg", (texture) => {
-    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(10, 10);
-  });
   
   // Calculate the size to cover a large area
   const oceanSize = 1000;
@@ -19,19 +14,18 @@ const Ocean = () => {
   const materialRef = useRef<MeshStandardMaterial>();
   const timeRef = useRef(0);
   
-  // Create the ocean material
+  // Create the ocean material without texture
   const material = useMemo(() => {
     const mat = new MeshStandardMaterial({
       color: "#0077BE",
       metalness: 0.1,
       roughness: 0.3,
-      map: waterTexture || undefined,
     });
     
     // Store ref for animation updates
     materialRef.current = mat;
     return mat;
-  }, [waterTexture]);
+  }, []);
   
   // Create a displacement map for waves
   const waveGeometry = useMemo(() => {
@@ -87,10 +81,11 @@ const Ocean = () => {
     
     positionAttr.needsUpdate = true;
     
-    // Update texture offset for flowing effect
-    if (waterTexture) {
-      waterTexture.offset.x = timeRef.current * 0.05;
-      waterTexture.offset.y = timeRef.current * 0.05;
+    // Apply a subtle color shift based on time for a water shimmering effect
+    if (materialRef.current) {
+      const baseColor = new THREE.Color("#0077BE");
+      const shimmerAmount = (Math.sin(timeRef.current * 0.1) * 0.05) + 0.95;
+      materialRef.current.color.copy(baseColor).multiplyScalar(shimmerAmount);
     }
   });
   
