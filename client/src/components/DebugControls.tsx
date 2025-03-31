@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import * as THREE from 'three';
-import { useThree } from '@react-three/fiber';
 
 // Styling
 const panelStyle: React.CSSProperties = {
@@ -61,18 +59,9 @@ const DebugControls: React.FC<DebugControlsProps> = ({
   initialWaveHeight,
   initialWaveSpeed,
 }) => {
-  const [isVisible, setIsVisible] = useState(false);
   const [shipHeight, setShipHeight] = useState(initialShipHeight);
   const [waveHeight, setWaveHeight] = useState(initialWaveHeight);
   const [waveSpeed, setWaveSpeed] = useState(initialWaveSpeed);
-  
-  // Camera controls
-  const { camera } = useThree();
-  const [cameraPosition, setCameraPosition] = useState({
-    x: camera.position.x,
-    y: camera.position.y,
-    z: camera.position.z,
-  });
 
   const handleShipHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newHeight = parseFloat(e.target.value);
@@ -92,47 +81,9 @@ const DebugControls: React.FC<DebugControlsProps> = ({
     onUpdateWaterParams({ waveHeight, waveSpeed: newSpeed });
   };
 
-  const handleCameraChange = (axis: 'x' | 'y' | 'z', value: number) => {
-    const newPosition = { ...cameraPosition, [axis]: value };
-    setCameraPosition(newPosition);
-    
-    // Update the actual camera position
-    camera.position.set(newPosition.x, newPosition.y, newPosition.z);
-  };
-
-  const resetCamera = () => {
-    // Default camera position
-    const defaultPosition = { x: 0, y: 40, z: 40 };
-    setCameraPosition(defaultPosition);
-    camera.position.set(defaultPosition.x, defaultPosition.y, defaultPosition.z);
-    camera.lookAt(new THREE.Vector3(0, 0, 0));
-  };
-
-  if (!isVisible) {
-    return (
-      <button 
-        onClick={() => setIsVisible(true)} 
-        style={{ 
-          ...buttonStyle, 
-          position: 'absolute', 
-          top: '10px', 
-          left: '10px',
-          zIndex: 1000,
-          width: 'auto',
-        }}
-      >
-        Show Debug Controls
-      </button>
-    );
-  }
-
   return (
     <div style={panelStyle}>
       <h2 style={{ margin: '0 0 15px 0', fontSize: '18px' }}>Debug Controls</h2>
-      
-      <button onClick={() => setIsVisible(false)} style={buttonStyle}>
-        Hide Controls
-      </button>
       
       <div style={sliderContainer}>
         <label style={sliderLabel}>
@@ -178,57 +129,10 @@ const DebugControls: React.FC<DebugControlsProps> = ({
           style={{ width: '100%' }}
         />
       </div>
-
-      <h3 style={{ margin: '15px 0 10px 0', fontSize: '16px' }}>Camera Position</h3>
       
-      <div style={sliderContainer}>
-        <label style={sliderLabel}>
-          Camera X <span style={valueDisplay}>{cameraPosition.x.toFixed(1)}</span>
-        </label>
-        <input
-          type="range"
-          min="-100"
-          max="100"
-          step="1"
-          value={cameraPosition.x}
-          onChange={(e) => handleCameraChange('x', parseFloat(e.target.value))}
-          style={{ width: '100%' }}
-        />
-      </div>
-
-      <div style={sliderContainer}>
-        <label style={sliderLabel}>
-          Camera Y <span style={valueDisplay}>{cameraPosition.y.toFixed(1)}</span>
-        </label>
-        <input
-          type="range"
-          min="5"
-          max="100"
-          step="1"
-          value={cameraPosition.y}
-          onChange={(e) => handleCameraChange('y', parseFloat(e.target.value))}
-          style={{ width: '100%' }}
-        />
-      </div>
-
-      <div style={sliderContainer}>
-        <label style={sliderLabel}>
-          Camera Z <span style={valueDisplay}>{cameraPosition.z.toFixed(1)}</span>
-        </label>
-        <input
-          type="range"
-          min="-100"
-          max="100"
-          step="1"
-          value={cameraPosition.z}
-          onChange={(e) => handleCameraChange('z', parseFloat(e.target.value))}
-          style={{ width: '100%' }}
-        />
-      </div>
-
-      <button onClick={resetCamera} style={{...buttonStyle, backgroundColor: '#4caf50'}}>
-        Reset Camera
-      </button>
+      <p style={{ fontSize: '12px', marginTop: '15px', color: '#aaa' }}>
+        Note: Camera controls were removed as they need to be implemented within the 3D Canvas.
+      </p>
     </div>
   );
 };
