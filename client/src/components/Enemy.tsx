@@ -311,19 +311,63 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
           // Log exact position for debugging
           console.log(`Enemy cannon at: (${cannonPosX.toFixed(2)}, ${cannonPosY.toFixed(2)}, ${cannonPosZ.toFixed(2)})`);
           
-          // Add randomness to firing direction for more realistic spread
-          const accuracy = 0.9; // 1.0 = perfect aim
-          const spreadX = (Math.random() - 0.5) * (1 - accuracy) * 0.2;
-          const spreadZ = (Math.random() - 0.5) * (1 - accuracy) * 0.2;
+          // Determine position type (front, middle, back) based on numerical offset
+          // rather than using string comparisons
           
-          // Add jitter to direction for more realistic aiming
-          const fireDirection = directionToPlayer.clone().add(new THREE.Vector3(spreadX, 0, spreadZ)).normalize();
+          // Get the offset value for this cannon
+          const offsetValue = cannonPosition.offset;
           
-          // Add the cannonball to the list
+          // Simple numerical checks to determine cannon location type
+          let cannonLocationType = '';
+          if (offsetValue < -2) {
+            cannonLocationType = 'front';
+          } else if (offsetValue > 2) {
+            cannonLocationType = 'back';
+          } else {
+            cannonLocationType = 'middle';
+          }
+          
+          // Create spread angle based on the cannon's location
+          // This creates the spreading/fan effect as cannonballs fly
+          let longSpreadAngle = 0;
+          
+          // Use simple string equality to check the location type
+          if (cannonLocationType === 'front') {
+            longSpreadAngle = -0.1; // Front cannon angles slightly backward
+          } else if (cannonLocationType === 'back') {
+            longSpreadAngle = 0.1;  // Back cannon angles slightly forward
+          }
+          // Middle cannons stay at 0 (fire straight)
+          
+          // Create a rotation matrix to apply the spread angle
+          const spreadMatrix = new THREE.Matrix4().makeRotationY(longSpreadAngle);
+          
+          // Create base direction with upward arc component (y=0.15)
+          const baseDir = directionToPlayer.clone();
+          baseDir.y = 0.15; // Add upward component for arcing trajectory
+          
+          // Apply the spread rotation
+          baseDir.applyMatrix4(spreadMatrix);
+          
+          // Add a small random deviation for realism
+          const accuracy = 0.95; // Higher accuracy (0.9 to 0.95)
+          const spreadX = (Math.random() - 0.5) * (1 - accuracy) * 0.1;
+          const spreadZ = (Math.random() - 0.5) * (1 - accuracy) * 0.1;
+          
+          // Apply the random deviation and normalize
+          const fireDirection = baseDir.add(new THREE.Vector3(spreadX, 0, spreadZ)).normalize();
+          
+          // Log the firing parameters for debugging
+          console.log(`Enemy cannon (${cannonLocationType}) firing: 
+            Position: (${cannonPosX.toFixed(1)}, ${cannonPosY.toFixed(1)}, ${cannonPosZ.toFixed(1)})
+            Direction: (${fireDirection.x.toFixed(2)}, ${fireDirection.y.toFixed(2)}, ${fireDirection.z.toFixed(2)})`
+          );
+          
+          // Add the cannonball to the list with the new direction
           cannonBalls.current.push({
             position: cannonBallPosition,
             direction: fireDirection,
-            life: 2, // Seconds of life
+            life: 2.5, // Slightly longer life to match player's cannonballs
             id: cannonBallId.current++
           });
         });
