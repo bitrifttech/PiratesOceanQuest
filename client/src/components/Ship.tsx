@@ -138,51 +138,32 @@ const Ship = () => {
       );
       
       // Configure horizontal cannon positions along the ship's sides
-      // All at similar height levels but spread horizontally
+      // All at the same height level but spread horizontally
       const cannonPositions: CannonPosition[] = [];
       
-      // Define cannon ports at different positions along the ship
-      // Each deck has its own height and positions
+      // Single deck height for all cannons (just above water level)
+      const deckHeight = 0.8;  
       
-      // First deck - lowest level, 5 cannon ports along each side
-      const firstDeckHeight = 0.6;  // Just above water level
-      const firstDeckPositions = [-5.0, -2.5, 0.0, 2.5, 5.0]; // Front to back
+      // Define many horizontal positions along the ship length
+      const shipPositions = [
+        -6.0, // Front of ship
+        -4.5,
+        -3.0,
+        -1.5,
+        0.0,  // Middle of ship
+        1.5,
+        3.0,
+        4.5,
+        6.0   // Back of ship
+      ];
       
-      // Second deck - middle level, 4 cannon ports along each side
-      const secondDeckHeight = 2.0; // Middle deck
-      const secondDeckPositions = [-4.0, -1.3, 1.3, 4.0];    // Front to back
-      
-      // Third deck - top level, 3 cannon ports along each side
-      const thirdDeckHeight = 3.4;  // Upper deck
-      const thirdDeckPositions = [-3.0, 0.0, 3.0];          // Front to back
-      
-      // Add first deck cannons
-      firstDeckPositions.forEach(zOffset => {
+      // Add cannons along the length of the ship, all at the same height
+      shipPositions.forEach(zOffset => {
         cannonPositions.push({
-          deckHeight: firstDeckHeight,
-          rightOffset: 2.5,       // Distance from center on right side
-          leftOffset: 2.5,        // Distance from center on left side
-          zOffset: zOffset        // Position along the length of the ship
-        });
-      });
-      
-      // Add second deck cannons
-      secondDeckPositions.forEach(zOffset => {
-        cannonPositions.push({
-          deckHeight: secondDeckHeight,
-          rightOffset: 2.2,       // Slightly narrower at second deck
-          leftOffset: 2.2,        // Slightly narrower at second deck
-          zOffset: zOffset        // Position along the length of the ship
-        });
-      });
-      
-      // Add third deck cannons
-      thirdDeckPositions.forEach(zOffset => {
-        cannonPositions.push({
-          deckHeight: thirdDeckHeight,
-          rightOffset: 2.0,       // Narrowest at top deck
-          leftOffset: 2.0,        // Narrowest at top deck
-          zOffset: zOffset        // Position along the length of the ship
+          deckHeight: deckHeight,      // All cannons at the same height
+          rightOffset: 2.5,            // Distance from center on right side
+          leftOffset: 2.5,             // Distance from center on left side
+          zOffset: zOffset             // Position along the length of the ship
         });
       });
       

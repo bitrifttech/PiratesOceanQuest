@@ -242,13 +242,15 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
         const sideOffset = cross.y > 0 ? 2.5 : -2.5;
         
         // Choose from multiple cannon positions along the side
+        // All cannons at the same height level (matching player ship)
         const cannonPositions = [
           // Define several horizontal positions (z-offsets) along the ship
-          { height: 0.6, offset: -4.0 },  // Front cannon
-          { height: 0.6, offset: 0.0 },   // Middle cannon
-          { height: 0.6, offset: 4.0 },   // Rear cannon
-          { height: 2.0, offset: -2.0 },  // Upper deck front
-          { height: 2.0, offset: 2.0 }    // Upper deck rear
+          { height: 0.8, offset: -5.0 },  // Front cannon
+          { height: 0.8, offset: -3.0 },  // Front-mid cannon
+          { height: 0.8, offset: -1.0 },  // Middle-front cannon
+          { height: 0.8, offset: 1.0 },   // Middle-back cannon
+          { height: 0.8, offset: 3.0 },   // Back-mid cannon
+          { height: 0.8, offset: 5.0 }    // Back cannon
         ];
         
         // Choose a random cannon position
