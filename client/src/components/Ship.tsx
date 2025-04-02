@@ -11,8 +11,8 @@ import { checkCollision } from "../lib/helpers/collisionDetection";
 import Cannon from "./Cannon";
 import { useAudio } from "../lib/stores/useAudio";
 
-// Pre-load the cartoony ship model
-useGLTF.preload("/models/cartoon_pirate_ship.glb");
+// Pre-load the tall multi-deck pirate ship model
+useGLTF.preload("/models/tall_pirate_ship.glb");
 
 const Ship = () => {
   // Get player state and controls
@@ -118,12 +118,14 @@ const Ship = () => {
         Math.cos(rotation.y)
       );
       
-      // Create two cannon balls (one from each side)
+      // Create multiple cannon balls from different deck levels
+      
+      // First deck (bottom) cannons
       cannonBalls.current.push({
         position: new THREE.Vector3(
-          position.x + direction.z * 2, // Right side of ship
-          2.25, // Adjusted cannon height to match raised ship
-          position.z - direction.x * 2
+          position.x + direction.z * 2.5, // Right side of ship
+          1.5, // Bottom deck cannon height
+          position.z - direction.x * 2.5
         ),
         direction: new THREE.Vector3(-direction.z, 0, direction.x), // Perpendicular to ship direction (right)
         life: 2, // Seconds of life
@@ -132,9 +134,55 @@ const Ship = () => {
       
       cannonBalls.current.push({
         position: new THREE.Vector3(
-          position.x - direction.z * 2, // Left side of ship
-          2.25, // Adjusted cannon height to match raised ship
-          position.z + direction.x * 2
+          position.x - direction.z * 2.5, // Left side of ship
+          1.5, // Bottom deck cannon height
+          position.z + direction.x * 2.5
+        ),
+        direction: new THREE.Vector3(direction.z, 0, -direction.x), // Perpendicular to ship direction (left)
+        life: 2, // Seconds of life
+        id: cannonBallId.current++
+      });
+      
+      // Second deck (middle) cannons
+      cannonBalls.current.push({
+        position: new THREE.Vector3(
+          position.x + direction.z * 2.2, // Right side of ship
+          3.0, // Middle deck cannon height
+          position.z - direction.x * 2.2
+        ),
+        direction: new THREE.Vector3(-direction.z, 0, direction.x), // Perpendicular to ship direction (right)
+        life: 2, // Seconds of life
+        id: cannonBallId.current++
+      });
+      
+      cannonBalls.current.push({
+        position: new THREE.Vector3(
+          position.x - direction.z * 2.2, // Left side of ship
+          3.0, // Middle deck cannon height
+          position.z + direction.x * 2.2
+        ),
+        direction: new THREE.Vector3(direction.z, 0, -direction.x), // Perpendicular to ship direction (left)
+        life: 2, // Seconds of life
+        id: cannonBallId.current++
+      });
+      
+      // Third deck (top) cannons
+      cannonBalls.current.push({
+        position: new THREE.Vector3(
+          position.x + direction.z * 2.0, // Right side of ship
+          4.5, // Top deck cannon height
+          position.z - direction.x * 2.0
+        ),
+        direction: new THREE.Vector3(-direction.z, 0, direction.x), // Perpendicular to ship direction (right)
+        life: 2, // Seconds of life
+        id: cannonBallId.current++
+      });
+      
+      cannonBalls.current.push({
+        position: new THREE.Vector3(
+          position.x - direction.z * 2.0, // Left side of ship
+          4.5, // Top deck cannon height
+          position.z + direction.x * 2.0
         ),
         direction: new THREE.Vector3(direction.z, 0, -direction.x), // Perpendicular to ship direction (left)
         life: 2, // Seconds of life
@@ -315,8 +363,8 @@ const Ship = () => {
     }
   });
 
-  // Load the new cartoony 3D model
-  const { scene: model } = useGLTF("/models/cartoon_pirate_ship.glb") as any;
+  // Load the new tall pirate ship 3D model with multiple decks and cannons
+  const { scene: model } = useGLTF("/models/tall_pirate_ship.glb") as any;
   const [modelLoaded, setModelLoaded] = useState(false);
   const shipModelRef = useRef<THREE.Group>(null);
 
@@ -346,9 +394,9 @@ const Ship = () => {
       {/* 3D Ship Model */}
       {modelLoaded && shipModel ? (
         <group 
-          scale={[32, 16, 32]} 
+          scale={[4.0, 4.0, 4.0]} 
           rotation={[0, Math.PI, 0]}
-          position={[0, useGameState.getState().shipHeight, 0]} // Use dynamic ship height
+          position={[0, useGameState.getState().shipHeight - 2.0, 0]} // Lower position to better show multiple decks
         >
           <primitive object={shipModel} castShadow receiveShadow />
         </group>

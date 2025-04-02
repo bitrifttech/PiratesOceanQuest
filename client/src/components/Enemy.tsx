@@ -9,8 +9,8 @@ import { useGameState } from "../lib/stores/useGameState";
 import { checkCollision } from "../lib/helpers/collisionDetection";
 import Cannon from "./Cannon";
 
-// Preload the cartoony ship model
-useGLTF.preload("/models/cartoon_pirate_ship.glb");
+// Preload the tall multi-deck pirate ship model
+useGLTF.preload("/models/tall_pirate_ship.glb");
 
 interface EnemyProps {
   id: string;
@@ -28,8 +28,8 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     state: "patrol" as "patrol" | "chase" | "attack"
   });
   
-  // Load cartoony ship model
-  const { scene: model } = useGLTF("/models/cartoon_pirate_ship.glb") as any;
+  // Load tall multi-deck pirate ship model
+  const { scene: model } = useGLTF("/models/tall_pirate_ship.glb") as any;
   const [modelLoaded, setModelLoaded] = useState(false);
   
   // Textures
@@ -293,22 +293,36 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       {/* 3D Ship Model - with red color overlay for enemies */}
       {modelLoaded && shipModel ? (
         <group 
-          scale={[32, 16, 32]} 
+          scale={[4.0, 4.0, 4.0]} 
           rotation={[0, Math.PI, 0]}
-          position={[0, useGameState.getState().shipHeight, 0]} // Use dynamic ship height
+          position={[0, useGameState.getState().shipHeight - 2.0, 0]} // Lower position to better show multiple decks
         >
           <primitive object={shipModel} castShadow receiveShadow />
           
-          {/* Red overlay to distinguish enemy ships */}
-          <mesh position={[0, 0.2, 0]} scale={[0.5, 2, 0.5]}>
-            <boxGeometry args={[0.3, 5, 0.8]} />
+          {/* Red flag to distinguish enemy ships */}
+          <mesh position={[0, 4.5, 0]} rotation={[0, 0, 0]}>
+            <boxGeometry args={[0.1, 3, 1.8]} />
             <meshStandardMaterial 
               color="#B71C1C" 
               transparent={true} 
               opacity={1.0} 
               emissive="#B71C1C"
-              emissiveIntensity={1.0}
+              emissiveIntensity={0.8}
             />
+          </mesh>
+          
+          {/* Skull and crossbones symbol on flag */}
+          <mesh position={[0.1, 4.5, 0]} rotation={[0, 0, 0]}>
+            <planeGeometry args={[1.5, 1.2]} />
+            <meshStandardMaterial 
+              color="white" 
+              transparent={true} 
+              opacity={1.0} 
+              alphaTest={0.5}
+              side={THREE.DoubleSide}
+            >
+              <primitive attach="map" object={new THREE.TextureLoader().load('/textures/skull.png')} />
+            </meshStandardMaterial>
           </mesh>
         </group>
       ) : (
