@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { SCALE } from "../lib/constants";
 
 interface CannonFireEffectProps {
   position: THREE.Vector3;
@@ -32,7 +33,7 @@ const CannonFireEffect = ({ position, direction, onComplete }: CannonFireEffectP
     // Create fire particles
     for (let i = 0; i < 15; i++) {
       const particleMesh = new THREE.Mesh(
-        new THREE.SphereGeometry(0.15 + Math.random() * 0.15, 8, 8),
+        new THREE.SphereGeometry((0.15 + Math.random() * 0.15) * SCALE.EFFECTS.FIRE, 8, 8),
         new THREE.MeshStandardMaterial({
           color: new THREE.Color(Math.random() < 0.3 ? 0xffa500 : 0xff4500),
           emissive: new THREE.Color(Math.random() < 0.3 ? 0xffa500 : 0xff4500),
@@ -81,7 +82,7 @@ const CannonFireEffect = ({ position, direction, onComplete }: CannonFireEffectP
     // Create smoke particles
     for (let i = 0; i < 8; i++) {
       const smokeMesh = new THREE.Mesh(
-        new THREE.SphereGeometry(0.25 + Math.random() * 0.5, 8, 8),
+        new THREE.SphereGeometry((0.25 + Math.random() * 0.5) * SCALE.EFFECTS.SMOKE, 8, 8),
         new THREE.MeshStandardMaterial({
           color: new THREE.Color(0x444444),
           transparent: true,
@@ -91,7 +92,7 @@ const CannonFireEffect = ({ position, direction, onComplete }: CannonFireEffectP
       
       // Position slightly offset from the fire
       smokeMesh.position.copy(position);
-      smokeMesh.position.add(dirNormalized.clone().multiplyScalar(0.3));
+      smokeMesh.position.add(dirNormalized.clone().multiplyScalar(0.3 * SCALE.EFFECTS.POSITION_OFFSET));
       
       // Random directions but generally following the cannon direction
       const smokeDir = dirNormalized.clone();

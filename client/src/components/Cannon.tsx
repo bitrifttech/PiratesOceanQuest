@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import * as THREE from "three";
 import { useTexture } from "@react-three/drei";
+import { SCALE, MODEL_ADJUSTMENT } from "../lib/constants";
 
 interface CannonProps {
   position: [number, number, number];
@@ -15,8 +16,11 @@ const Cannon = ({ position, rotation }: CannonProps) => {
   woodTexture.wrapS = woodTexture.wrapT = THREE.RepeatWrapping;
   woodTexture.repeat.set(1, 1);
   
+  // Calculate the standardized scale for cannons
+  const cannonScale = SCALE.CANNON * MODEL_ADJUSTMENT.CANNON;
+  
   return (
-    <group ref={cannonRef} position={position} rotation={rotation}>
+    <group ref={cannonRef} position={position} rotation={rotation} scale={[cannonScale, cannonScale, cannonScale]}>
       {/* Cannon barrel */}
       <mesh castShadow position={[0, 0, 0.2]}>
         <cylinderGeometry args={[0.4, 0.5, 2.5, 16]} />

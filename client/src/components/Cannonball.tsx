@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { Trail } from "@react-three/drei";
+import { SCALE, MODEL_ADJUSTMENT } from "../lib/constants";
 
 interface CannonballProps {
   position: THREE.Vector3;
@@ -110,6 +111,11 @@ const Cannonball = ({
       <mesh 
         ref={ballRef}
         castShadow
+        scale={[
+          SCALE.CANNONBALL * MODEL_ADJUSTMENT.CANNONBALL, 
+          SCALE.CANNONBALL * MODEL_ADJUSTMENT.CANNONBALL, 
+          SCALE.CANNONBALL * MODEL_ADJUSTMENT.CANNONBALL
+        ]}
       >
         <sphereGeometry args={[0.8, 16, 16]} />
         <meshStandardMaterial 
@@ -122,9 +128,9 @@ const Cannonball = ({
         
         {/* Trail effect that follows the cannonball */}
         <Trail
-          width={1.5}
+          width={1.5 * SCALE.EFFECTS.TRAIL}
           color={'#777777'}
-          length={8}
+          length={8 * SCALE.EFFECTS.TRAIL_LENGTH}
           decay={1}
           local={false}
           stride={0}

@@ -11,6 +11,9 @@ import HelpMenu from "./components/HelpMenu";
 import UpgradeMenu from "./components/UpgradeMenu";
 import GameUI from "./components/GameUI";
 import DebugControls from "./components/DebugControls";
+import ModelTestScene from "./components/ModelTestScene";
+import { MODEL_ADJUSTMENT } from "./lib/constants";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "@fontsource/inter";
 
 // Define control keys for the game
@@ -77,55 +80,76 @@ function App() {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden relative">
-      <KeyboardControls map={controlsMap}>
-        {/* Title Screen */}
-        {gameState === 'title' && <TitleScreen />}
+    <Router>
+      <Routes>
+        {/* Model Test Route */}
+        <Route path="/model-test" element={<ModelTestScene modelPath="/models/base_pirate_ship.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.SHIP} />} />
+        <Route path="/model-test/ship" element={<ModelTestScene modelPath="/models/base_pirate_ship.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.SHIP} />} />
+        <Route path="/model-test/tropical" element={<ModelTestScene modelPath="/models/tropical_island.glb" modelScale={3.0} modelAdjustment={MODEL_ADJUSTMENT.TROPICAL} />} />
+        <Route path="/model-test/mountain" element={<ModelTestScene modelPath="/models/mountain_island.glb" modelScale={5.0} modelAdjustment={MODEL_ADJUSTMENT.MOUNTAIN} />} />
+        <Route path="/model-test/rocks" element={<ModelTestScene modelPath="/models/rock_formation.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.ROCKS} />} />
         
-        {/* Main Menu */}
-        {gameState === 'menu' && <MainMenu />}
-        
-        {/* Settings Menu */}
-        {gameState === 'settings' && <SettingsMenu />}
-        
-        {/* Help Menu */}
-        {gameState === 'help' && <HelpMenu />}
-        
-        {/* Upgrade Menu */}
-        {gameState === 'upgrade' && <UpgradeMenu />}
-        
-        {/* Game Canvas - Only render when playing */}
-        {gameState === 'playing' && (
-          <>
-            <Canvas
-              shadows
-              camera={{
-                position: [0, 15, 30],
-                fov: 60,
-                near: 0.1,
-                far: 1000
-              }}
-              gl={{
-                antialias: true,
-                powerPreference: "default"
-              }}
-            >
-              <color attach="background" args={["#89CFF0"]} />
-              <fog attach="fog" args={["#89CFF0", 50, 200]} />
+        {/* Main Game Route */}
+        <Route path="*" element={
+          <div className="h-screen w-screen overflow-hidden relative">
+            <KeyboardControls map={controlsMap}>
+              {/* Title Screen */}
+              {gameState === 'title' && <TitleScreen />}
               
-              <Suspense fallback={null}>
-                <Game />
-              </Suspense>
-            </Canvas>
+              {/* Main Menu */}
+              {gameState === 'menu' && <MainMenu />}
+              
+              {/* Settings Menu */}
+              {gameState === 'settings' && <SettingsMenu />}
+              
+              {/* Help Menu */}
+              {gameState === 'help' && <HelpMenu />}
+              
+              {/* Upgrade Menu */}
+              {gameState === 'upgrade' && <UpgradeMenu />}
+              
+              {/* Game Canvas - Only render when playing */}
+              {gameState === 'playing' && (
+                <>
+                  <Canvas
+                    shadows
+                    camera={{
+                      position: [0, 15, 30],
+                      fov: 60,
+                      near: 0.1,
+                      far: 1000
+                    }}
+                    gl={{
+                      antialias: true,
+                      powerPreference: "default"
+                    }}
+                  >
+                    <color attach="background" args={["#89CFF0"]} />
+                    <fog attach="fog" args={["#89CFF0", 50, 200]} />
+                    
+                    <Suspense fallback={null}>
+                      <Game />
+                    </Suspense>
+                  </Canvas>
+                  
+                  {/* Game UI overlay */}
+                  <GameUI />
+                  
+                  {/* Game provides its own debug controls */}
+                </>
+              )}
+            </KeyboardControls>
             
-            {/* Game UI overlay */}
-            <GameUI />
-            
-            {/* Game provides its own debug controls */}
-          </>
-        )}
-      </KeyboardControls>
-    </div>
+            {/* Model Test Navigation Button */}
+            <div className="absolute right-4 bottom-4 bg-blue-800 text-white rounded-lg overflow-hidden">
+              <a href="/model-test" className="block px-4 py-2 hover:bg-blue-700 transition-colors">
+                Model Viewer
+              </a>
+            </div>
+          </div>
+        } />
+      </Routes>
+    </Router>
   );
 }
 

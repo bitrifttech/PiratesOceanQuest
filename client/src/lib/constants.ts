@@ -35,14 +35,18 @@ export const SCALE = {
     }
   },
   
-  // Projectile scaling
-  CANNONBALL: 0.02, // 0.5 BSU
+  // Weapon scaling
+  CANNON: 0.05,    // Cannon size (relative to BSU)
+  CANNONBALL: 0.02, // Cannonball size (0.5 BSU)
   
   // Decoration and effects scaling
   EFFECTS: {
     FIRE: 0.2,
     SMOKE: 0.3,
-    SPLASH: 0.2
+    SPLASH: 0.2,
+    TRAIL: 0.18,
+    TRAIL_LENGTH: 0.25,
+    POSITION_OFFSET: 1.5
   }
 };
 
@@ -51,7 +55,9 @@ export const MODEL_ADJUSTMENT = {
   SHIP: 24.0,     // Required multiplier to make ship model appropriate size
   TROPICAL: 8.0,  // Multiplier for tropical island models
   MOUNTAIN: 10.0, // Multiplier for mountain island models
-  ROCKS: 6.0      // Multiplier for rock formation models
+  ROCKS: 6.0,     // Multiplier for rock formation models
+  CANNON: 20.0,   // Multiplier for cannon models
+  CANNONBALL: 15.0 // Multiplier for cannonball models
 };
 
 // Position constants
