@@ -33,10 +33,10 @@ export const useGameState = create<GameStateStore>((set) => ({
   },
   
   // Initial parameters
-  shipHeight: 2.25,
-  waveHeight: 0.3,
+  shipHeight: 4.45, // Updated default ship height
+  waveHeight: 0.15, // Updated default wave height
   waveSpeed: 0.0006,
-  shipScale: 8.0, // Default ship scale (initial large value from previous setting)
+  shipScale: 24.0, // Updated default ship scale to maximum value
   
   // Update functions
   setShipHeight: (height) => {

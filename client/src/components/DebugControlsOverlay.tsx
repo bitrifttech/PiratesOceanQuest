@@ -11,8 +11,10 @@ export const DebugControlsOverlay: React.FC<DebugControlsOverlayProps> = ({ cont
   const shipHeight = useGameState((state) => state.shipHeight);
   const waveHeight = useGameState((state) => state.waveHeight);
   const waveSpeed = useGameState((state) => state.waveSpeed);
+  const shipScale = useGameState((state) => state.shipScale);
   const setShipHeight = useGameState((state) => state.setShipHeight);
   const setWaveParameters = useGameState((state) => state.setWaveParameters);
+  const setShipScale = useGameState((state) => state.setShipScale);
 
   const container = document.getElementById(containerId);
   
@@ -22,9 +24,11 @@ export const DebugControlsOverlay: React.FC<DebugControlsOverlayProps> = ({ cont
     <DebugControls
       onUpdateShipHeight={setShipHeight}
       onUpdateWaterParams={setWaveParameters}
+      onUpdateShipScale={setShipScale}
       initialShipHeight={shipHeight}
       initialWaveHeight={waveHeight}
       initialWaveSpeed={waveSpeed}
+      initialShipScale={shipScale}
     />,
     container
   );
