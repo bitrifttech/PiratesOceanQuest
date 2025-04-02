@@ -13,10 +13,10 @@ interface IslandProps {
   type?: IslandType;
 }
 
-// Preload all island models
-useGLTF.preload('/models/tropical_island.glb');
-useGLTF.preload('/models/mountain_island.glb');
-useGLTF.preload('/models/rock_formation.glb');
+// Preload all island models with correct paths
+useGLTF.preload('./models/tropical_island.glb');
+useGLTF.preload('./models/mountain_island.glb');
+useGLTF.preload('./models/rock_formation.glb');
 
 const Island = ({ 
   position, 
@@ -27,23 +27,33 @@ const Island = ({
   const islandRef = useRef<THREE.Group>(null);
   const [modelLoaded, setModelLoaded] = useState(false);
   
-  // Get the proper model path based on island type
+  // Get the proper model path based on island type - NOTE: Use ./models instead of /models
   const modelPath = type === 'tropical' 
-    ? '/models/tropical_island.glb' 
+    ? './models/tropical_island.glb' 
     : type === 'mountain' 
-      ? '/models/mountain_island.glb' 
-      : '/models/rock_formation.glb';
+      ? './models/mountain_island.glb' 
+      : './models/rock_formation.glb';
   
-  // Load the specified model
-  const { scene: model } = useGLTF(modelPath) as GLTF & {
-    scene: THREE.Group
-  };
+  // Load the specified model with error handling
+  let model: THREE.Group | null = null;
+  try {
+    const gltf = useGLTF(modelPath) as GLTF & {
+      scene: THREE.Group
+    };
+    model = gltf.scene;
+    console.log(`Successfully loaded model from ${modelPath}`);
+  } catch (error) {
+    console.error(`Error loading model from ${modelPath}:`, error);
+    model = null;
+  }
   
   // Detect when model is loaded
   useEffect(() => {
     if (model) {
-      console.log(`Island model loaded: ${type}`);
+      console.log(`Island model loaded: ${type}`, model);
       setModelLoaded(true);
+    } else {
+      console.error(`Failed to load island model for type: ${type}`);
     }
   }, [model, type]);
   
@@ -91,7 +101,8 @@ const Island = ({
     >
       {modelLoaded && islandModel ? (
         // Render loaded 3D model with proper scaling
-        <group scale={[scale * 2.5, scale * 2.5, scale * 2.5]}>
+        // Increase scale significantly to make them more visible
+        <group scale={[scale * 6, scale * 6, scale * 6]}>
           <primitive object={islandModel} castShadow receiveShadow />
         </group>
       ) : (

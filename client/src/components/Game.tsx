@@ -206,27 +206,27 @@ const Game = () => {
   // Island positions and other environment features (pre-calculated for consistency)
   // Each feature has type, position, scale, and rotation
   const environmentFeatures = useRef<EnvironmentFeature[]>([
-    // Tropical islands
-    { type: 'tropical', x: 80, z: 100, scale: 1.5, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'tropical', x: -120, z: -50, scale: 1.2, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'tropical', x: 200, z: -150, scale: 0.8, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'tropical', x: -180, z: 220, scale: 1.0, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    // Tropical islands - positioned closer to the starting point
+    { type: 'tropical', x: 40, z: 40, scale: 1.5, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'tropical', x: -60, z: -30, scale: 1.2, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'tropical', x: 80, z: -50, scale: 0.8, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'tropical', x: -90, z: 70, scale: 1.0, rotation: [0, Math.random() * Math.PI * 2, 0] },
     
-    // Mountain islands
-    { type: 'mountain', x: 150, z: -120, scale: 1.8, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'mountain', x: -60, z: 150, scale: 2.0, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'mountain', x: 250, z: 220, scale: 2.2, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'mountain', x: -230, z: -180, scale: 1.7, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    // Mountain islands - medium distance
+    { type: 'mountain', x: 70, z: -60, scale: 1.8, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'mountain', x: -40, z: 80, scale: 2.0, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'mountain', x: 100, z: 90, scale: 2.2, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'mountain', x: -100, z: -80, scale: 1.7, rotation: [0, Math.random() * Math.PI * 2, 0] },
     
-    // Rock formations - more of these to add navigational hazards
-    { type: 'rocks', x: 40, z: 50, scale: 0.7, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: -30, z: 80, scale: 0.6, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: 70, z: -40, scale: 0.5, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: -90, z: -70, scale: 0.8, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: 120, z: 30, scale: 0.4, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: -50, z: -120, scale: 0.7, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: 10, z: 130, scale: 0.5, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: 180, z: 60, scale: 0.6, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    // Rock formations - much closer to create immediate obstacles
+    { type: 'rocks', x: 20, z: 25, scale: 0.7, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'rocks', x: -15, z: 30, scale: 0.6, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'rocks', x: 25, z: -20, scale: 0.5, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'rocks', x: -25, z: -25, scale: 0.8, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'rocks', x: 40, z: 15, scale: 0.4, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'rocks', x: -20, z: -40, scale: 0.7, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'rocks', x: 5, z: 45, scale: 0.5, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'rocks', x: 50, z: 30, scale: 0.6, rotation: [0, Math.random() * Math.PI * 2, 0] },
   ]);
 
   // Initialize game on first load
