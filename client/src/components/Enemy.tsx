@@ -293,15 +293,15 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       {/* 3D Ship Model - with red color overlay for enemies */}
       {modelLoaded && shipModel ? (
         <group 
-          scale={[4.0, 4.0, 4.0]} 
-          rotation={[0, Math.PI, 0]}
+          scale={[8.0, 8.0, 8.0]} 
+          rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
           position={[0, useGameState.getState().shipHeight - 2.0, 0]} // Lower position to better show multiple decks
         >
           <primitive object={shipModel} castShadow receiveShadow />
           
-          {/* Red flag to distinguish enemy ships */}
-          <mesh position={[0, 4.5, 0]} rotation={[0, 0, 0]}>
-            <boxGeometry args={[0.1, 3, 1.8]} />
+          {/* Red flag to distinguish enemy ships - adjusted for new rotation */}
+          <mesh position={[0, 6, 0]} rotation={[0, 0, 0]}>
+            <boxGeometry args={[0.1, 4, 2.5]} />
             <meshStandardMaterial 
               color="#B71C1C" 
               transparent={true} 
@@ -311,18 +311,17 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
             />
           </mesh>
           
-          {/* Skull and crossbones symbol on flag */}
-          <mesh position={[0.1, 4.5, 0]} rotation={[0, 0, 0]}>
-            <planeGeometry args={[1.5, 1.2]} />
+          {/* Skull and crossbones symbol on flag - adjusted for new rotation */}
+          <mesh position={[0.1, 6, 0]} rotation={[0, 0, 0]}>
+            <planeGeometry args={[2.0, 1.5]} />
             <meshStandardMaterial 
-              color="white" 
+              color="black" 
               transparent={true} 
               opacity={1.0} 
-              alphaTest={0.5}
+              emissive="white"
+              emissiveIntensity={0.5}
               side={THREE.DoubleSide}
-            >
-              <primitive attach="map" object={new THREE.TextureLoader().load('/textures/skull.png')} />
-            </meshStandardMaterial>
+            />
           </mesh>
         </group>
       ) : (

@@ -235,7 +235,8 @@ const Ship = () => {
     // Get current key states directly
     const keys = getKeys();
     
-    // Debug: Show current key states
+    // Debug: Show current key states (commented out to reduce console spam)
+    /*
     console.log("Current key states:", 
       JSON.stringify({
         forward: keys.forward,
@@ -246,6 +247,7 @@ const Ship = () => {
         board: keys.board
       })
     );
+    */
     
     // Current rotation (yaw only)
     const currentRotation = rotation.y;
@@ -254,12 +256,12 @@ const Ship = () => {
     let rotationDelta = 0;
     if (keys.leftward) {
       rotationDelta += 1.5 * delta;
-      console.log("Turning left");
+      // console.log("Turning left");
     }
     
     if (keys.rightward) {
       rotationDelta -= 1.5 * delta;
-      console.log("Turning right");
+      // console.log("Turning right");
     }
     
     // Update ship rotation
@@ -271,7 +273,7 @@ const Ship = () => {
     setRotation(newRotation);
     
     // Calculate direction vector based on rotation
-    // Ship model faces -Z direction by default, so direction vector should reflect that
+    // Adjusted directional calculations for new ship orientation (90 degree adjustment)
     const direction = new THREE.Vector3(
       Math.sin(newRotation.y),
       0,
@@ -284,27 +286,22 @@ const Ship = () => {
     // Check key states and apply acceleration
     if (keys.forward) {
       // Apply acceleration in the direction the ship is facing (W key should move forward)
-      const forwardForce = direction.clone().multiplyScalar(-10 * delta);
+      const forwardForce = direction.clone().multiplyScalar(-15 * delta); // Increased for better control with larger ship
       acceleration.add(forwardForce);
-      console.log("Accelerating forward:", direction, "Force:", forwardForce);
+      // console.log("Accelerating forward:", direction, "Force:", forwardForce);
     }
     
     if (keys.backward) {
       // Apply acceleration in the opposite direction the ship is facing (S key should move backward)
-      const backwardForce = direction.clone().multiplyScalar(5 * delta);
+      const backwardForce = direction.clone().multiplyScalar(7.5 * delta); // Increased for better control
       acceleration.add(backwardForce);
-      console.log("Accelerating backward:", direction, "Force:", backwardForce);
+      // console.log("Accelerating backward:", direction, "Force:", backwardForce);
     }
-    
-    // Log current velocity for debugging
-    console.log("Current velocity before update:", velocity);
     
     // Update velocity with acceleration and apply drag
     const newVelocity = velocity.clone()
       .add(acceleration)
       .multiplyScalar(0.95); // Apply drag
-    
-    console.log("New velocity after update:", newVelocity);
     
     setVelocity(newVelocity);
     
@@ -394,8 +391,8 @@ const Ship = () => {
       {/* 3D Ship Model */}
       {modelLoaded && shipModel ? (
         <group 
-          scale={[4.0, 4.0, 4.0]} 
-          rotation={[0, Math.PI, 0]}
+          scale={[8.0, 8.0, 8.0]} 
+          rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
           position={[0, useGameState.getState().shipHeight - 2.0, 0]} // Lower position to better show multiple decks
         >
           <primitive object={shipModel} castShadow receiveShadow />
