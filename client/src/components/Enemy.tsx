@@ -25,6 +25,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     patrolTimer: 0,
     patrolDirection: new THREE.Vector3(0, 0, 0),
     attackCooldown: 0,
+    collisionCooldown: 0, // Add collision cooldown
     state: "patrol" as "patrol" | "chase" | "attack"
   });
   
@@ -63,23 +64,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
   }[]>([]);
   let cannonBallId = useRef(0);
   
-  // Check for collision with player
-  useEffect(() => {
-    if (!playerPosition) return;
-    
-    const playerCollision = checkCollision(
-      playerPosition,
-      position,
-      6, // Player radius
-      6  // Enemy radius
-    );
-    
-    if (playerCollision) {
-      // Ships collided, damage both
-      playerTakeDamage(1);
-      damageEnemy(id, 1);
-    }
-  }, [id, position, playerPosition, playerTakeDamage, damageEnemy]);
+  // We'll handle collisions in the useFrame hook instead of here
   
   // Animation and AI behavior
   useFrame((_, delta) => {
@@ -271,6 +256,27 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       }
     }
     
+    // Update collision cooldown
+    state.collisionCooldown = Math.max(0, state.collisionCooldown - delta);
+    
+    // Check for collision with player with cooldown
+    const playerCollision = checkCollision(
+      playerPosition,
+      position,
+      6, // Player radius
+      6  // Enemy radius
+    );
+    
+    if (playerCollision && state.collisionCooldown <= 0) {
+      // Ships collided, damage both - but only on cooldown
+      console.log("Ship collision detected!");
+      playerTakeDamage(5);
+      damageEnemy(id, 5);
+      
+      // Set collision cooldown to 2 seconds
+      state.collisionCooldown = 2.0;
+    }
+    
     // Update cannonballs
     cannonBalls.current.forEach((ball, index) => {
       // Move the cannon ball
@@ -284,6 +290,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       // Check for collision with player
       if (checkCollision(ball.position, playerPosition, 1, 5)) {
         // Hit player!
+        console.log("Cannonball hit player!");
         playerTakeDamage(10);
         ball.life = 0; // Remove the ball
       }
