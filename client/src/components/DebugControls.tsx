@@ -119,7 +119,7 @@ const DebugControls: React.FC<DebugControlsProps> = ({
         <input
           type="range"
           min="2.0"
-          max="12.0"
+          max="24.0"
           step="0.5"
           value={shipScale}
           onChange={handleShipScaleChange}
