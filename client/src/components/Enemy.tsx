@@ -253,8 +253,24 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
           { height: 0.8, offset: 5.0 }    // Back cannon
         ];
         
-        // Choose a random cannon position
-        const cannonPosition = cannonPositions[Math.floor(Math.random() * cannonPositions.length)];
+        // Instead of a single random position, pick 3 evenly distributed positions
+        // This ensures cannon fire from different parts of the ship
+        const cannonsToFire = 3; // Number of cannons to fire per volley
+        const selectedIndices = [];
+        
+        // Calculate even distribution along ship length
+        for (let i = 0; i < cannonsToFire; i++) {
+          // Divide ship into sections and pick position from each section
+          const sectionSize = cannonPositions.length / cannonsToFire;
+          const baseIndex = Math.floor(i * sectionSize);
+          // Add slight randomness within the section
+          const randomOffset = Math.floor(Math.random() * (sectionSize * 0.8));
+          const index = Math.min(baseIndex + randomOffset, cannonPositions.length - 1);
+          selectedIndices.push(index);
+        }
+        
+        // Choose one of the selected positions for this specific shot
+        const cannonPosition = cannonPositions[selectedIndices[Math.floor(Math.random() * selectedIndices.length)]];
         
         // Calculate the longitudinal offset to position the cannon along ship's length
         const shipLongitudinalVector = new THREE.Vector3(

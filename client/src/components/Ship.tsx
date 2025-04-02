@@ -32,6 +32,7 @@ interface CannonPosition {
   rightOffset: number;
   leftOffset: number;
   zOffset: number;
+  side?: 'right' | 'left'; // Optional property for cannon side
 }
 
 // Pre-load the tall multi-deck pirate ship model
@@ -167,24 +168,44 @@ const Ship = () => {
         });
       });
       
-      // Select a subset of cannon positions to fire at once (based on cannon level)
-      // This is more realistic than firing all cannons simultaneously
-      const cannonsPerSide = 4; // Number of cannons to fire per side
+      // Number of cannons to fire per side
+      const cannonsPerSide = 4;
       
-      // Shuffle cannon positions for random distribution
-      const shuffledPositions = [...cannonPositions];
+      // Select evenly distributed positions along the ship's length
+      // Instead of random selection, we'll pick positions with even spacing
       
-      // Fisher-Yates shuffle algorithm for random selection
-      for (let i = shuffledPositions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffledPositions[i], shuffledPositions[j]] = [shuffledPositions[j], shuffledPositions[i]];
+      // Calculate even distribution of indices
+      const divisions = cannonPositions.length / cannonsPerSide;
+      const rightSideIndices = [];
+      const leftSideIndices = [];
+      
+      // Create evenly spaced indices covering the entire ship length
+      for (let i = 0; i < cannonsPerSide; i++) {
+        // Calculate index with some randomness but within specific segments
+        const baseIndex = Math.floor(i * divisions);
+        // Add a small random offset but stay within the segment
+        const randomOffset = Math.floor(Math.random() * (divisions * 0.8));
+        const index = Math.min(baseIndex + randomOffset, cannonPositions.length - 1);
+        
+        rightSideIndices.push(index);
+        leftSideIndices.push(index);
       }
       
-      // Take only the first N positions for each side
-      const selectedPositions = shuffledPositions.slice(0, cannonsPerSide * 2);
+      // Create the selected positions arrays with properly distributed indices
+      const selectedPositions: CannonPosition[] = [];
+      
+      // Add right side positions first
+      rightSideIndices.forEach(index => {
+        selectedPositions.push({...cannonPositions[index], side: 'right'});
+      });
+      
+      // Then add left side positions
+      leftSideIndices.forEach(index => {
+        selectedPositions.push({...cannonPositions[index], side: 'left'});
+      });
       
       // Create cannonballs and effects for selected cannon positions
-      selectedPositions.forEach((deck, index) => {
+      selectedPositions.forEach((deck) => {
         // Calculate longitudinal offset vector based on ship's direction
         // This positions cannons along the length of the ship
         const longitudinalOffset = new THREE.Vector3(
@@ -193,10 +214,8 @@ const Ship = () => {
           Math.cos(rotation.y + Math.PI/2) * deck.zOffset
         );
         
-        // Determine which side this cannon should fire from
-        const isRightSide = index < cannonsPerSide;
-        
-        if (isRightSide) {
+        // Use the side property from our selection algorithm
+        if (deck.side === 'right') {
           // Right side cannonball - positioned along ship length using longitudinal offset
           const rightPos = new THREE.Vector3(
             position.x + direction.z * deck.rightOffset + longitudinalOffset.x, // Right side + offset along ship
