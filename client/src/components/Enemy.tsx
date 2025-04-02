@@ -89,7 +89,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     enemyRef.current.position.copy(position);
     enemyRef.current.rotation.copy(rotation);
     
-    // Ship bobbing on waves with configurable height
+    // Ship bobbing on waves with configurable height - use the same settings as player ship
     const { shipHeight, waveHeight, waveSpeed, shipScale } = useGameState.getState();
     
     // Update model scale dynamically if it has changed
@@ -97,6 +97,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       enemyRef.current.children[0].scale.set(shipScale, shipScale, shipScale);
     }
     
+    // Update position with correct shipHeight
     enemyRef.current.position.y = Math.sin(Date.now() * waveSpeed + parseInt(id)) * waveHeight + shipHeight;
     enemyRef.current.rotation.x = Math.sin(Date.now() * (waveSpeed - 0.0001) + parseInt(id)) * 0.01;
     enemyRef.current.rotation.z = Math.cos(Date.now() * (waveSpeed - 0.0001) + parseInt(id)) * 0.01;
