@@ -90,7 +90,13 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     enemyRef.current.rotation.copy(rotation);
     
     // Ship bobbing on waves with configurable height
-    const { shipHeight, waveHeight, waveSpeed } = useGameState.getState();
+    const { shipHeight, waveHeight, waveSpeed, shipScale } = useGameState.getState();
+    
+    // Update model scale dynamically if it has changed
+    if (enemyRef.current.children[0] && modelLoaded) {
+      enemyRef.current.children[0].scale.set(shipScale, shipScale, shipScale);
+    }
+    
     enemyRef.current.position.y = Math.sin(Date.now() * waveSpeed + parseInt(id)) * waveHeight + shipHeight;
     enemyRef.current.rotation.x = Math.sin(Date.now() * (waveSpeed - 0.0001) + parseInt(id)) * 0.01;
     enemyRef.current.rotation.z = Math.cos(Date.now() * (waveSpeed - 0.0001) + parseInt(id)) * 0.01;
@@ -293,7 +299,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       {/* 3D Ship Model - with red color overlay for enemies */}
       {modelLoaded && shipModel ? (
         <group 
-          scale={[8.0, 8.0, 8.0]} 
+          scale={[useGameState.getState().shipScale, useGameState.getState().shipScale, useGameState.getState().shipScale]} // Use dynamic ship scale
           rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
           position={[0, useGameState.getState().shipHeight - 2.0, 0]} // Lower position to better show multiple decks
         >

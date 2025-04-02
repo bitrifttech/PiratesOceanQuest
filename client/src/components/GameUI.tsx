@@ -21,8 +21,10 @@ const GameUI = () => {
   const shipHeight = useGameState((state) => state.shipHeight);
   const waveHeight = useGameState((state) => state.waveHeight);
   const waveSpeed = useGameState((state) => state.waveSpeed);
+  const shipScale = useGameState((state) => state.shipScale); // Add ship scale
   const setShipHeight = useGameState((state) => state.setShipHeight);
   const setWaveParameters = useGameState((state) => state.setWaveParameters);
+  const setShipScale = useGameState((state) => state.setShipScale); // Add ship scale setter
   
   // Player state
   const playerHealth = usePlayer((state) => state.health);
@@ -226,9 +228,11 @@ const GameUI = () => {
           <DebugControls
             onUpdateShipHeight={setShipHeight}
             onUpdateWaterParams={setWaveParameters}
+            onUpdateShipScale={setShipScale}
             initialShipHeight={shipHeight}
             initialWaveHeight={waveHeight}
             initialWaveSpeed={waveSpeed}
+            initialShipScale={shipScale}
           />
         </div>
       )}

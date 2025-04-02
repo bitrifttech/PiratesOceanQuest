@@ -11,10 +11,12 @@ interface GameStateStore {
   shipHeight: number;
   waveHeight: number;
   waveSpeed: number;
+  shipScale: number; // Ship size scale factor
   
   // Update functions
   setShipHeight: (height: number) => void;
   setWaveParameters: (params: { waveHeight: number; waveSpeed: number }) => void;
+  setShipScale: (scale: number) => void; // Function to update ship scale
 }
 
 export const useGameState = create<GameStateStore>((set) => ({
@@ -34,6 +36,7 @@ export const useGameState = create<GameStateStore>((set) => ({
   shipHeight: 2.25,
   waveHeight: 0.3,
   waveSpeed: 0.0006,
+  shipScale: 8.0, // Default ship scale (initial large value from previous setting)
   
   // Update functions
   setShipHeight: (height) => {
@@ -47,5 +50,10 @@ export const useGameState = create<GameStateStore>((set) => ({
       waveSpeed: params.waveSpeed,
     });
     console.log(`Wave parameters updated: height=${params.waveHeight}, speed=${params.waveSpeed}`);
+  },
+  
+  setShipScale: (scale) => {
+    set({ shipScale: scale });
+    console.log(`Ship scale updated to: ${scale}`);
   },
 }));

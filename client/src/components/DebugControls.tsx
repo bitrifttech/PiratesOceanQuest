@@ -47,21 +47,26 @@ const valueDisplay: React.CSSProperties = {
 interface DebugControlsProps {
   onUpdateShipHeight: (height: number) => void;
   onUpdateWaterParams: (params: { waveHeight: number; waveSpeed: number }) => void;
+  onUpdateShipScale: (scale: number) => void; // New prop for updating ship scale
   initialShipHeight: number;
   initialWaveHeight: number;
   initialWaveSpeed: number;
+  initialShipScale: number; // New prop for initial ship scale
 }
 
 const DebugControls: React.FC<DebugControlsProps> = ({
   onUpdateShipHeight,
   onUpdateWaterParams,
+  onUpdateShipScale,
   initialShipHeight,
   initialWaveHeight,
   initialWaveSpeed,
+  initialShipScale,
 }) => {
   const [shipHeight, setShipHeight] = useState(initialShipHeight);
   const [waveHeight, setWaveHeight] = useState(initialWaveHeight);
   const [waveSpeed, setWaveSpeed] = useState(initialWaveSpeed);
+  const [shipScale, setShipScale] = useState(initialShipScale);
 
   const handleShipHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newHeight = parseFloat(e.target.value);
@@ -80,6 +85,13 @@ const DebugControls: React.FC<DebugControlsProps> = ({
     setWaveSpeed(newSpeed);
     onUpdateWaterParams({ waveHeight, waveSpeed: newSpeed });
   };
+  
+  // Handle ship scale changes
+  const handleShipScaleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newScale = parseFloat(e.target.value);
+    setShipScale(newScale);
+    onUpdateShipScale(newScale);
+  };
 
   return (
     <div style={panelStyle}>
@@ -96,6 +108,21 @@ const DebugControls: React.FC<DebugControlsProps> = ({
           step="0.05"
           value={shipHeight}
           onChange={handleShipHeightChange}
+          style={{ width: '100%' }}
+        />
+      </div>
+      
+      <div style={sliderContainer}>
+        <label style={sliderLabel}>
+          Ship Size <span style={valueDisplay}>{shipScale.toFixed(1)}</span>
+        </label>
+        <input
+          type="range"
+          min="2.0"
+          max="12.0"
+          step="0.5"
+          value={shipScale}
+          onChange={handleShipScaleChange}
           style={{ width: '100%' }}
         />
       </div>

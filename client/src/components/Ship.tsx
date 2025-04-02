@@ -235,6 +235,14 @@ const Ship = () => {
     // Get current key states directly
     const keys = getKeys();
     
+    // Get dynamic ship parameters from game state
+    const { shipHeight, waveHeight, waveSpeed, shipScale } = useGameState.getState();
+    
+    // Update model scale dynamically if it has changed
+    if (shipRef.current.children[0] && modelLoaded) {
+      shipRef.current.children[0].scale.set(shipScale, shipScale, shipScale);
+    }
+    
     // Debug: Show current key states (commented out to reduce console spam)
     /*
     console.log("Current key states:", 
@@ -391,7 +399,7 @@ const Ship = () => {
       {/* 3D Ship Model */}
       {modelLoaded && shipModel ? (
         <group 
-          scale={[8.0, 8.0, 8.0]} 
+          scale={[useGameState.getState().shipScale, useGameState.getState().shipScale, useGameState.getState().shipScale]} // Use dynamic ship scale
           rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
           position={[0, useGameState.getState().shipHeight - 2.0, 0]} // Lower position to better show multiple decks
         >
