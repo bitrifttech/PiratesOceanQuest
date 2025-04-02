@@ -9,7 +9,22 @@ import { useEnemies } from "../lib/stores/useEnemies";
 import { useGameState } from "../lib/stores/useGameState";
 import { checkCollision } from "../lib/helpers/collisionDetection";
 import Cannon from "./Cannon";
+import Cannonball from "./Cannonball";
+import CannonFireEffect from "./CannonFireEffect";
 import { useAudio } from "../lib/stores/useAudio";
+
+// Define types for our cannonball and effect tracking
+interface CannonballInfo {
+  id: number;
+  position: THREE.Vector3;
+  direction: THREE.Vector3;
+}
+
+interface CannonFireEffectInfo {
+  id: number;
+  position: THREE.Vector3;
+  direction: THREE.Vector3;
+}
 
 // Pre-load the tall multi-deck pirate ship model
 useGLTF.preload("/models/tall_pirate_ship.glb");
@@ -79,13 +94,9 @@ const Ship = () => {
     };
   }, [subscribeKeys]);
   
-  // Cannon balls
-  const cannonBalls = useRef<{
-    position: THREE.Vector3;
-    direction: THREE.Vector3;
-    life: number;
-    id: number;
-  }[]>([]);
+  // Track cannonballs and effects using our defined interfaces
+  const cannonballs = useRef<CannonballInfo[]>([]);
+  const cannonFireEffects = useRef<CannonFireEffectInfo[]>([]);
   let cannonBallId = useRef(0);
   
   // Initialize ship position if needed
@@ -118,78 +129,80 @@ const Ship = () => {
         Math.cos(rotation.y)
       );
       
-      // Create multiple cannon balls from different deck levels
+      // Cannon positions for different decks
+      const cannonPositions = [
+        // First deck (bottom) cannons
+        {
+          deckHeight: 1.5,
+          rightOffset: 2.5,
+          leftOffset: 2.5
+        },
+        // Second deck (middle) cannons
+        {
+          deckHeight: 3.0,
+          rightOffset: 2.2,
+          leftOffset: 2.2
+        },
+        // Third deck (top) cannons
+        {
+          deckHeight: 4.5,
+          rightOffset: 2.0,
+          leftOffset: 2.0
+        }
+      ];
       
-      // First deck (bottom) cannons
-      cannonBalls.current.push({
-        position: new THREE.Vector3(
-          position.x + direction.z * 2.5, // Right side of ship
-          1.5, // Bottom deck cannon height
-          position.z - direction.x * 2.5
-        ),
-        direction: new THREE.Vector3(-direction.z, 0, direction.x), // Perpendicular to ship direction (right)
-        life: 2, // Seconds of life
-        id: cannonBallId.current++
+      // Create cannonballs and effects for each deck level and side
+      cannonPositions.forEach(deck => {
+        // Right side cannonball
+        const rightPos = new THREE.Vector3(
+          position.x + direction.z * deck.rightOffset, // Right side of ship
+          deck.deckHeight, // Deck height
+          position.z - direction.x * deck.rightOffset
+        );
+        
+        // Right side cannon direction (perpendicular to ship)
+        const rightDir = new THREE.Vector3(-direction.z, 0, direction.x);
+        
+        // Add cannonball
+        cannonballs.current.push({
+          id: cannonBallId.current++,
+          position: rightPos.clone(),
+          direction: rightDir.clone()
+        });
+        
+        // Add cannon fire effect
+        cannonFireEffects.current.push({
+          id: cannonBallId.current++,
+          position: rightPos.clone(),
+          direction: rightDir.clone()
+        });
+        
+        // Left side cannonball
+        const leftPos = new THREE.Vector3(
+          position.x - direction.z * deck.leftOffset, // Left side of ship
+          deck.deckHeight, // Deck height
+          position.z + direction.x * deck.leftOffset
+        );
+        
+        // Left side cannon direction (perpendicular to ship)
+        const leftDir = new THREE.Vector3(direction.z, 0, -direction.x);
+        
+        // Add cannonball
+        cannonballs.current.push({
+          id: cannonBallId.current++,
+          position: leftPos.clone(),
+          direction: leftDir.clone()
+        });
+        
+        // Add cannon fire effect
+        cannonFireEffects.current.push({
+          id: cannonBallId.current++,
+          position: leftPos.clone(),
+          direction: leftDir.clone()
+        });
       });
       
-      cannonBalls.current.push({
-        position: new THREE.Vector3(
-          position.x - direction.z * 2.5, // Left side of ship
-          1.5, // Bottom deck cannon height
-          position.z + direction.x * 2.5
-        ),
-        direction: new THREE.Vector3(direction.z, 0, -direction.x), // Perpendicular to ship direction (left)
-        life: 2, // Seconds of life
-        id: cannonBallId.current++
-      });
-      
-      // Second deck (middle) cannons
-      cannonBalls.current.push({
-        position: new THREE.Vector3(
-          position.x + direction.z * 2.2, // Right side of ship
-          3.0, // Middle deck cannon height
-          position.z - direction.x * 2.2
-        ),
-        direction: new THREE.Vector3(-direction.z, 0, direction.x), // Perpendicular to ship direction (right)
-        life: 2, // Seconds of life
-        id: cannonBallId.current++
-      });
-      
-      cannonBalls.current.push({
-        position: new THREE.Vector3(
-          position.x - direction.z * 2.2, // Left side of ship
-          3.0, // Middle deck cannon height
-          position.z + direction.x * 2.2
-        ),
-        direction: new THREE.Vector3(direction.z, 0, -direction.x), // Perpendicular to ship direction (left)
-        life: 2, // Seconds of life
-        id: cannonBallId.current++
-      });
-      
-      // Third deck (top) cannons
-      cannonBalls.current.push({
-        position: new THREE.Vector3(
-          position.x + direction.z * 2.0, // Right side of ship
-          4.5, // Top deck cannon height
-          position.z - direction.x * 2.0
-        ),
-        direction: new THREE.Vector3(-direction.z, 0, direction.x), // Perpendicular to ship direction (right)
-        life: 2, // Seconds of life
-        id: cannonBallId.current++
-      });
-      
-      cannonBalls.current.push({
-        position: new THREE.Vector3(
-          position.x - direction.z * 2.0, // Left side of ship
-          4.5, // Top deck cannon height
-          position.z + direction.x * 2.0
-        ),
-        direction: new THREE.Vector3(direction.z, 0, -direction.x), // Perpendicular to ship direction (left)
-        life: 2, // Seconds of life
-        id: cannonBallId.current++
-      });
-      
-      console.log("Cannon fired!", cannonBalls.current.length);
+      console.log("Enhanced cannons fired!", cannonballs.current.length, "cannonballs and", cannonFireEffects.current.length, "effects");
     }
   }, [cannonReady, position, rotation, fireCannon, getKeys]);
   
@@ -337,29 +350,28 @@ const Ship = () => {
     }
     
     // Update cannon balls
-    cannonBalls.current.forEach((ball, index) => {
+    cannonballs.current.forEach((ball, index) => {
       // Move the cannon ball
       ball.position.add(
         ball.direction.clone().multiplyScalar(40 * delta)
       );
-      
-      // Decrease life
-      ball.life -= delta;
       
       // Check for collisions with enemies
       enemies.forEach(enemy => {
         if (checkCollision(ball.position, enemy.position, 2, 5)) {
           // Hit!
           damageEnemy(enemy.id, 10);
-          ball.life = 0; // Remove the ball
+          // Mark for removal
+          cannonballs.current.splice(index, 1);
           playHit();
         }
       });
-      
-      // Remove if life is depleted
-      if (ball.life <= 0) {
-        cannonBalls.current.splice(index, 1);
-      }
+    });
+    
+    // Remove fire effects after their lifetime
+    cannonFireEffects.current = cannonFireEffects.current.filter(effect => {
+      const lifetime = 0.5; // Short lifetime for effects
+      return Date.now() - effect.id < lifetime * 1000;
     });
     
     // Update cannon cooldown
@@ -456,16 +468,24 @@ const Ship = () => {
         </mesh>
       )}
       
-      {/* Render cannonballs */}
-      {cannonBalls.current.map((ball) => (
-        <mesh
+      {/* Render enhanced cannonballs with the new Cannonball component */}
+      {cannonballs.current.map((ball) => (
+        <Cannonball
           key={ball.id}
           position={ball.position}
-          castShadow
-        >
-          <sphereGeometry args={[0.8, 16, 16]} />
-          <meshStandardMaterial color="#222" roughness={0.7} metalness={0.5} />
-        </mesh>
+          direction={ball.direction}
+          speed={35}
+          lifespan={2.5}
+        />
+      ))}
+      
+      {/* Render cannon fire effects */}
+      {cannonFireEffects.current.map((effect) => (
+        <CannonFireEffect
+          key={effect.id}
+          position={effect.position}
+          direction={effect.direction}
+        />
       ))}
     </group>
   );

@@ -19,6 +19,7 @@ const ReferenceShip = () => {
   // Load the same tall multi-deck pirate ship model
   const { scene: model } = useGLTF("/models/tall_pirate_ship.glb") as any;
   const [modelLoaded, setModelLoaded] = useState(false);
+  const shipRef = useRef<THREE.Group>(null);
   
   // Make sure model is loaded
   useEffect(() => {
@@ -31,16 +32,30 @@ const ReferenceShip = () => {
   // Deep clone the model to prevent issues
   const shipModel = modelLoaded ? model.clone() : null;
   
-  // Get game state for ship scale and height
-  const { shipHeight, shipScale } = useGameState.getState();
+  // Get game state for ship scale and height - using directly to always have latest values
+  const shipHeight = useGameState((state) => state.shipHeight);
+  const shipScale = useGameState((state) => state.shipScale);
+  const waveHeight = useGameState((state) => state.waveHeight);
+  const waveSpeed = useGameState((state) => state.waveSpeed);
+  
+  // Add wave bobbing effect to match other ships
+  useFrame(() => {
+    if (!shipRef.current) return;
+    
+    // Apply bobbing effect on waves
+    const time = Date.now() * waveSpeed;
+    shipRef.current.position.y = Math.sin(time) * waveHeight + shipHeight; 
+    shipRef.current.rotation.x = Math.sin(time - 0.1) * 0.01;
+    shipRef.current.rotation.z = Math.cos(time - 0.1) * 0.01;
+  });
   
   return (
-    <group position={[20, 0, 0]}>
+    <group ref={shipRef} position={[20, shipHeight, 0]}>
       {modelLoaded && shipModel ? (
         <group 
           scale={[shipScale, shipScale, shipScale]} // Use dynamic ship scale
           rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
-          position={[0, shipHeight - 2.0, 0]} // Lower position to better show multiple decks
+          position={[0, 0, 0]} // Centered at origin since parent handles height
         >
           <primitive object={shipModel} castShadow receiveShadow />
           
