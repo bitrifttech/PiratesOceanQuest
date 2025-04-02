@@ -162,53 +162,42 @@ const Game = () => {
     }
   }, [playerHealth, setGameOver]);
 
-  // State to track if we're using orbit controls
-  const [useOrbitControls, setUseOrbitControls] = useState(false);
+  // Reference to the OrbitControls
+  const orbitControlsRef = useRef<any>(null);
   
-  // Toggle between automatic camera following and manual orbit controls
-  const toggleCameraControls = () => {
-    setUseOrbitControls(prev => !prev);
-    console.log("Camera controls toggled, useOrbitControls:", !useOrbitControls);
-  };
+  // Track the last camera position and rotation before manual adjustment
+  const lastCameraPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
+  const lastCameraRotationRef = useRef<THREE.Euler>(new THREE.Euler());
+  const cameraAdjustedRef = useRef<boolean>(false);
   
-  // Effect to add keyboard shortcut for toggling camera mode
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'c' || e.key === 'C') {
-        toggleCameraControls();
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [useOrbitControls]); // Need to include the current state to correctly toggle
+  // Player's ship orientation for forward direction
+  const shipForwardRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, -1));
   
-  // Camera follows player ship (only when orbit controls are disabled)
+  // Camera dynamics settings
+  const [cameraSmoothing, setCameraSmoothing] = useState<number>(0.05);
+  
+  // Camera follows player ship but preserves manual adjustments
   useFrame(() => {
-    if (playerPosition && !useOrbitControls) {
-      // Update target position based on player's position
-      cameraTargetRef.current.set(
+    if (!playerPosition) return;
+    
+    // Update target to always follow the player ship
+    cameraTargetRef.current.set(
+      playerPosition.x,
+      0,
+      playerPosition.z
+    );
+    
+    // Always update the ship's forward direction based on rotation
+    // This is needed for proper WASD controls relative to camera view
+    shipForwardRef.current.set(0, 0, -1).applyEuler(playerRotation);
+    
+    if (orbitControlsRef.current) {
+      // Update orbit controls target to follow the player
+      orbitControlsRef.current.target.set(
         playerPosition.x,
         0,
         playerPosition.z
       );
-      
-      // Calculate camera position based on player rotation
-      const angle = playerRotation.y;
-      const distance = 30;
-      const height = 15;
-      
-      cameraOffsetRef.current.set(
-        Math.sin(angle) * distance,
-        height,
-        Math.cos(angle) * distance
-      );
-      
-      // Set camera position behind the player
-      camera.position.copy(cameraTargetRef.current).add(cameraOffsetRef.current);
-      
-      // Look at the player
-      camera.lookAt(playerPosition.x, 0, playerPosition.z);
     }
   });
 
@@ -283,7 +272,7 @@ const Game = () => {
       
       {/* Interactive orbit controls for click-and-drag camera movement */}
       <OrbitControls 
-        enabled={useOrbitControls}
+        ref={orbitControlsRef}
         enablePan={true}
         enableZoom={true}
         enableRotate={true}
@@ -292,20 +281,8 @@ const Game = () => {
         maxDistance={100}
         minPolarAngle={0.1} 
         maxPolarAngle={Math.PI / 2 - 0.1} // Restrict to avoid going below ground
+        enabled={true}
       />
-      
-      {/* Camera mode indicator */}
-      {useOrbitControls && (
-        <Text
-          position={[0, 20, 0]}
-          fontSize={3}
-          color="white"
-          anchorX="center"
-          anchorY="middle"
-        >
-          ORBIT CAMERA MODE
-        </Text>
-      )}
     </>
   );
 };

@@ -125,7 +125,7 @@ const GameUI = () => {
         </div>
         
         <div className="px-2 py-1 bg-gray-900 bg-opacity-70 text-white text-sm rounded-lg">
-          Press 'C' to toggle camera control mode
+          Click and drag to rotate camera view
         </div>
       </div>
       

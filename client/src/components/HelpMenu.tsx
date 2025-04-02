@@ -47,6 +47,9 @@ const HelpMenu = () => {
               
               <div>B</div>
               <div>Board Enemy Ship</div>
+              
+              <div>Mouse</div>
+              <div>Click and drag to rotate camera</div>
             </div>
           </div>
           
