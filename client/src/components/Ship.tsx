@@ -8,6 +8,7 @@ import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
 import { useGameState } from "../lib/stores/useGameState";
 import { checkCollision } from "../lib/helpers/collisionDetection";
+import { SCALE, MODEL_ADJUSTMENT, POSITION } from "../lib/constants";
 import Cannon from "./Cannon";
 import Cannonball from "./Cannonball";
 import CannonFireEffect from "./CannonFireEffect";
@@ -372,9 +373,10 @@ const Ship = () => {
     // Get dynamic ship parameters from game state
     const { shipHeight, waveHeight, waveSpeed, shipScale } = useGameState.getState();
     
-    // Update model scale dynamically if it has changed
+    // Update model scale dynamically if it has changed using standardized scaling system
     if (shipRef.current.children[0] && modelLoaded) {
-      shipRef.current.children[0].scale.set(shipScale, shipScale, shipScale);
+      const standardizedScale = shipScale * SCALE.PLAYER_SHIP * MODEL_ADJUSTMENT.SHIP;
+      shipRef.current.children[0].scale.set(standardizedScale, standardizedScale, standardizedScale);
     }
     
     // Debug: Show current key states (commented out to reduce console spam)
@@ -534,7 +536,11 @@ const Ship = () => {
         {/* 3D Ship Model */}
         {modelLoaded && shipModel ? (
           <group 
-            scale={[useGameState.getState().shipScale, useGameState.getState().shipScale, useGameState.getState().shipScale]} // Use dynamic ship scale
+            scale={[
+              useGameState.getState().shipScale * SCALE.PLAYER_SHIP * MODEL_ADJUSTMENT.SHIP, 
+              useGameState.getState().shipScale * SCALE.PLAYER_SHIP * MODEL_ADJUSTMENT.SHIP, 
+              useGameState.getState().shipScale * SCALE.PLAYER_SHIP * MODEL_ADJUSTMENT.SHIP
+            ]} // Use standardized scaling system
             rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
             position={[0, useGameState.getState().shipHeight - 2.0, 0]} // Lower position to better show multiple decks
           >

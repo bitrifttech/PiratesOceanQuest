@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTF } from "three-stdlib";
+import { SCALE, MODEL_ADJUSTMENT, POSITION } from "../lib/constants";
 
 // Define island types
 type IslandType = 'tropical' | 'mountain' | 'rocks';
@@ -100,6 +101,35 @@ const Island = ({
     };
   }, [position, type]);
   
+  // Calculate scale based on island type using our standardized scale system
+  const getScaleFactor = () => {
+    let baseScale: number;
+    let modelAdjustment: number;
+    
+    switch (type) {
+      case 'tropical':
+        baseScale = SCALE.ISLAND.TROPICAL.BASE;
+        modelAdjustment = MODEL_ADJUSTMENT.TROPICAL;
+        break;
+      case 'mountain':
+        baseScale = SCALE.ISLAND.MOUNTAIN.BASE;
+        modelAdjustment = MODEL_ADJUSTMENT.MOUNTAIN;
+        break;
+      case 'rocks':
+        baseScale = SCALE.ISLAND.ROCKS.BASE;
+        modelAdjustment = MODEL_ADJUSTMENT.ROCKS;
+        break;
+      default:
+        baseScale = SCALE.ISLAND.TROPICAL.BASE;
+        modelAdjustment = MODEL_ADJUSTMENT.TROPICAL;
+    }
+    
+    // Calculate final scale: user-provided scale * base type scale * model adjustment
+    return scale * baseScale * modelAdjustment;
+  };
+  
+  const finalScale = getScaleFactor();
+  
   return (
     <group 
       ref={islandRef} 
@@ -107,21 +137,25 @@ const Island = ({
       rotation={rotation}
     >
       {modelLoaded && islandModel ? (
-        // Render loaded 3D model with proper scaling
-        // Increase scale dramatically to make them more visible
-        // Scale differently based on type - larger mountains, medium tropical islands, smaller rocks
-        <group scale={[
-          scale * (type === 'mountain' ? 25 : type === 'tropical' ? 20 : 15), 
-          scale * (type === 'mountain' ? 25 : type === 'tropical' ? 20 : 15), 
-          scale * (type === 'mountain' ? 25 : type === 'tropical' ? 20 : 15)
-        ]}>
+        // Render loaded 3D model with standardized scaling
+        <group scale={[finalScale, finalScale, finalScale]}>
           <primitive object={islandModel} castShadow receiveShadow />
         </group>
       ) : (
-        // Fallback while loading
+        // Fallback while loading - sized according to island type
         <mesh castShadow receiveShadow>
-          <cylinderGeometry args={[8, 10, 4, 16]} />
-          <meshStandardMaterial color={type === 'rocks' ? "#888888" : "#8d7447"} roughness={0.9} />
+          <cylinderGeometry 
+            args={[
+              type === 'mountain' ? 10 : type === 'tropical' ? 8 : 5, 
+              type === 'mountain' ? 12 : type === 'tropical' ? 10 : 6, 
+              type === 'mountain' ? 6 : type === 'tropical' ? 4 : 2, 
+              16
+            ]} 
+          />
+          <meshStandardMaterial 
+            color={type === 'rocks' ? "#888888" : type === 'mountain' ? "#9a8569" : "#8d7447"} 
+            roughness={0.9} 
+          />
         </mesh>
       )}
     </group>

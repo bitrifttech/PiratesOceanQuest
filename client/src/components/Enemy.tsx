@@ -7,6 +7,7 @@ import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
 import { useGameState } from "../lib/stores/useGameState";
 import { checkCollision } from "../lib/helpers/collisionDetection";
+import { SCALE, MODEL_ADJUSTMENT, POSITION } from "../lib/constants";
 import Cannon from "./Cannon";
 
 // Preload the tall multi-deck pirate ship model
@@ -78,9 +79,12 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     // Ship bobbing on waves with configurable height - use the same settings as player ship
     const { shipHeight, waveHeight, waveSpeed, shipScale } = useGameState.getState();
     
-    // Update model scale dynamically if it has changed
+    // Update model scale dynamically if it has changed using standardized scaling system
     if (enemyRef.current.children[0] && modelLoaded) {
-      enemyRef.current.children[0].scale.set(shipScale, shipScale, shipScale);
+      // Apply enemy ship scaling factor (0.8-1.1 relative to player)
+      const enemyScaleFactor = SCALE.ENEMY_SHIP.MIN + (parseInt(id) % 4) * 0.1; // Varied sizes for enemies (0.8, 0.9, 1.0, 1.1)
+      const standardizedScale = shipScale * enemyScaleFactor * MODEL_ADJUSTMENT.SHIP;
+      enemyRef.current.children[0].scale.set(standardizedScale, standardizedScale, standardizedScale);
     }
     
     // Update position with correct shipHeight
@@ -434,7 +438,11 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       {/* 3D Ship Model - with red color overlay for enemies */}
       {modelLoaded && shipModel ? (
         <group 
-          scale={[useGameState.getState().shipScale, useGameState.getState().shipScale, useGameState.getState().shipScale]} // Use dynamic ship scale
+          scale={[
+            useGameState.getState().shipScale * (SCALE.ENEMY_SHIP.MIN + (parseInt(id) % 4) * 0.1) * MODEL_ADJUSTMENT.SHIP,
+            useGameState.getState().shipScale * (SCALE.ENEMY_SHIP.MIN + (parseInt(id) % 4) * 0.1) * MODEL_ADJUSTMENT.SHIP,
+            useGameState.getState().shipScale * (SCALE.ENEMY_SHIP.MIN + (parseInt(id) % 4) * 0.1) * MODEL_ADJUSTMENT.SHIP
+          ]} // Use standardized scaling system with enemy variation
           rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
           position={[0, useGameState.getState().shipHeight - 2.0, 0]} // Lower position to better show multiple decks
         >

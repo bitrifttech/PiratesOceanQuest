@@ -8,6 +8,7 @@ import Ship from "./Ship";
 import Enemy from "./Enemy";
 import Island from "./Island";
 import DebugControls from "./DebugControls";
+import { SCALE, MODEL_ADJUSTMENT, POSITION, WORLD } from "../lib/constants";
 
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
@@ -347,7 +348,15 @@ const Game = () => {
       {environmentFeatures.current.map((feature, index) => (
         <Island 
           key={`env-${feature.type}-${index}`} 
-          position={[feature.x, feature.type === 'rocks' ? -3 : -10, feature.z]} 
+          position={[
+            feature.x, 
+            feature.type === 'rocks' 
+              ? POSITION.ISLAND.ROCKS 
+              : feature.type === 'mountain' 
+                ? POSITION.ISLAND.MOUNTAIN 
+                : POSITION.ISLAND.TROPICAL, 
+            feature.z
+          ]} 
           scale={feature.scale} 
           rotation={feature.rotation}
           type={feature.type}
