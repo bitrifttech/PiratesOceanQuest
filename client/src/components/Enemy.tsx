@@ -296,25 +296,22 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
         
         // Fire from each selected position
         positionsToFire.forEach(cannonPosition => {
-          // Calculate precise X and Z offsets for the cannon position along the ship's length
-          const longitudinalOffsetX = Math.sin(rotation.y + Math.PI/2) * cannonPosition.offset;
-          const longitudinalOffsetZ = Math.cos(rotation.y + Math.PI/2) * cannonPosition.offset;
+          // SIMPLIFIED: Use fixed positions at the sides of the ship
+          // Instead of varying cannon positions, we'll use fixed side positions
+          // and vary the firing angles to create the spread pattern
           
-          // Precise position for this cannon
-          const cannonPosX = position.x + direction.z * sideOffset + longitudinalOffsetX;
-          const cannonPosY = cannonPosition.height; // Height is fixed per cannon position
-          const cannonPosZ = position.z - direction.x * sideOffset + longitudinalOffsetZ;
+          // Use a fixed width for the ship hull
+          const shipHalfWidth = 3.5; // Half-width of the ship
+          
+          // Calculate a consistent side position
+          const cannonPosX = position.x + (cross.y > 0 ? 1 : -1) * direction.z * shipHalfWidth;
+          const cannonPosY = 0.8; // Fixed height above water
+          const cannonPosZ = position.z + (cross.y > 0 ? 1 : -1) * -direction.x * shipHalfWidth;
           
           // Create the cannon ball position with explicit coordinates
           const cannonBallPosition = new THREE.Vector3(cannonPosX, cannonPosY, cannonPosZ);
           
-          // Log exact position for debugging
-          console.log(`Enemy cannon at: (${cannonPosX.toFixed(2)}, ${cannonPosY.toFixed(2)}, ${cannonPosZ.toFixed(2)})`);
-          
-          // Determine position type (front, middle, back) based on numerical offset
-          // rather than using string comparisons
-          
-          // Get the offset value for this cannon
+          // Get the offset value for this cannon position
           const offsetValue = cannonPosition.offset;
           
           // Simple numerical checks to determine cannon location type
@@ -329,36 +326,40 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
           
           // Create spread angle based on the cannon's location
           // This creates the spreading/fan effect as cannonballs fly
-          let longSpreadAngle = 0;
+          let horizontalSpreadAngle = 0;
           
-          // Use simple string equality to check the location type
+          // Different angles for front/middle/back cannon positions
           if (cannonLocationType === 'front') {
-            longSpreadAngle = -0.1; // Front cannon angles slightly backward
+            // Front cannons angle slightly backward/forward
+            horizontalSpreadAngle = cross.y > 0 ? -0.2 : 0.2;
           } else if (cannonLocationType === 'back') {
-            longSpreadAngle = 0.1;  // Back cannon angles slightly forward
+            // Back cannons angle slightly forward/backward
+            horizontalSpreadAngle = cross.y > 0 ? 0.2 : -0.2;
           }
-          // Middle cannons stay at 0 (fire straight)
+          // Middle cannons stay at 0 (fire straight out from the side)
           
-          // Create a rotation matrix to apply the spread angle
-          const spreadMatrix = new THREE.Matrix4().makeRotationY(longSpreadAngle);
+          // Create base direction - always perpendicular to ship's side
+          // with an upward arc component
+          const baseDir = cross.y > 0 
+            ? new THREE.Vector3(direction.z, 0.15, -direction.x).normalize()  // Left side
+            : new THREE.Vector3(-direction.z, 0.15, direction.x).normalize(); // Right side
           
-          // Create base direction with upward arc component (y=0.15)
-          const baseDir = directionToPlayer.clone();
-          baseDir.y = 0.15; // Add upward component for arcing trajectory
+          // Apply the spread angle
+          const spreadMatrix = new THREE.Matrix4().makeRotationY(horizontalSpreadAngle);
+          const directionWithSpread = baseDir.clone().applyMatrix4(spreadMatrix);
           
-          // Apply the spread rotation
-          baseDir.applyMatrix4(spreadMatrix);
-          
-          // Add a small random deviation for realism
-          const accuracy = 0.95; // Higher accuracy (0.9 to 0.95)
+          // Add a small random deviation for slightly randomized shots
+          const accuracy = 0.95;
           const spreadX = (Math.random() - 0.5) * (1 - accuracy) * 0.1;
           const spreadZ = (Math.random() - 0.5) * (1 - accuracy) * 0.1;
           
-          // Apply the random deviation and normalize
-          const fireDirection = baseDir.add(new THREE.Vector3(spreadX, 0, spreadZ)).normalize();
+          // Final firing direction with spread and random component
+          const fireDirection = directionWithSpread.clone()
+            .add(new THREE.Vector3(spreadX, 0, spreadZ))
+            .normalize();
           
           // Log the firing parameters for debugging
-          console.log(`Enemy cannon (${cannonLocationType}) firing: 
+          console.log(`Enemy ${cannonLocationType} cannon firing: 
             Position: (${cannonPosX.toFixed(1)}, ${cannonPosY.toFixed(1)}, ${cannonPosZ.toFixed(1)})
             Direction: (${fireDirection.x.toFixed(2)}, ${fireDirection.y.toFixed(2)}, ${fireDirection.z.toFixed(2)})`
           );

@@ -225,93 +225,100 @@ const Ship = () => {
         const longitudinalOffsetX = Math.sin(rotation.y + Math.PI/2) * deck.zOffset;
         const longitudinalOffsetZ = Math.cos(rotation.y + Math.PI/2) * deck.zOffset;
         
+        // SIMPLIFIED CANNON FIRING APPROACH
+        // Instead of using separate positions for each cannon, we'll use fixed side positions
+        // and vary only the firing angle to create the spread effect
+        
+        // Set a consistent firing position at the middle of each side of the ship
+        // Determine the longitudinal position (fore to aft) based on the cannon's position
+        const shipHalfWidth = 3.5; // Half-width of the ship
+        
+        // Determine cannon type (front, middle, back) which affects firing angle
+        let cannonPosition: 'front' | 'middle' | 'back';
+        if (deck.zOffset < -2) cannonPosition = 'front';
+        else if (deck.zOffset > 2) cannonPosition = 'back';
+        else cannonPosition = 'middle';
+        
+        // Calculate a single firing position based on the ship's side
         if (deck.side === 'right') {
-          // RIGHT SIDE CANNON
-          // Position calculation - same as before
-          const rightPosX = position.x + direction.z * deck.rightOffset + longitudinalOffsetX;
-          const rightPosY = cannonHeight;
-          const rightPosZ = position.z - direction.x * deck.rightOffset + longitudinalOffsetZ;
+          // RIGHT SIDE CANNON - Fixed position on right side of ship
+          // Simplified position - always from the exact side of the ship
+          const rightPosX = position.x + direction.z * shipHalfWidth; // Fixed side offset
+          const rightPosY = cannonHeight; // Fixed height
+          const rightPosZ = position.z - direction.x * shipHalfWidth; // Fixed side offset
+          
+          // Create a firing position vector
           const rightPos = new THREE.Vector3(rightPosX, rightPosY, rightPosZ);
           
-          // Calculate position in ship's deck coordinates
-          // This helps us identify front, middle, back cannons
-          let cannonPosition: 'front' | 'middle' | 'back';
-          if (deck.zOffset < -2) cannonPosition = 'front';
-          else if (deck.zOffset > 2) cannonPosition = 'back';
-          else cannonPosition = 'middle';
+          // Create spread angles based on cannon position
+          // All cannons fire outward from the side, but at slightly different angles
+          const horizontalSpreadAngle = cannonPosition === 'front' ? -0.2 : // Front cannon angles backward
+                                        cannonPosition === 'back' ? 0.2 :   // Back cannon angles forward
+                                        0;                                  // Middle cannon fires straight out
           
-          // Create spread angle based on cannon position (front, middle, back)
-          // This creates the spreading/fan effect as cannonballs fly
-          const spreadAngle = cannonPosition === 'front' ? -0.15 : // Front cannon angles backward
-                             cannonPosition === 'back' ? 0.15 :  // Back cannon angles forward
-                             0;                                  // Middle cannon fires straight
-                             
-          // Create a base direction perpendicular to the ship
-          const baseDir = new THREE.Vector3(-direction.z, 0.15, direction.x); // 0.15 y value creates upward arc
+          // Base direction is always directly outward from the side
+          // This ensures cannonballs never go through the ship
+          const baseDir = new THREE.Vector3(-direction.z, 0.15, direction.x).normalize();
           
-          // Create a rotation matrix to angle the cannon based on position
-          const spreadMatrix = new THREE.Matrix4().makeRotationY(spreadAngle);
+          // Apply the spread angle for fan effect using a rotation matrix
+          const spreadMatrix = new THREE.Matrix4().makeRotationY(horizontalSpreadAngle);
+          const finalDir = baseDir.clone().applyMatrix4(spreadMatrix).normalize();
           
-          // Apply the spread rotation to the base direction vector
-          const rightDir = baseDir.clone().applyMatrix4(spreadMatrix).normalize();
+          // Log the firing details for debugging
+          console.log(`Right ${cannonPosition} cannon: pos=(${rightPosX.toFixed(1)}, ${rightPosY.toFixed(1)}, ${rightPosZ.toFixed(1)}), dir=(${finalDir.x.toFixed(2)}, ${finalDir.y.toFixed(2)}, ${finalDir.z.toFixed(2)})`);
           
-          // Log the cannon firing details for debugging
-          console.log(`Right cannon at ${cannonPosition}: pos=(${rightPosX.toFixed(2)}, ${rightPosY.toFixed(2)}, ${rightPosZ.toFixed(2)}), dir=(${rightDir.x.toFixed(2)}, ${rightDir.y.toFixed(2)}, ${rightDir.z.toFixed(2)})`);
-          
-          // Add cannonball with the new direction that includes spread and arc
+          // Add cannonball
           cannonballs.current.push({
             id: cannonBallId.current++,
             position: rightPos,
-            direction: rightDir
+            direction: finalDir
           });
           
-          // Add cannon fire effect
+          // Add fire effect
           cannonFireEffects.current.push({
             id: cannonBallId.current++,
             position: rightPos.clone(),
-            direction: rightDir.clone()
+            direction: finalDir.clone()
           });
         } else {
-          // LEFT SIDE CANNON - same approach as right side
-          // Position calculation
-          const leftPosX = position.x - direction.z * deck.leftOffset + longitudinalOffsetX;
-          const leftPosY = cannonHeight;
-          const leftPosZ = position.z + direction.x * deck.leftOffset + longitudinalOffsetZ;
+          // LEFT SIDE CANNON - Fixed position on left side of ship
+          // Simplified position - always from the exact side of the ship
+          const leftPosX = position.x - direction.z * shipHalfWidth; // Fixed side offset
+          const leftPosY = cannonHeight; // Fixed height
+          const leftPosZ = position.z + direction.x * shipHalfWidth; // Fixed side offset
+          
+          // Create a firing position vector
           const leftPos = new THREE.Vector3(leftPosX, leftPosY, leftPosZ);
           
-          // Determine cannon position (front, middle, back)
-          let cannonPosition: 'front' | 'middle' | 'back';
-          if (deck.zOffset < -2) cannonPosition = 'front';
-          else if (deck.zOffset > 2) cannonPosition = 'back';
-          else cannonPosition = 'middle';
+          // Create spread angles based on cannon position
+          // All cannons fire outward from the side, but at slightly different angles
+          const horizontalSpreadAngle = cannonPosition === 'front' ? 0.2 : // Front cannon angles forward
+                                        cannonPosition === 'back' ? -0.2 : // Back cannon angles backward
+                                        0;                                 // Middle cannon fires straight out
           
-          // Create opposite spread direction for left side
-          const spreadAngle = cannonPosition === 'front' ? 0.15 : // Front cannon angles forward
-                             cannonPosition === 'back' ? -0.15 :  // Back cannon angles backward
-                             0;                                  // Middle cannon fires straight
+          // Base direction is always directly outward from the side
+          // This ensures cannonballs never go through the ship
+          const baseDir = new THREE.Vector3(direction.z, 0.15, -direction.x).normalize();
           
-          // Base direction with upward arc
-          const baseDir = new THREE.Vector3(direction.z, 0.15, -direction.x); // 0.15 y value creates upward arc
+          // Apply the spread angle for fan effect using a rotation matrix
+          const spreadMatrix = new THREE.Matrix4().makeRotationY(horizontalSpreadAngle);
+          const finalDir = baseDir.clone().applyMatrix4(spreadMatrix).normalize();
           
-          // Apply spread angle
-          const spreadMatrix = new THREE.Matrix4().makeRotationY(spreadAngle);
-          const leftDir = baseDir.clone().applyMatrix4(spreadMatrix).normalize();
+          // Log the firing details for debugging
+          console.log(`Left ${cannonPosition} cannon: pos=(${leftPosX.toFixed(1)}, ${leftPosY.toFixed(1)}, ${leftPosZ.toFixed(1)}), dir=(${finalDir.x.toFixed(2)}, ${finalDir.y.toFixed(2)}, ${finalDir.z.toFixed(2)})`);
           
-          // Log the cannon firing details
-          console.log(`Left cannon at ${cannonPosition}: pos=(${leftPosX.toFixed(2)}, ${leftPosY.toFixed(2)}, ${leftPosZ.toFixed(2)}), dir=(${leftDir.x.toFixed(2)}, ${leftDir.y.toFixed(2)}, ${leftDir.z.toFixed(2)})`);
-          
-          // Add cannonball with the new direction that includes spread and arc
+          // Add cannonball
           cannonballs.current.push({
             id: cannonBallId.current++,
             position: leftPos,
-            direction: leftDir
+            direction: finalDir
           });
           
-          // Add cannon fire effect
+          // Add fire effect
           cannonFireEffects.current.push({
             id: cannonBallId.current++,
             position: leftPos.clone(),
-            direction: leftDir.clone()
+            direction: finalDir.clone()
           });
         }
       });
