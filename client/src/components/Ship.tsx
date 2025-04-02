@@ -145,18 +145,19 @@ const Ship = () => {
       // Single deck height for all cannons (just above water level)
       const deckHeight = 0.8;  
       
-      // Define many horizontal positions along the ship length
-      const shipPositions = [
-        -6.0, // Front of ship
-        -4.5,
-        -3.0,
-        -1.5,
-        0.0,  // Middle of ship
-        1.5,
-        3.0,
-        4.5,
-        6.0   // Back of ship
-      ];
+      // Define many more horizontal positions along the ship length
+      // Generate positions from front to back with smaller intervals
+      const shipPositions = [];
+      
+      // Generate 20 positions from front to back
+      const shipLength = 14.0; // Longer than actual ship for better spread
+      for (let i = 0; i < 20; i++) {
+        // From -shipLength/2 to +shipLength/2
+        const position = -shipLength/2 + (shipLength * i / 19);
+        shipPositions.push(position);
+      }
+      
+      console.log("Ship cannon positions:", shipPositions);
       
       // Add cannons along the length of the ship, all at the same height
       shipPositions.forEach(zOffset => {
@@ -168,41 +169,52 @@ const Ship = () => {
         });
       });
       
-      // Number of cannons to fire per side
-      const cannonsPerSide = 4;
+      // Force cannonballs to be evenly spaced along ship length
+      // Fixed positions to ensure proper distribution
       
-      // Select evenly distributed positions along the ship's length
-      // Instead of random selection, we'll pick positions with even spacing
+      // Fire from 8 positions on each side (16 total)
+      // This gives much better distribution along the entire ship length
+      const cannonsPerSide = 8;
       
-      // Calculate even distribution of indices
-      const divisions = cannonPositions.length / cannonsPerSide;
-      const rightSideIndices = [];
-      const leftSideIndices = [];
-      
-      // Create evenly spaced indices covering the entire ship length
-      for (let i = 0; i < cannonsPerSide; i++) {
-        // Calculate index with some randomness but within specific segments
-        const baseIndex = Math.floor(i * divisions);
-        // Add a small random offset but stay within the segment
-        const randomOffset = Math.floor(Math.random() * (divisions * 0.8));
-        const index = Math.min(baseIndex + randomOffset, cannonPositions.length - 1);
-        
-        rightSideIndices.push(index);
-        leftSideIndices.push(index);
-      }
-      
-      // Create the selected positions arrays with properly distributed indices
+      // Select evenly spaced positions from the available cannon positions
       const selectedPositions: CannonPosition[] = [];
       
-      // Add right side positions first
-      rightSideIndices.forEach(index => {
-        selectedPositions.push({...cannonPositions[index], side: 'right'});
-      });
+      // Calculate right indices with more precision
+      // Step size calculation to ensure even distribution
+      const step = Math.max(1, Math.floor(cannonPositions.length / cannonsPerSide));
       
-      // Then add left side positions
-      leftSideIndices.forEach(index => {
-        selectedPositions.push({...cannonPositions[index], side: 'left'});
-      });
+      // Generate cannon positions evenly spaced from bow to stern
+      // Right side cannons
+      for (let i = 0; i < cannonsPerSide; i++) {
+        // Calculate index to pick evenly distributed positions
+        const index = Math.min(
+          Math.floor(i * (cannonPositions.length / cannonsPerSide)),
+          cannonPositions.length - 1
+        );
+        
+        // Add to list with side indicator
+        selectedPositions.push({
+          ...cannonPositions[index],
+          side: 'right'
+        });
+      }
+      
+      // Left side cannons - use same spacing/distribution
+      for (let i = 0; i < cannonsPerSide; i++) {
+        const index = Math.min(
+          Math.floor(i * (cannonPositions.length / cannonsPerSide)),
+          cannonPositions.length - 1
+        );
+        
+        // Add to list with side indicator
+        selectedPositions.push({
+          ...cannonPositions[index],
+          side: 'left'
+        });
+      }
+      
+      // Log the distribution of positions for debugging
+      console.log("Cannon positions distribution:", selectedPositions.map(pos => pos.zOffset));
       
       // Create cannonballs and effects for selected cannon positions
       selectedPositions.forEach((deck) => {

@@ -26,6 +26,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     patrolDirection: new THREE.Vector3(0, 0, 0),
     attackCooldown: 0,
     collisionCooldown: 0, // Add collision cooldown
+    currentCannonPosition: 0, // Track which cannon position to fire from
     state: "patrol" as "patrol" | "chase" | "attack"
   });
   
@@ -98,6 +99,11 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     
     // Get current state ref
     const state = stateRef.current;
+    
+    // Make sure currentCannonPosition is initialized
+    if (state.currentCannonPosition === undefined) {
+      state.currentCannonPosition = 0;
+    }
     
     // Update state based on distance to player
     if (distanceToPlayer < 40) {
@@ -253,53 +259,65 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
           { height: 0.8, offset: 5.0 }    // Back cannon
         ];
         
-        // Instead of a single random position, pick 3 evenly distributed positions
-        // This ensures cannon fire from different parts of the ship
-        const cannonsToFire = 3; // Number of cannons to fire per volley
-        const selectedIndices = [];
+        // Fire from multiple positions at once, spread across the ship's length
+        // Number of cannons to fire at once
+        const cannonsToFireAtOnce = 3;
         
-        // Calculate even distribution along ship length
-        for (let i = 0; i < cannonsToFire; i++) {
-          // Divide ship into sections and pick position from each section
-          const sectionSize = cannonPositions.length / cannonsToFire;
-          const baseIndex = Math.floor(i * sectionSize);
-          // Add slight randomness within the section
-          const randomOffset = Math.floor(Math.random() * (sectionSize * 0.8));
-          const index = Math.min(baseIndex + randomOffset, cannonPositions.length - 1);
-          selectedIndices.push(index);
+        // Choose which cannon positions to use - evenly distributed
+        // Start with current position and add a few more evenly spaced
+        if (state.currentCannonPosition === undefined) {
+          state.currentCannonPosition = 0;
         }
         
-        // Choose one of the selected positions for this specific shot
-        const cannonPosition = cannonPositions[selectedIndices[Math.floor(Math.random() * selectedIndices.length)]];
+        // Calculate the positions to fire from
+        const positionsToFire = [];
+        for (let i = 0; i < cannonsToFireAtOnce; i++) {
+          // Calculate index with even spacing
+          const posIndex = (state.currentCannonPosition + 
+                         Math.floor(i * (cannonPositions.length / cannonsToFireAtOnce))) % 
+                         cannonPositions.length;
+          
+          positionsToFire.push(cannonPositions[posIndex]);
+        }
         
-        // Calculate the longitudinal offset to position the cannon along ship's length
-        const shipLongitudinalVector = new THREE.Vector3(
-          Math.sin(rotation.y + Math.PI/2) * cannonPosition.offset,
-          0,
-          Math.cos(rotation.y + Math.PI/2) * cannonPosition.offset
-        );
+        // Increment current position for next volley
+        state.currentCannonPosition = (state.currentCannonPosition + 2) % cannonPositions.length;
         
-        // Create the cannon ball position
-        const cannonBallPosition = new THREE.Vector3(
-          position.x + direction.z * sideOffset + shipLongitudinalVector.x,
-          cannonPosition.height, // Height varies by deck
-          position.z - direction.x * sideOffset + shipLongitudinalVector.z
-        );
+        // Log what we're using
+        console.log(`Enemy ${id} firing ${positionsToFire.length} cannons from positions:`, 
+                   positionsToFire.map(p => p.offset));
         
-        // Add randomness to firing direction for more realistic spread
-        const accuracy = 0.9; // 1.0 = perfect aim
-        const spreadX = (Math.random() - 0.5) * (1 - accuracy) * 0.2;
-        const spreadZ = (Math.random() - 0.5) * (1 - accuracy) * 0.2;
-        
-        // Add jitter to direction for more realistic aiming
-        const fireDirection = directionToPlayer.clone().add(new THREE.Vector3(spreadX, 0, spreadZ)).normalize();
-        
-        // Add the cannonball to the list
-        cannonBalls.current.push({
-          position: cannonBallPosition,
-          direction: fireDirection,
-          life: 2, // Seconds of life
-          id: cannonBallId.current++
+        // Fire from each selected position
+        positionsToFire.forEach(cannonPosition => {
+          // Calculate the longitudinal offset to position the cannon along ship's length
+          const shipLongitudinalVector = new THREE.Vector3(
+            Math.sin(rotation.y + Math.PI/2) * cannonPosition.offset,
+            0,
+            Math.cos(rotation.y + Math.PI/2) * cannonPosition.offset
+          );
+          
+          // Create the cannon ball position
+          const cannonBallPosition = new THREE.Vector3(
+            position.x + direction.z * sideOffset + shipLongitudinalVector.x,
+            cannonPosition.height, // Height varies by deck
+            position.z - direction.x * sideOffset + shipLongitudinalVector.z
+          );
+          
+          // Add randomness to firing direction for more realistic spread
+          const accuracy = 0.9; // 1.0 = perfect aim
+          const spreadX = (Math.random() - 0.5) * (1 - accuracy) * 0.2;
+          const spreadZ = (Math.random() - 0.5) * (1 - accuracy) * 0.2;
+          
+          // Add jitter to direction for more realistic aiming
+          const fireDirection = directionToPlayer.clone().add(new THREE.Vector3(spreadX, 0, spreadZ)).normalize();
+          
+          // Add the cannonball to the list
+          cannonBalls.current.push({
+            position: cannonBallPosition,
+            direction: fireDirection,
+            life: 2, // Seconds of life
+            id: cannonBallId.current++
+          });
         });
         
         console.log("Enemy fired cannon!", id);
