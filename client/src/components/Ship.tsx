@@ -141,24 +141,69 @@ const Ship = () => {
       // All at similar height levels but spread horizontally
       const cannonPositions: CannonPosition[] = [];
       
-      // Deck height for all cannons (slightly above water level)
-      const deckHeight = 1.0;
+      // Define cannon ports at different positions along the ship
+      // Each deck has its own height and positions
       
-      // Ship length distribution - each position is at a different position along the hull
-      const longitudinalPositions = [-4.0, -2.0, 0.0, 2.0, 4.0];
+      // First deck - lowest level, 5 cannon ports along each side
+      const firstDeckHeight = 0.6;  // Just above water level
+      const firstDeckPositions = [-5.0, -2.5, 0.0, 2.5, 5.0]; // Front to back
       
-      // Create cannon positions distributed horizontally along the ship's hull
-      longitudinalPositions.forEach(zOffset => {
+      // Second deck - middle level, 4 cannon ports along each side
+      const secondDeckHeight = 2.0; // Middle deck
+      const secondDeckPositions = [-4.0, -1.3, 1.3, 4.0];    // Front to back
+      
+      // Third deck - top level, 3 cannon ports along each side
+      const thirdDeckHeight = 3.4;  // Upper deck
+      const thirdDeckPositions = [-3.0, 0.0, 3.0];          // Front to back
+      
+      // Add first deck cannons
+      firstDeckPositions.forEach(zOffset => {
         cannonPositions.push({
-          deckHeight: deckHeight,
-          rightOffset: 2.5,             // Distance from center on right side
-          leftOffset: 2.5,              // Distance from center on left side
-          zOffset: zOffset              // Position along the length of the ship
+          deckHeight: firstDeckHeight,
+          rightOffset: 2.5,       // Distance from center on right side
+          leftOffset: 2.5,        // Distance from center on left side
+          zOffset: zOffset        // Position along the length of the ship
         });
       });
       
-      // Create cannonballs and effects for each deck level and side
-      cannonPositions.forEach(deck => {
+      // Add second deck cannons
+      secondDeckPositions.forEach(zOffset => {
+        cannonPositions.push({
+          deckHeight: secondDeckHeight,
+          rightOffset: 2.2,       // Slightly narrower at second deck
+          leftOffset: 2.2,        // Slightly narrower at second deck
+          zOffset: zOffset        // Position along the length of the ship
+        });
+      });
+      
+      // Add third deck cannons
+      thirdDeckPositions.forEach(zOffset => {
+        cannonPositions.push({
+          deckHeight: thirdDeckHeight,
+          rightOffset: 2.0,       // Narrowest at top deck
+          leftOffset: 2.0,        // Narrowest at top deck
+          zOffset: zOffset        // Position along the length of the ship
+        });
+      });
+      
+      // Select a subset of cannon positions to fire at once (based on cannon level)
+      // This is more realistic than firing all cannons simultaneously
+      const cannonsPerSide = 4; // Number of cannons to fire per side
+      
+      // Shuffle cannon positions for random distribution
+      const shuffledPositions = [...cannonPositions];
+      
+      // Fisher-Yates shuffle algorithm for random selection
+      for (let i = shuffledPositions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledPositions[i], shuffledPositions[j]] = [shuffledPositions[j], shuffledPositions[i]];
+      }
+      
+      // Take only the first N positions for each side
+      const selectedPositions = shuffledPositions.slice(0, cannonsPerSide * 2);
+      
+      // Create cannonballs and effects for selected cannon positions
+      selectedPositions.forEach((deck, index) => {
         // Calculate longitudinal offset vector based on ship's direction
         // This positions cannons along the length of the ship
         const longitudinalOffset = new THREE.Vector3(
@@ -167,53 +212,58 @@ const Ship = () => {
           Math.cos(rotation.y + Math.PI/2) * deck.zOffset
         );
         
-        // Right side cannonball - positioned along ship length using longitudinal offset
-        const rightPos = new THREE.Vector3(
-          position.x + direction.z * deck.rightOffset + longitudinalOffset.x, // Right side + offset along ship
-          deck.deckHeight, // Deck height
-          position.z - direction.x * deck.rightOffset + longitudinalOffset.z // Right side + offset along ship
-        );
+        // Determine which side this cannon should fire from
+        const isRightSide = index < cannonsPerSide;
         
-        // Right side cannon direction (perpendicular to ship)
-        const rightDir = new THREE.Vector3(-direction.z, 0, direction.x);
-        
-        // Add cannonball
-        cannonballs.current.push({
-          id: cannonBallId.current++,
-          position: rightPos.clone(),
-          direction: rightDir.clone()
-        });
-        
-        // Add cannon fire effect
-        cannonFireEffects.current.push({
-          id: cannonBallId.current++,
-          position: rightPos.clone(),
-          direction: rightDir.clone()
-        });
-        
-        // Left side cannonball - positioned along ship length using same longitudinal offset
-        const leftPos = new THREE.Vector3(
-          position.x - direction.z * deck.leftOffset + longitudinalOffset.x, // Left side + offset along ship
-          deck.deckHeight, // Deck height
-          position.z + direction.x * deck.leftOffset + longitudinalOffset.z // Left side + offset along ship
-        );
-        
-        // Left side cannon direction (perpendicular to ship)
-        const leftDir = new THREE.Vector3(direction.z, 0, -direction.x);
-        
-        // Add cannonball
-        cannonballs.current.push({
-          id: cannonBallId.current++,
-          position: leftPos.clone(),
-          direction: leftDir.clone()
-        });
-        
-        // Add cannon fire effect
-        cannonFireEffects.current.push({
-          id: cannonBallId.current++,
-          position: leftPos.clone(),
-          direction: leftDir.clone()
-        });
+        if (isRightSide) {
+          // Right side cannonball - positioned along ship length using longitudinal offset
+          const rightPos = new THREE.Vector3(
+            position.x + direction.z * deck.rightOffset + longitudinalOffset.x, // Right side + offset along ship
+            deck.deckHeight, // Deck height
+            position.z - direction.x * deck.rightOffset + longitudinalOffset.z // Right side + offset along ship
+          );
+          
+          // Right side cannon direction (perpendicular to ship)
+          const rightDir = new THREE.Vector3(-direction.z, 0, direction.x);
+          
+          // Add cannonball
+          cannonballs.current.push({
+            id: cannonBallId.current++,
+            position: rightPos.clone(),
+            direction: rightDir.clone()
+          });
+          
+          // Add cannon fire effect
+          cannonFireEffects.current.push({
+            id: cannonBallId.current++,
+            position: rightPos.clone(),
+            direction: rightDir.clone()
+          });
+        } else {
+          // Left side cannonball - positioned along ship length using same longitudinal offset
+          const leftPos = new THREE.Vector3(
+            position.x - direction.z * deck.leftOffset + longitudinalOffset.x, // Left side + offset along ship
+            deck.deckHeight, // Deck height
+            position.z + direction.x * deck.leftOffset + longitudinalOffset.z // Left side + offset along ship
+          );
+          
+          // Left side cannon direction (perpendicular to ship)
+          const leftDir = new THREE.Vector3(direction.z, 0, -direction.x);
+          
+          // Add cannonball
+          cannonballs.current.push({
+            id: cannonBallId.current++,
+            position: leftPos.clone(),
+            direction: leftDir.clone()
+          });
+          
+          // Add cannon fire effect
+          cannonFireEffects.current.push({
+            id: cannonBallId.current++,
+            position: leftPos.clone(),
+            direction: leftDir.clone()
+          });
+        }
       });
       
       console.log("Enhanced cannons fired!", cannonballs.current.length, "cannonballs and", cannonFireEffects.current.length, "effects");

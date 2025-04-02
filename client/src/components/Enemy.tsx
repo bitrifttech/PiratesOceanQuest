@@ -238,16 +238,48 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
           directionToPlayer
         );
         
-        // Fires from the side facing the player
-        const sideOffset = cross.y > 0 ? 2 : -2;
+        // Determine which side the player is on - positive means left side, negative means right side
+        const sideOffset = cross.y > 0 ? 2.5 : -2.5;
         
+        // Choose from multiple cannon positions along the side
+        const cannonPositions = [
+          // Define several horizontal positions (z-offsets) along the ship
+          { height: 0.6, offset: -4.0 },  // Front cannon
+          { height: 0.6, offset: 0.0 },   // Middle cannon
+          { height: 0.6, offset: 4.0 },   // Rear cannon
+          { height: 2.0, offset: -2.0 },  // Upper deck front
+          { height: 2.0, offset: 2.0 }    // Upper deck rear
+        ];
+        
+        // Choose a random cannon position
+        const cannonPosition = cannonPositions[Math.floor(Math.random() * cannonPositions.length)];
+        
+        // Calculate the longitudinal offset to position the cannon along ship's length
+        const shipLongitudinalVector = new THREE.Vector3(
+          Math.sin(rotation.y + Math.PI/2) * cannonPosition.offset,
+          0,
+          Math.cos(rotation.y + Math.PI/2) * cannonPosition.offset
+        );
+        
+        // Create the cannon ball position
+        const cannonBallPosition = new THREE.Vector3(
+          position.x + direction.z * sideOffset + shipLongitudinalVector.x,
+          cannonPosition.height, // Height varies by deck
+          position.z - direction.x * sideOffset + shipLongitudinalVector.z
+        );
+        
+        // Add randomness to firing direction for more realistic spread
+        const accuracy = 0.9; // 1.0 = perfect aim
+        const spreadX = (Math.random() - 0.5) * (1 - accuracy) * 0.2;
+        const spreadZ = (Math.random() - 0.5) * (1 - accuracy) * 0.2;
+        
+        // Add jitter to direction for more realistic aiming
+        const fireDirection = directionToPlayer.clone().add(new THREE.Vector3(spreadX, 0, spreadZ)).normalize();
+        
+        // Add the cannonball to the list
         cannonBalls.current.push({
-          position: new THREE.Vector3(
-            position.x + direction.z * sideOffset,
-            2.25, // Adjusted cannon height to match raised ship
-            position.z - direction.x * sideOffset
-          ),
-          direction: directionToPlayer.clone(),
+          position: cannonBallPosition,
+          direction: fireDirection,
           life: 2, // Seconds of life
           id: cannonBallId.current++
         });
