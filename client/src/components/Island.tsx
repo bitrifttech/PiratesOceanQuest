@@ -58,7 +58,14 @@ const Island = ({
   }, [model, type]);
   
   // Deep clone the model to prevent issues
-  const islandModel = modelLoaded ? model.clone() : null;
+  let islandModel: THREE.Group | null = null;
+  if (modelLoaded && model) {
+    try {
+      islandModel = model.clone();
+    } catch (error) {
+      console.error(`Error cloning model for ${type}:`, error);
+    }
+  }
   
   // Generate random Y rotation if none specified
   useEffect(() => {
@@ -101,8 +108,13 @@ const Island = ({
     >
       {modelLoaded && islandModel ? (
         // Render loaded 3D model with proper scaling
-        // Increase scale significantly to make them more visible
-        <group scale={[scale * 6, scale * 6, scale * 6]}>
+        // Increase scale dramatically to make them more visible
+        // Scale differently based on type - larger mountains, medium tropical islands, smaller rocks
+        <group scale={[
+          scale * (type === 'mountain' ? 25 : type === 'tropical' ? 20 : 15), 
+          scale * (type === 'mountain' ? 25 : type === 'tropical' ? 20 : 15), 
+          scale * (type === 'mountain' ? 25 : type === 'tropical' ? 20 : 15)
+        ]}>
           <primitive object={islandModel} castShadow receiveShadow />
         </group>
       ) : (
