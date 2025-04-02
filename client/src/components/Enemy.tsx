@@ -249,15 +249,22 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
         
         // Choose from multiple cannon positions along the side
         // All cannons at the same height level (matching player ship)
-        const cannonPositions = [
-          // Define several horizontal positions (z-offsets) along the ship
-          { height: 0.8, offset: -5.0 },  // Front cannon
-          { height: 0.8, offset: -3.0 },  // Front-mid cannon
-          { height: 0.8, offset: -1.0 },  // Middle-front cannon
-          { height: 0.8, offset: 1.0 },   // Middle-back cannon
-          { height: 0.8, offset: 3.0 },   // Back-mid cannon
-          { height: 0.8, offset: 5.0 }    // Back cannon
-        ];
+        // Generate many more positions evenly spaced along the ship
+        const cannonPositions = [];
+        
+        // Generate 12 positions from front to back of the ship
+        const shipLength = 12; // Length of the ship for positioning
+        const cannonHeight = 0.8;  // Height of all cannons (above water level)
+        
+        // Generate evenly distributed positions
+        for (let i = 0; i < 12; i++) {
+          // Calculate position from front (-shipLength/2) to back (+shipLength/2)
+          const offset = -shipLength/2 + (shipLength * i / 11);
+          cannonPositions.push({
+            height: cannonHeight,
+            offset: offset
+          });
+        }
         
         // Fire from multiple positions at once, spread across the ship's length
         // Number of cannons to fire at once
@@ -289,19 +296,20 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
         
         // Fire from each selected position
         positionsToFire.forEach(cannonPosition => {
-          // Calculate the longitudinal offset to position the cannon along ship's length
-          const shipLongitudinalVector = new THREE.Vector3(
-            Math.sin(rotation.y + Math.PI/2) * cannonPosition.offset,
-            0,
-            Math.cos(rotation.y + Math.PI/2) * cannonPosition.offset
-          );
+          // Calculate precise X and Z offsets for the cannon position along the ship's length
+          const longitudinalOffsetX = Math.sin(rotation.y + Math.PI/2) * cannonPosition.offset;
+          const longitudinalOffsetZ = Math.cos(rotation.y + Math.PI/2) * cannonPosition.offset;
           
-          // Create the cannon ball position
-          const cannonBallPosition = new THREE.Vector3(
-            position.x + direction.z * sideOffset + shipLongitudinalVector.x,
-            cannonPosition.height, // Height varies by deck
-            position.z - direction.x * sideOffset + shipLongitudinalVector.z
-          );
+          // Precise position for this cannon
+          const cannonPosX = position.x + direction.z * sideOffset + longitudinalOffsetX;
+          const cannonPosY = cannonPosition.height; // Height is fixed per cannon position
+          const cannonPosZ = position.z - direction.x * sideOffset + longitudinalOffsetZ;
+          
+          // Create the cannon ball position with explicit coordinates
+          const cannonBallPosition = new THREE.Vector3(cannonPosX, cannonPosY, cannonPosZ);
+          
+          // Log exact position for debugging
+          console.log(`Enemy cannon at: (${cannonPosX.toFixed(2)}, ${cannonPosY.toFixed(2)}, ${cannonPosZ.toFixed(2)})`);
           
           // Add randomness to firing direction for more realistic spread
           const accuracy = 0.9; // 1.0 = perfect aim

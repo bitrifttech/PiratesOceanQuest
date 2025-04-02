@@ -218,31 +218,36 @@ const Ship = () => {
       
       // Create cannonballs and effects for selected cannon positions
       selectedPositions.forEach((deck) => {
-        // Calculate longitudinal offset vector based on ship's direction
-        // This positions cannons along the length of the ship
-        const longitudinalOffset = new THREE.Vector3(
-          Math.sin(rotation.y + Math.PI/2) * deck.zOffset,
-          0,
-          Math.cos(rotation.y + Math.PI/2) * deck.zOffset
-        );
+        // Use completely separate x,y,z coordinates for each cannon
+        // This ensures they're not aligned in a single line
         
-        // Use the side property from our selection algorithm
+        // Set cannon height (all cannon balls emerge at same height)
+        const cannonHeight = deck.deckHeight;
+        
+        // Longitudinal position along ship (front to back)
+        // This varies for each cannon to distribute them along ship length
+        const longitudinalOffsetX = Math.sin(rotation.y + Math.PI/2) * deck.zOffset;
+        const longitudinalOffsetZ = Math.cos(rotation.y + Math.PI/2) * deck.zOffset;
+        
         if (deck.side === 'right') {
-          // Right side cannonball - positioned along ship length using longitudinal offset
-          const rightPos = new THREE.Vector3(
-            position.x + direction.z * deck.rightOffset + longitudinalOffset.x, // Right side + offset along ship
-            deck.deckHeight, // Deck height
-            position.z - direction.x * deck.rightOffset + longitudinalOffset.z // Right side + offset along ship
-          );
+          // Right side cannon calculation
+          // The critical part is calculating the exact position in 3D space
+          const rightPosX = position.x + direction.z * deck.rightOffset + longitudinalOffsetX;
+          const rightPosY = cannonHeight; // Fixed height for all cannons
+          const rightPosZ = position.z - direction.x * deck.rightOffset + longitudinalOffsetZ;
           
-          // Right side cannon direction (perpendicular to ship)
+          // Create position and direction vectors
+          const rightPos = new THREE.Vector3(rightPosX, rightPosY, rightPosZ);
           const rightDir = new THREE.Vector3(-direction.z, 0, direction.x);
+          
+          // Log exact position for debugging
+          console.log(`Right cannon at: (${rightPosX.toFixed(2)}, ${rightPosY.toFixed(2)}, ${rightPosZ.toFixed(2)})`);
           
           // Add cannonball
           cannonballs.current.push({
             id: cannonBallId.current++,
-            position: rightPos.clone(),
-            direction: rightDir.clone()
+            position: rightPos,
+            direction: rightDir
           });
           
           // Add cannon fire effect
@@ -252,21 +257,24 @@ const Ship = () => {
             direction: rightDir.clone()
           });
         } else {
-          // Left side cannonball - positioned along ship length using same longitudinal offset
-          const leftPos = new THREE.Vector3(
-            position.x - direction.z * deck.leftOffset + longitudinalOffset.x, // Left side + offset along ship
-            deck.deckHeight, // Deck height
-            position.z + direction.x * deck.leftOffset + longitudinalOffset.z // Left side + offset along ship
-          );
+          // Left side cannon calculation
+          // Separate variables for precise control
+          const leftPosX = position.x - direction.z * deck.leftOffset + longitudinalOffsetX;
+          const leftPosY = cannonHeight; // Fixed height for all cannons
+          const leftPosZ = position.z + direction.x * deck.leftOffset + longitudinalOffsetZ;
           
-          // Left side cannon direction (perpendicular to ship)
+          // Create position and direction vectors
+          const leftPos = new THREE.Vector3(leftPosX, leftPosY, leftPosZ);
           const leftDir = new THREE.Vector3(direction.z, 0, -direction.x);
+          
+          // Log exact position for debugging
+          console.log(`Left cannon at: (${leftPosX.toFixed(2)}, ${leftPosY.toFixed(2)}, ${leftPosZ.toFixed(2)})`);
           
           // Add cannonball
           cannonballs.current.push({
             id: cannonBallId.current++,
-            position: leftPos.clone(),
-            direction: leftDir.clone()
+            position: leftPos,
+            direction: leftDir
           });
           
           // Add cannon fire effect
