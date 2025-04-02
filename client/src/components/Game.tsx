@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Sky, Environment, OrbitControls, Text } from "@react-three/drei";
+import { Sky, Environment, OrbitControls, Text, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
 import Ocean from "./Ocean";
@@ -16,46 +16,95 @@ import { useAudio } from "../lib/stores/useAudio";
 
 // A reference ship that doesn't move - used to help with orientation
 const ReferenceShip = () => {
+  // Load the same tall multi-deck pirate ship model
+  const { scene: model } = useGLTF("/models/tall_pirate_ship.glb") as any;
+  const [modelLoaded, setModelLoaded] = useState(false);
+  
+  // Make sure model is loaded
+  useEffect(() => {
+    if (model) {
+      console.log("Reference ship model loaded successfully");
+      setModelLoaded(true);
+    }
+  }, [model]);
+  
+  // Deep clone the model to prevent issues
+  const shipModel = modelLoaded ? model.clone() : null;
+  
+  // Get game state for ship scale and height
+  const { shipHeight, shipScale } = useGameState.getState();
+  
   return (
     <group position={[20, 0, 0]}>
-      {/* Ship hull */}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[6, 3, 12]} />
-        <meshStandardMaterial color="#FF5722" roughness={0.8} />
-      </mesh>
-      
-      {/* Ship Deck */}
-      <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
-        <boxGeometry args={[5.5, 0.5, 11.5]} />
-        <meshStandardMaterial color="#E64A19" roughness={0.7} />
-      </mesh>
-      
-      {/* Main mast */}
-      <mesh position={[0, 8, 0]} castShadow>
-        <cylinderGeometry args={[0.3, 0.3, 14]} />
-        <meshStandardMaterial color="#795548" roughness={0.7} />
-      </mesh>
-      
-      {/* Main sail */}
-      <mesh position={[0, 8, 2]} castShadow>
-        <planeGeometry args={[8, 10]} />
-        <meshStandardMaterial
-          color="#FFEB3B"
-          side={THREE.DoubleSide}
-          roughness={0.8}
-        />
-      </mesh>
-      
-      {/* Reference label */}
-      <Text
-        position={[0, 10, 0]}
-        fontSize={2}
-        color="#FF5722"
-        anchorX="center"
-        anchorY="middle"
-      >
-        REFERENCE
-      </Text>
+      {modelLoaded && shipModel ? (
+        <group 
+          scale={[shipScale, shipScale, shipScale]} // Use dynamic ship scale
+          rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
+          position={[0, shipHeight - 2.0, 0]} // Lower position to better show multiple decks
+        >
+          <primitive object={shipModel} castShadow receiveShadow />
+          
+          {/* Orange flag to distinguish reference ship */}
+          <mesh position={[0, 6, 0]} rotation={[0, 0, 0]}>
+            <boxGeometry args={[0.1, 4, 2.5]} />
+            <meshStandardMaterial 
+              color="#FF5722" 
+              transparent={true} 
+              opacity={1.0} 
+              emissive="#FF5722"
+              emissiveIntensity={0.8}
+            />
+          </mesh>
+          
+          {/* Reference text */}
+          <Text
+            position={[0, 12, 0]}
+            fontSize={2}
+            color="#FF5722"
+            anchorX="center"
+            anchorY="middle"
+          >
+            REFERENCE
+          </Text>
+        </group>
+      ) : (
+        /* Fallback if model fails to load */
+        <group>
+          <mesh castShadow receiveShadow>
+            <boxGeometry args={[6, 3, 12]} />
+            <meshStandardMaterial color="#FF5722" roughness={0.8} />
+          </mesh>
+          
+          <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
+            <boxGeometry args={[5.5, 0.5, 11.5]} />
+            <meshStandardMaterial color="#E64A19" roughness={0.7} />
+          </mesh>
+          
+          <mesh position={[0, 8, 0]} castShadow>
+            <cylinderGeometry args={[0.3, 0.3, 14]} />
+            <meshStandardMaterial color="#795548" roughness={0.7} />
+          </mesh>
+          
+          <mesh position={[0, 8, 2]} castShadow>
+            <planeGeometry args={[8, 10]} />
+            <meshStandardMaterial
+              color="#FFEB3B"
+              side={THREE.DoubleSide}
+              roughness={0.8}
+            />
+          </mesh>
+          
+          <Text
+            position={[0, 10, 0]}
+            fontSize={2}
+            color="#FF5722"
+            anchorX="center"
+            anchorY="middle"
+          >
+            REFERENCE
+          </Text>
+        </group>
+      )}
     </group>
   );
 };
