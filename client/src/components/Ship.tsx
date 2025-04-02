@@ -244,11 +244,11 @@ const Ship = () => {
           if (boardingSuccess) {
             // Successfully captured ship
             damageEnemy(enemy.id, enemy.health);
-            console.log("Successfully captured enemy ship!");
+            console.log("DEBUG: Successfully captured enemy ship!");
           } else {
             // Failed boarding attempt
-            takeDamage(10);
-            console.log("Boarding attempt failed!");
+            // takeDamage(10); // Disabled for debugging
+            console.log("DEBUG: Boarding attempt failed!");
           }
         }
       });

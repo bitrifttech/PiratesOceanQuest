@@ -268,10 +268,14 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     );
     
     if (playerCollision && state.collisionCooldown <= 0) {
-      // Ships collided, damage both - but only on cooldown
-      console.log("Ship collision detected!");
-      playerTakeDamage(5);
-      damageEnemy(id, 5);
+      // Ships collided, but we're just logging for debugging, not causing damage
+      console.log("DEBUG: Ship collision detected with enemy ID:", id);
+      console.log("DEBUG: Position player:", playerPosition);
+      console.log("DEBUG: Position enemy:", position);
+      
+      // Collision detection only - no damage
+      // playerTakeDamage(5);  // Disabled
+      // damageEnemy(id, 5);   // Disabled
       
       // Set collision cooldown to 2 seconds
       state.collisionCooldown = 2.0;
@@ -290,8 +294,10 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       // Check for collision with player
       if (checkCollision(ball.position, playerPosition, 1, 5)) {
         // Hit player!
-        console.log("Cannonball hit player!");
-        playerTakeDamage(10);
+        console.log("DEBUG: Cannonball hit player! from enemy ID:", id);
+        console.log("DEBUG: Ball position:", ball.position);
+        console.log("DEBUG: Player position:", playerPosition);
+        // playerTakeDamage(10); // Disabled for debugging
         ball.life = 0; // Remove the ball
       }
       

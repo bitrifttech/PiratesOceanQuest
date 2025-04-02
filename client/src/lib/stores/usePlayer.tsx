@@ -128,13 +128,18 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   // Take damage
   takeDamage: (amount) => {
     const { health } = get();
-    const newHealth = Math.max(0, health - amount);
     
-    set({ health: newHealth });
+    // Get the stack trace to identify the caller
+    const stack = new Error().stack;
+    console.log(`DAMAGE SOURCE - Player is taking ${amount} damage from:`, stack);
     
-    console.log(`Player took ${amount} damage. Health: ${newHealth}`);
+    // Disabled for now to debug health drain issue
+    // const newHealth = Math.max(0, health - amount);
+    // set({ health: newHealth });
     
-    return newHealth;
+    console.log(`DEBUG: Player would have taken ${amount} damage. Current health remains: ${health}`);
+    
+    return health; // Return current health without modifying it
   },
   
   // Heal
