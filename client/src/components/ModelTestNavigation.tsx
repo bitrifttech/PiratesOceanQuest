@@ -22,7 +22,15 @@ const ModelTestNavigation: React.FC = () => {
             href="/model-test/ship" 
             className="flex items-center bg-blue-900 hover:bg-blue-800 px-3 py-2 rounded-md transition-colors"
           >
-            🚢 Ship Model
+            🚢 Base Ship Model
+          </a>
+        </li>
+        <li>
+          <a 
+            href="/model-test/advanced-ship" 
+            className="flex items-center bg-red-900 hover:bg-red-800 px-3 py-2 rounded-md transition-colors"
+          >
+            ⛵ Advanced Ship Model
           </a>
         </li>
         <li>
