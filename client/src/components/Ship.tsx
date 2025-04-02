@@ -26,6 +26,14 @@ interface CannonFireEffectInfo {
   direction: THREE.Vector3;
 }
 
+// Define type for cannon position configuration
+interface CannonPosition {
+  deckHeight: number;
+  rightOffset: number;
+  leftOffset: number;
+  zOffset: number;
+}
+
 // Pre-load the tall multi-deck pirate ship model
 useGLTF.preload("/models/tall_pirate_ship.glb");
 
@@ -129,36 +137,41 @@ const Ship = () => {
         Math.cos(rotation.y)
       );
       
-      // Cannon positions for different decks
-      // Adjusted to properly position at the sides of the ship model
-      const cannonPositions = [
-        // First deck (bottom) cannons
-        {
-          deckHeight: 0.8,  // Lower position
-          rightOffset: 2.5, // Distance from center
-          leftOffset: 2.5   // Distance from center
-        },
-        // Second deck (middle) cannons
-        {
-          deckHeight: 2.2,  // Middle deck position
-          rightOffset: 2.2, // Distance from center
-          leftOffset: 2.2   // Distance from center
-        },
-        // Third deck (top) cannons
-        {
-          deckHeight: 3.6,  // Top deck position
-          rightOffset: 2.0, // Distance from center
-          leftOffset: 2.0   // Distance from center
-        }
-      ];
+      // Configure horizontal cannon positions along the ship's sides
+      // All at similar height levels but spread horizontally
+      const cannonPositions: CannonPosition[] = [];
+      
+      // Deck height for all cannons (slightly above water level)
+      const deckHeight = 1.0;
+      
+      // Ship length distribution - each position is at a different position along the hull
+      const longitudinalPositions = [-4.0, -2.0, 0.0, 2.0, 4.0];
+      
+      // Create cannon positions distributed horizontally along the ship's hull
+      longitudinalPositions.forEach(zOffset => {
+        cannonPositions.push({
+          deckHeight: deckHeight,
+          rightOffset: 2.5,             // Distance from center on right side
+          leftOffset: 2.5,              // Distance from center on left side
+          zOffset: zOffset              // Position along the length of the ship
+        });
+      });
       
       // Create cannonballs and effects for each deck level and side
       cannonPositions.forEach(deck => {
-        // Right side cannonball
+        // Calculate longitudinal offset vector based on ship's direction
+        // This positions cannons along the length of the ship
+        const longitudinalOffset = new THREE.Vector3(
+          Math.sin(rotation.y + Math.PI/2) * deck.zOffset,
+          0,
+          Math.cos(rotation.y + Math.PI/2) * deck.zOffset
+        );
+        
+        // Right side cannonball - positioned along ship length using longitudinal offset
         const rightPos = new THREE.Vector3(
-          position.x + direction.z * deck.rightOffset, // Right side of ship
+          position.x + direction.z * deck.rightOffset + longitudinalOffset.x, // Right side + offset along ship
           deck.deckHeight, // Deck height
-          position.z - direction.x * deck.rightOffset
+          position.z - direction.x * deck.rightOffset + longitudinalOffset.z // Right side + offset along ship
         );
         
         // Right side cannon direction (perpendicular to ship)
@@ -178,11 +191,11 @@ const Ship = () => {
           direction: rightDir.clone()
         });
         
-        // Left side cannonball
+        // Left side cannonball - positioned along ship length using same longitudinal offset
         const leftPos = new THREE.Vector3(
-          position.x - direction.z * deck.leftOffset, // Left side of ship
+          position.x - direction.z * deck.leftOffset + longitudinalOffset.x, // Left side + offset along ship
           deck.deckHeight, // Deck height
-          position.z + direction.x * deck.leftOffset
+          position.z + direction.x * deck.leftOffset + longitudinalOffset.z // Left side + offset along ship
         );
         
         // Left side cannon direction (perpendicular to ship)
