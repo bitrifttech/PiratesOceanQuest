@@ -166,7 +166,12 @@ const CannonFireEffect = ({ position, direction, onComplete }: CannonFireEffectP
     }
   });
   
-  return <group ref={groupRef} />;
+  // Use a scene-level group to ensure the effect doesn't move with the ship
+  return (
+    <group position={[0, 0, 0]}>
+      <group ref={groupRef} />
+    </group>
+  );
 };
 
 export default CannonFireEffect;

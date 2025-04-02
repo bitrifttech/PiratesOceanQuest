@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { Trail } from "@react-three/drei";
@@ -13,6 +13,8 @@ interface CannonballProps {
 
 /**
  * Renders a cannonball with physics and trail effect
+ * Important: This component is rendered outside the ship group hierarchy
+ * to ensure cannonballs don't move with the ship after being fired
  */
 const Cannonball = ({
   position,
@@ -24,21 +26,25 @@ const Cannonball = ({
   // References
   const ballRef = useRef<THREE.Mesh>(null);
   const lifeRef = useRef<number>(lifespan);
-  const velocityRef = useRef<THREE.Vector3>(direction.clone().normalize().multiplyScalar(speed));
   
-  // Initial position
+  // Store the initial position and velocity locally to prevent them from being affected by the parent ship
+  const [localPosition] = useState<THREE.Vector3>(position.clone());
+  const [velocity] = useState<THREE.Vector3>(direction.clone().normalize().multiplyScalar(speed));
+  
+  // Initialize position
   useEffect(() => {
-    if (ballRef.current && position) {
-      ballRef.current.position.copy(position);
+    if (ballRef.current) {
+      // Set initial position directly to avoid being parented to the ship
+      ballRef.current.position.copy(localPosition);
+      console.log("Cannonball initialized at", localPosition);
     }
-  }, [position]);
+  }, [localPosition]);
   
-  // Update cannonball position and apply physics
+  // Update cannonball position and apply physics independently of ship
   useFrame((_, delta) => {
     if (!ballRef.current) return;
     
-    // Move cannonball
-    const velocity = velocityRef.current;
+    // Move cannonball using local velocity reference
     ballRef.current.position.add(velocity.clone().multiplyScalar(delta));
     
     // Apply slight gravity
@@ -60,10 +66,19 @@ const Cannonball = ({
       // Execute callback if provided
       if (onHit) onHit();
     }
+    
+    // Optional: Check if cannonball has fallen into the water
+    if (ballRef.current.position.y < -2) {
+      lifeRef.current = 0;
+      if (onHit) onHit();
+      
+      // Create a small splash effect here (for future enhancement)
+    }
   });
   
   return (
-    <group>
+    // Use an absolute positioned group (not relative to ship)
+    <group position={[0, 0, 0]}>
       {/* Cannonball mesh */}
       <mesh 
         ref={ballRef}

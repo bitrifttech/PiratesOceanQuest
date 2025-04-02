@@ -130,24 +130,25 @@ const Ship = () => {
       );
       
       // Cannon positions for different decks
+      // Adjusted to properly position at the sides of the ship model
       const cannonPositions = [
         // First deck (bottom) cannons
         {
-          deckHeight: 1.5,
-          rightOffset: 2.5,
-          leftOffset: 2.5
+          deckHeight: 0.8,  // Lower position
+          rightOffset: 2.5, // Distance from center
+          leftOffset: 2.5   // Distance from center
         },
         // Second deck (middle) cannons
         {
-          deckHeight: 3.0,
-          rightOffset: 2.2,
-          leftOffset: 2.2
+          deckHeight: 2.2,  // Middle deck position
+          rightOffset: 2.2, // Distance from center
+          leftOffset: 2.2   // Distance from center
         },
         // Third deck (top) cannons
         {
-          deckHeight: 4.5,
-          rightOffset: 2.0,
-          leftOffset: 2.0
+          deckHeight: 3.6,  // Top deck position
+          rightOffset: 2.0, // Distance from center
+          leftOffset: 2.0   // Distance from center
         }
       ];
       
@@ -407,66 +408,72 @@ const Ship = () => {
   const shipModel = modelLoaded ? model.clone() : null;
 
   return (
-    <group ref={shipRef} position={position || [0, 0, 0]}>
-      {/* 3D Ship Model */}
-      {modelLoaded && shipModel ? (
-        <group 
-          scale={[useGameState.getState().shipScale, useGameState.getState().shipScale, useGameState.getState().shipScale]} // Use dynamic ship scale
-          rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
-          position={[0, useGameState.getState().shipHeight - 2.0, 0]} // Lower position to better show multiple decks
-        >
-          <primitive object={shipModel} castShadow receiveShadow />
-        </group>
-      ) : (
-        /* Fallback if model fails to load */
-        <group>
-          <mesh
-            position={[0, 0, 0]}
-            castShadow
-            receiveShadow
+    <>
+      {/* Ship Group - contains only the ship model and health indicator */}
+      <group ref={shipRef} position={position || [0, 0, 0]}>
+        {/* 3D Ship Model */}
+        {modelLoaded && shipModel ? (
+          <group 
+            scale={[useGameState.getState().shipScale, useGameState.getState().shipScale, useGameState.getState().shipScale]} // Use dynamic ship scale
+            rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
+            position={[0, useGameState.getState().shipHeight - 2.0, 0]} // Lower position to better show multiple decks
           >
-            <boxGeometry args={[6, 3, 12]} />
-            <meshStandardMaterial map={woodTexture} roughness={0.7} />
+            <primitive object={shipModel} castShadow receiveShadow />
+          </group>
+        ) : (
+          /* Fallback if model fails to load */
+          <group>
+            <mesh
+              position={[0, 0, 0]}
+              castShadow
+              receiveShadow
+            >
+              <boxGeometry args={[6, 3, 12]} />
+              <meshStandardMaterial map={woodTexture} roughness={0.7} />
+            </mesh>
+          </group>
+        )}
+        
+        {/* Cannons are now part of the 3D model */}
+        {!modelLoaded && (
+          <>
+            {/* Cannons - port side (left) - shown only in fallback mode */}
+            {[-6, -3, 0, 3, 6].map((z, i) => (
+              <Cannon
+                key={`port-${i}`}
+                position={[-3.5, 0.8, z]}
+                rotation={[0, -Math.PI / 2, 0]}
+              />
+            ))}
+            
+            {/* Cannons - starboard side (right) - shown only in fallback mode */}
+            {[-6, -3, 0, 3, 6].map((z, i) => (
+              <Cannon
+                key={`starboard-${i}`}
+                position={[3.5, 0.8, z]}
+                rotation={[0, Math.PI / 2, 0]}
+              />
+            ))}
+          </>
+        )}
+        
+        {/* Health indicator (only shown when damaged) - positioned above ship */}
+        {health < 100 && (
+          <mesh position={[0, 8, 0]} rotation={[0, 0, 0]}>
+            <boxGeometry args={[10, 0.4, 2]} />
+            <meshStandardMaterial 
+              color={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
+              emissive={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
+              emissiveIntensity={0.8}
+              transparent={true}
+              opacity={0.8}
+            />
           </mesh>
-        </group>
-      )}
+        )}
+      </group>
       
-      {/* Cannons are now part of the 3D model */}
-      {!modelLoaded && (
-        <>
-          {/* Cannons - port side (left) - shown only in fallback mode */}
-          {[-6, -3, 0, 3, 6].map((z, i) => (
-            <Cannon
-              key={`port-${i}`}
-              position={[-3.5, 0.8, z]}
-              rotation={[0, -Math.PI / 2, 0]}
-            />
-          ))}
-          
-          {/* Cannons - starboard side (right) - shown only in fallback mode */}
-          {[-6, -3, 0, 3, 6].map((z, i) => (
-            <Cannon
-              key={`starboard-${i}`}
-              position={[3.5, 0.8, z]}
-              rotation={[0, Math.PI / 2, 0]}
-            />
-          ))}
-        </>
-      )}
-      
-      {/* Health indicator (only shown when damaged) - positioned above ship */}
-      {health < 100 && (
-        <mesh position={[0, 8, 0]} rotation={[0, 0, 0]}>
-          <boxGeometry args={[10, 0.4, 2]} />
-          <meshStandardMaterial 
-            color={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
-            emissive={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
-            emissiveIntensity={0.8}
-            transparent={true}
-            opacity={0.8}
-          />
-        </mesh>
-      )}
+      {/* Scene-level projectiles and effects - not children of the ship group */}
+      {/* This ensures they move independently from the ship */}
       
       {/* Render enhanced cannonballs with the new Cannonball component */}
       {cannonballs.current.map((ball) => (
@@ -487,7 +494,7 @@ const Ship = () => {
           direction={effect.direction}
         />
       ))}
-    </group>
+    </>
   );
 };
 
