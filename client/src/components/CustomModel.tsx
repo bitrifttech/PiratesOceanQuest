@@ -11,6 +11,7 @@ interface CustomModelProps {
   rotation?: [number, number, number];    // Model rotation
   scale?: number;                         // Base scale multiplier
   modelAdjustment?: number;               // Model-specific adjustment factor
+  modelHeightOffset?: number;             // Vertical offset to position model at water level
   bob?: boolean;                          // Enable ocean bob effect
   bobHeight?: number;                     // Bob amplitude
   bobSpeed?: number;                      // Bob frequency
@@ -28,6 +29,7 @@ const CustomModel = ({
   rotation = [0, 0, 0],
   scale = 1.0,
   modelAdjustment,
+  modelHeightOffset = 0,
   bob = false,
   bobHeight = 0.15,
   bobSpeed = 1.0,
@@ -37,7 +39,15 @@ const CustomModel = ({
 }: CustomModelProps) => {
   // Model reference
   const modelRef = useRef<THREE.Group>(null);
-  const initialY = useRef<number>(position[1]);
+  
+  // Create a new position array with the height offset applied
+  const adjustedPosition: [number, number, number] = [
+    position[0],
+    position[1] + modelHeightOffset,
+    position[2]
+  ];
+  
+  const initialY = useRef<number>(adjustedPosition[1]);
   const time = useRef<number>(Math.random() * 100); // Random start time for varied bobbing
   
   // Track loading state
@@ -92,7 +102,7 @@ const CustomModel = ({
   
   return (
     <group
-      position={position}
+      position={adjustedPosition}
       rotation={rotation as unknown as THREE.Euler}
       ref={modelRef}
     >

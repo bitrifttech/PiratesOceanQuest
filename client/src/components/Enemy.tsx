@@ -9,6 +9,7 @@ import { useGameState } from "../lib/stores/useGameState";
 import { checkCollision } from "../lib/helpers/collisionDetection";
 import { SCALE, MODEL_ADJUSTMENT, POSITION } from "../lib/constants";
 import Cannon from "./Cannon";
+import CustomModel from "./CustomModel";
 
 // Preload the tall multi-deck pirate ship model
 useGLTF.preload("/models/tall_pirate_ship.glb");
@@ -31,23 +32,11 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     state: "patrol" as "patrol" | "chase" | "attack"
   });
   
-  // Load tall multi-deck pirate ship model
-  const { scene: model } = useGLTF("/models/tall_pirate_ship.glb") as any;
+  // Track model loading state - now handled by CustomModel component
   const [modelLoaded, setModelLoaded] = useState(false);
   
   // Textures
   const woodTexture = useTexture("/textures/wood.jpg");
-  
-  // Make sure model is loaded
-  useEffect(() => {
-    if (model) {
-      console.log("Enemy ship model loaded successfully");
-      setModelLoaded(true);
-    }
-  }, [model]);
-  
-  // Deep clone the model to prevent issues
-  const shipModel = modelLoaded ? model.clone() : null;
   
   // Get player state
   const playerPosition = usePlayer((state) => state.position);
@@ -79,18 +68,11 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     // Ship bobbing on waves with configurable height - use the same settings as player ship
     const { shipHeight, waveHeight, waveSpeed, shipScale } = useGameState.getState();
     
-    // Update model scale dynamically if it has changed using standardized scaling system
-    if (enemyRef.current.children[0] && modelLoaded) {
-      // Apply enemy ship scaling factor (0.8-1.1 relative to player)
-      const enemyScaleFactor = SCALE.ENEMY_SHIP.MIN + (parseInt(id) % 4) * 0.1; // Varied sizes for enemies (0.8, 0.9, 1.0, 1.1)
-      const standardizedScale = shipScale * enemyScaleFactor * MODEL_ADJUSTMENT.SHIP;
-      enemyRef.current.children[0].scale.set(standardizedScale, standardizedScale, standardizedScale);
-    }
+    // No need to update model scale here, CustomModel handles it internally
     
-    // Update position with correct shipHeight
-    enemyRef.current.position.y = Math.sin(Date.now() * waveSpeed + parseInt(id)) * waveHeight + shipHeight;
-    enemyRef.current.rotation.x = Math.sin(Date.now() * (waveSpeed - 0.0001) + parseInt(id)) * 0.01;
-    enemyRef.current.rotation.z = Math.cos(Date.now() * (waveSpeed - 0.0001) + parseInt(id)) * 0.01;
+    // Update position with correct shipHeight for the base group only (not the model)
+    // Model bobbing is now handled by CustomModel internally
+    enemyRef.current.position.y = shipHeight;
     
     // Calculate distance to player
     const distanceToPlayer = new THREE.Vector3()
@@ -435,66 +417,46 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
   
   return (
     <group ref={enemyRef} position={position} rotation={rotation}>
-      {/* 3D Ship Model - with red color overlay for enemies */}
-      {modelLoaded && shipModel ? (
-        <group 
-          scale={[
-            useGameState.getState().shipScale * (SCALE.ENEMY_SHIP.MIN + (parseInt(id) % 4) * 0.1) * MODEL_ADJUSTMENT.SHIP,
-            useGameState.getState().shipScale * (SCALE.ENEMY_SHIP.MIN + (parseInt(id) % 4) * 0.1) * MODEL_ADJUSTMENT.SHIP,
-            useGameState.getState().shipScale * (SCALE.ENEMY_SHIP.MIN + (parseInt(id) % 4) * 0.1) * MODEL_ADJUSTMENT.SHIP
-          ]} // Use standardized scaling system with enemy variation
-          rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
-          position={[0, useGameState.getState().shipHeight - 2.0, 0]} // Lower position to better show multiple decks
-        >
-          <primitive object={shipModel} castShadow receiveShadow />
-          
-          {/* Red flag to distinguish enemy ships - adjusted for new rotation */}
-          <mesh position={[0, 6, 0]} rotation={[0, 0, 0]}>
-            <boxGeometry args={[0.1, 4, 2.5]} />
-            <meshStandardMaterial 
-              color="#B71C1C" 
-              transparent={true} 
-              opacity={1.0} 
-              emissive="#B71C1C"
-              emissiveIntensity={0.8}
-            />
-          </mesh>
-          
-          {/* Skull and crossbones symbol on flag - adjusted for new rotation */}
-          <mesh position={[0.1, 6, 0]} rotation={[0, 0, 0]}>
-            <planeGeometry args={[2.0, 1.5]} />
-            <meshStandardMaterial 
-              color="black" 
-              transparent={true} 
-              opacity={1.0} 
-              emissive="white"
-              emissiveIntensity={0.5}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
-        </group>
-      ) : (
-        /* Fallback geometry if model fails to load */
-        <group>
-          <mesh castShadow receiveShadow>
-            <boxGeometry args={[6, 3, 12]} />
-            <meshStandardMaterial
-              map={woodTexture}
-              color="#5D4037"
-              roughness={0.8}
-            />
-          </mesh>
-          
-          <mesh position={[0, 8, 2]} castShadow>
-            <planeGeometry args={[8, 10]} />
-            <meshStandardMaterial
-              color="#B71C1C"
-              side={THREE.DoubleSide}
-              roughness={0.8}
-            />
-          </mesh>
-        </group>
-      )}
+      {/* 3D Ship Model using CustomModel component */}
+      <CustomModel 
+        path="/models/tall_pirate_ship.glb"
+        position={[0, 0, 0]}
+        rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
+        scale={useGameState.getState().shipScale * (SCALE.ENEMY_SHIP.MIN + (parseInt(id) % 4) * 0.1)}
+        modelAdjustment={MODEL_ADJUSTMENT.SHIP}
+        modelHeightOffset={useGameState.getState().shipHeight - 2.0} // Apply dynamic height offset from game state
+        bob={true}
+        bobHeight={0.15}
+        bobSpeed={0.5}
+        castShadow
+        receiveShadow
+        onLoad={() => setModelLoaded(true)}
+      />
+      
+      {/* Red flag to distinguish enemy ships */}
+      <mesh position={[0, 6, 0]} rotation={[0, 0, 0]}>
+        <boxGeometry args={[0.1, 4, 2.5]} />
+        <meshStandardMaterial 
+          color="#B71C1C" 
+          transparent={true} 
+          opacity={1.0} 
+          emissive="#B71C1C"
+          emissiveIntensity={0.8}
+        />
+      </mesh>
+      
+      {/* Skull and crossbones symbol on flag */}
+      <mesh position={[0.1, 6, 0]} rotation={[0, 0, 0]}>
+        <planeGeometry args={[2.0, 1.5]} />
+        <meshStandardMaterial 
+          color="black" 
+          transparent={true} 
+          opacity={1.0} 
+          emissive="white"
+          emissiveIntensity={0.5}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
       
       {/* Health indicator (only shown when damaged) - positioned above ship */}
       {health < 100 && (

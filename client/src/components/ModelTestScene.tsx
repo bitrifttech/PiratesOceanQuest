@@ -10,6 +10,7 @@ interface ModelTestSceneProps {
   modelPath?: string;
   modelScale?: number;
   modelAdjustment?: number;
+  modelHeightOffset?: number;
   enableBob?: boolean;
 }
 
@@ -20,6 +21,7 @@ export const ModelTestScene = ({
   modelPath = "/models/base_pirate_ship.glb",
   modelScale = 1.0,
   modelAdjustment,
+  modelHeightOffset = 2.0, // Default height offset to position models at water level
   enableBob = true
 }: ModelTestSceneProps) => {
   // References
@@ -85,6 +87,7 @@ export const ModelTestScene = ({
             position={[0, 0, 0]}
             scale={modelScale}
             modelAdjustment={modelAdjustment}
+            modelHeightOffset={modelHeightOffset}
             bob={enableBob}
             bobHeight={0.15}
             bobSpeed={0.5}
@@ -137,6 +140,7 @@ export const ModelTestScene = ({
         <h3>Model Test Scene</h3>
         <p>Model: {modelPath.split('/').pop()}</p>
         <p>Scale: {modelScale} × {modelAdjustment || "N/A"}</p>
+        <p>Height Offset: {modelHeightOffset}</p>
         <p>Status: {modelLoaded ? "✅ Loaded" : "⏳ Loading..."}</p>
         <p>Bob Effect: {enableBob ? "Enabled" : "Disabled"}</p>
         <p><small>Red, green, blue and yellow cubes are 1×1×1 meter reference blocks</small></p>

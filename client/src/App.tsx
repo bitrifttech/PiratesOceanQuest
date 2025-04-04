@@ -83,12 +83,12 @@ function App() {
     <Router>
       <Routes>
         {/* Model Test Route */}
-        <Route path="/model-test" element={<ModelTestScene modelPath="/models/base_pirate_ship.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.SHIP} />} />
-        <Route path="/model-test/ship" element={<ModelTestScene modelPath="/models/base_pirate_ship.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.SHIP} />} />
-        <Route path="/model-test/advanced-ship" element={<ModelTestScene modelPath="/models/advanced_pirate_ship.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.SHIP} />} />
-        <Route path="/model-test/tropical" element={<ModelTestScene modelPath="/models/tropical_island.glb" modelScale={3.0} modelAdjustment={MODEL_ADJUSTMENT.TROPICAL} />} />
-        <Route path="/model-test/mountain" element={<ModelTestScene modelPath="/models/mountain_island.glb" modelScale={5.0} modelAdjustment={MODEL_ADJUSTMENT.MOUNTAIN} />} />
-        <Route path="/model-test/rocks" element={<ModelTestScene modelPath="/models/rock_formation.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.ROCKS} />} />
+        <Route path="/model-test" element={<ModelTestScene modelPath="/models/base_pirate_ship.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.SHIP} modelHeightOffset={1.5} />} />
+        <Route path="/model-test/ship" element={<ModelTestScene modelPath="/models/base_pirate_ship.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.SHIP} modelHeightOffset={1.5} />} />
+        <Route path="/model-test/advanced-ship" element={<ModelTestScene modelPath="/models/advanced_pirate_ship.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.SHIP} modelHeightOffset={2.5} />} />
+        <Route path="/model-test/tropical" element={<ModelTestScene modelPath="/models/tropical_island.glb" modelScale={3.0} modelAdjustment={MODEL_ADJUSTMENT.TROPICAL} modelHeightOffset={0} />} />
+        <Route path="/model-test/mountain" element={<ModelTestScene modelPath="/models/mountain_island.glb" modelScale={5.0} modelAdjustment={MODEL_ADJUSTMENT.MOUNTAIN} modelHeightOffset={0} />} />
+        <Route path="/model-test/rocks" element={<ModelTestScene modelPath="/models/rock_formation.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.ROCKS} modelHeightOffset={0} />} />
         
         {/* Main Game Route */}
         <Route path="*" element={

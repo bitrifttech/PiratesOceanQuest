@@ -12,6 +12,7 @@ import { SCALE, MODEL_ADJUSTMENT, POSITION } from "../lib/constants";
 import Cannon from "./Cannon";
 import Cannonball from "./Cannonball";
 import CannonFireEffect from "./CannonFireEffect";
+import CustomModel from "./CustomModel";
 import { useAudio } from "../lib/stores/useAudio";
 
 // Define types for our cannonball and effect tracking
@@ -36,8 +37,9 @@ interface CannonPosition {
   side?: 'right' | 'left'; // Optional property for cannon side
 }
 
-// Pre-load the tall multi-deck pirate ship model
+// Pre-load the ship models
 useGLTF.preload("/models/tall_pirate_ship.glb");
+useGLTF.preload("/models/advanced_pirate_ship.glb");
 
 const Ship = () => {
   // Get player state and controls
@@ -373,11 +375,7 @@ const Ship = () => {
     // Get dynamic ship parameters from game state
     const { shipHeight, waveHeight, waveSpeed, shipScale } = useGameState.getState();
     
-    // Update model scale dynamically if it has changed using standardized scaling system
-    if (shipRef.current.children[0] && modelLoaded) {
-      const standardizedScale = shipScale * SCALE.PLAYER_SHIP * MODEL_ADJUSTMENT.SHIP;
-      shipRef.current.children[0].scale.set(standardizedScale, standardizedScale, standardizedScale);
-    }
+    // No need to update model scale here, CustomModel handles it internally
     
     // Debug: Show current key states (commented out to reduce console spam)
     /*
@@ -503,62 +501,28 @@ const Ship = () => {
     }
   });
 
-  // Load the new tall pirate ship 3D model with multiple decks and cannons
-  const { scene: model } = useGLTF("/models/tall_pirate_ship.glb") as any;
+  // Track model loading state - now handled by CustomModel component
   const [modelLoaded, setModelLoaded] = useState(false);
-  const shipModelRef = useRef<THREE.Group>(null);
-
-  // Make sure model is loaded
-  useEffect(() => {
-    if (model) {
-      console.log("Ship model loaded successfully", model);
-      
-      // Debug model structure
-      if (model.children) {
-        console.log("Model children:", model.children.length);
-        // Use a regular for loop to avoid TypeScript errors
-        for (let i = 0; i < model.children.length; i++) {
-          console.log(`Child ${i}:`, model.children[i]);
-        }
-      }
-      
-      setModelLoaded(true);
-    }
-  }, [model]);
-
-  // Deep clone the model to prevent issues
-  const shipModel = modelLoaded ? model.clone() : null;
 
   return (
     <>
       {/* Ship Group - contains only the ship model and health indicator */}
       <group ref={shipRef} position={position || [0, 0, 0]}>
-        {/* 3D Ship Model */}
-        {modelLoaded && shipModel ? (
-          <group 
-            scale={[
-              useGameState.getState().shipScale * SCALE.PLAYER_SHIP * MODEL_ADJUSTMENT.SHIP, 
-              useGameState.getState().shipScale * SCALE.PLAYER_SHIP * MODEL_ADJUSTMENT.SHIP, 
-              useGameState.getState().shipScale * SCALE.PLAYER_SHIP * MODEL_ADJUSTMENT.SHIP
-            ]} // Use standardized scaling system
-            rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
-            position={[0, useGameState.getState().shipHeight - 2.0, 0]} // Lower position to better show multiple decks
-          >
-            <primitive object={shipModel} castShadow receiveShadow />
-          </group>
-        ) : (
-          /* Fallback if model fails to load */
-          <group>
-            <mesh
-              position={[0, 0, 0]}
-              castShadow
-              receiveShadow
-            >
-              <boxGeometry args={[6, 3, 12]} />
-              <meshStandardMaterial map={woodTexture} roughness={0.7} />
-            </mesh>
-          </group>
-        )}
+        {/* 3D Ship Model using CustomModel component */}
+        <CustomModel 
+          path="/models/tall_pirate_ship.glb"
+          position={[0, 0, 0]}
+          rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
+          scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP}
+          modelAdjustment={MODEL_ADJUSTMENT.SHIP}
+          modelHeightOffset={useGameState.getState().shipHeight - 2.0} // Apply dynamic height offset from game state
+          bob={true}
+          bobHeight={0.15}
+          bobSpeed={0.5}
+          castShadow
+          receiveShadow
+          onLoad={() => setModelLoaded(true)}
+        />
         
         {/* Cannons are now part of the 3D model */}
         {!modelLoaded && (
