@@ -40,14 +40,15 @@ const CustomModel = ({
   // Model reference
   const modelRef = useRef<THREE.Group>(null);
   
-  // Create a new position array with the height offset applied
-  const adjustedPosition: [number, number, number] = [
-    position[0],
-    position[1] + modelHeightOffset,
+  // Base position without height offset
+  const basePosition: [number, number, number] = [
+    position[0], 
+    position[1], 
     position[2]
   ];
   
-  const initialY = useRef<number>(adjustedPosition[1]);
+  // Track initial position and bob state
+  const initialY = useRef<number>(position[1]);
   const time = useRef<number>(Math.random() * 100); // Random start time for varied bobbing
   
   // Track loading state
@@ -83,6 +84,16 @@ const CustomModel = ({
     };
   }, [customModel, path, castShadow, receiveShadow, onLoad]);
   
+  // Set initial position when component mounts or modelHeightOffset changes
+  useEffect(() => {
+    if (modelRef.current) {
+      // Apply the height offset to the model's position
+      modelRef.current.position.y = position[1] + modelHeightOffset;
+      // Update initialY reference for bobbing
+      initialY.current = position[1] + modelHeightOffset;
+    }
+  }, [modelHeightOffset, position]);
+  
   // Apply bobbing motion if enabled
   useFrame((_, delta) => {
     if (!modelRef.current || !bob) return;
@@ -102,7 +113,7 @@ const CustomModel = ({
   
   return (
     <group
-      position={adjustedPosition}
+      position={basePosition}
       rotation={rotation as unknown as THREE.Euler}
       ref={modelRef}
     >
