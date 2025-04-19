@@ -12,6 +12,8 @@ interface ModelTestSceneProps {
   modelAdjustment?: number;
   modelHeightOffset?: number;
   enableBob?: boolean;
+  bobHeight?: number;
+  bobSpeed?: number;
 }
 
 /**
@@ -22,7 +24,9 @@ export const ModelTestScene = ({
   modelScale = 1.0,
   modelAdjustment,
   modelHeightOffset = 2.0, // Default height offset to position models at water level
-  enableBob = true
+  enableBob = true,
+  bobHeight: initialBobHeight = 0.03,
+  bobSpeed: initialBobSpeed = 0.5
 }: ModelTestSceneProps) => {
   // References
   const sceneRef = useRef<THREE.Group>(null);
@@ -35,8 +39,8 @@ export const ModelTestScene = ({
   const [heightOffset, setHeightOffset] = useState<number>(modelHeightOffset);
   const [adjustmentFactor, setAdjustmentFactor] = useState<number>(modelAdjustment || 1.0);
   const [bobEnabled, setBobEnabled] = useState<boolean>(enableBob);
-  const [bobHeight, setBobHeight] = useState<number>(0.15);
-  const [bobSpeed, setBobSpeed] = useState<number>(0.5);
+  const [bobHeight, setBobHeight] = useState<number>(initialBobHeight);
+  const [bobSpeed, setBobSpeed] = useState<number>(initialBobSpeed);
   const [showGrid, setShowGrid] = useState<boolean>(true);
   
   // Copy to clipboard function
