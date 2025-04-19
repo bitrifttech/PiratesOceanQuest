@@ -426,7 +426,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
         modelAdjustment={MODEL_ADJUSTMENT.SHIP}
         modelHeightOffset={useGameState.getState().shipHeight - 2.0} // Apply dynamic height offset from game state
         bob={true}
-        bobHeight={0.15}
+        bobHeight={0.01} // Updated value from model test
         bobSpeed={0.5}
         castShadow
         receiveShadow

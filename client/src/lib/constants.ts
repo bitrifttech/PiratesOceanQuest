@@ -52,7 +52,7 @@ export const SCALE = {
 
 // Model scaling adjustments (to correct for model-specific scaling issues)
 export const MODEL_ADJUSTMENT = {
-  SHIP: 24.0,     // Required multiplier to make ship model appropriate size
+  SHIP: 1.6,      // Required multiplier to make ship model appropriate size (updated from model test)
   TROPICAL: 8.0,  // Multiplier for tropical island models
   MOUNTAIN: 10.0, // Multiplier for mountain island models
   ROCKS: 6.0,     // Multiplier for rock formation models
