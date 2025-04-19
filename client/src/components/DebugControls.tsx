@@ -129,13 +129,13 @@ const DebugControls: React.FC<DebugControlsProps> = ({
 
       <div style={sliderContainer}>
         <label style={sliderLabel}>
-          Wave Height <span style={valueDisplay}>{waveHeight.toFixed(2)}</span>
+          Wave Height <span style={valueDisplay}>{waveHeight.toFixed(3)}</span>
         </label>
         <input
           type="range"
-          min="0"
-          max="1"
-          step="0.05"
+          min="0.01"
+          max="0.2"
+          step="0.01"
           value={waveHeight}
           onChange={handleWaveHeightChange}
           style={{ width: '100%' }}
