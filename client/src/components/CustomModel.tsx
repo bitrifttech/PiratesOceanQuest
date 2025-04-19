@@ -31,7 +31,7 @@ const CustomModel = ({
   modelAdjustment,
   modelHeightOffset = 0,
   bob = false,
-  bobHeight = 0.15,
+  bobHeight = 0.03,
   bobSpeed = 1.0,
   receiveShadow = true,
   castShadow = true,

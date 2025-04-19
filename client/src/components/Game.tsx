@@ -45,7 +45,7 @@ const ReferenceShip = () => {
     
     // Apply bobbing effect on waves
     const time = Date.now() * waveSpeed;
-    shipRef.current.position.y = Math.sin(time) * waveHeight + shipHeight; 
+    shipRef.current.position.y = Math.sin(time) * 0.03 + shipHeight; 
     shipRef.current.rotation.x = Math.sin(time - 0.1) * 0.01;
     shipRef.current.rotation.z = Math.cos(time - 0.1) * 0.01;
   });
