@@ -4,7 +4,7 @@ import { Controls } from "../App";
 import HUD from "./HUD";
 import DebugControls from "./DebugControls";
 import { usePlayer } from "../lib/stores/usePlayer";
-import { useEnemies } from "../lib/stores/useEnemies";
+// import { useEnemies } from "../lib/stores/useEnemies"; // Removed enemies import
 import { useGameState } from "../lib/stores/useGameState";
 import { useUpgrades } from "../lib/stores/useUpgrades";
 import { useAudio } from "../lib/stores/useAudio";
@@ -30,9 +30,7 @@ const GameUI = () => {
   const playerHealth = usePlayer((state) => state.health);
   const resetPlayer = usePlayer((state) => state.resetPlayer);
   
-  // Enemy state
-  const enemies = useEnemies((state) => state.enemies);
-  const resetEnemies = useEnemies((state) => state.resetEnemies);
+  // Enemy state removed
   
   // Upgrades
   const loot = useUpgrades((state) => state.loot);
@@ -55,23 +53,22 @@ const GameUI = () => {
     }
   }, [gameState]);
   
-  // Create a ref to track if enemies have been defeated
-  const hasDefeatedEnemies = useRef(false);
+  // Using a ref to track game time for auto victory
+  const gameTimeRef = useRef(0);
   
-  // Check for victory condition - but only when the player has defeated enemies
+  // Trigger victory after a set amount of time for demo purposes
   useEffect(() => {
-    // Only show victory when enemies have been spawned and then defeated
-    if (gameState === 'playing' && hasDefeatedEnemies.current && enemies.length === 0) {
-      setShowVictory(true);
-      // Add loot
-      addLoot(Math.floor(Math.random() * 100) + 100);
+    if (gameState === 'playing') {
+      // Set a timeout to show victory after 2 minutes of gameplay
+      const victoryTimeout = setTimeout(() => {
+        setShowVictory(true);
+        // Add random loot amount
+        addLoot(Math.floor(Math.random() * 100) + 100);
+      }, 120000); // 2 minutes
+      
+      return () => clearTimeout(victoryTimeout);
     }
-    
-    // If enemies exist, mark that the player has engaged with them
-    if (enemies.length > 0) {
-      hasDefeatedEnemies.current = true;
-    }
-  }, [gameState, enemies, addLoot]);
+  }, [gameState, addLoot]);
   
   // Handle game restart
   const handleRestart = () => {

@@ -55,41 +55,4 @@ export function calculateShipMovement(
   };
 }
 
-// Check if player has input for ship boarding
-export function checkBoardingInput(
-  boardKey: boolean,
-  playerPosition: THREE.Vector3,
-  enemyPosition: THREE.Vector3,
-  enemyHealth: number,
-  maxBoardingDistance: number = 15,
-  enemyHealthThreshold: number = 30
-): boolean {
-  if (!boardKey) return false;
-  
-  // Calculate distance to enemy
-  const distance = playerPosition.distanceTo(enemyPosition);
-  
-  // Check if enemy is close enough and weak enough to board
-  return (
-    distance < maxBoardingDistance &&
-    enemyHealth < enemyHealthThreshold
-  );
-}
-
-// Calculate success chance for boarding
-export function calculateBoardingSuccess(
-  enemyHealth: number,
-  playerHullLevel: number
-): boolean {
-  // Base chance depends on enemy health (lower health = higher chance)
-  const baseChance = (100 - enemyHealth) / 100;
-  
-  // Bonus from hull level (each level adds 5% chance)
-  const hullBonus = playerHullLevel * 0.05;
-  
-  // Calculate final chance (capped at 95%)
-  const successChance = Math.min(0.95, baseChance + hullBonus);
-  
-  // Determine success
-  return Math.random() < successChance;
-}
+// Boarding functions removed
