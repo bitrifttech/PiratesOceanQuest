@@ -62,6 +62,13 @@ const Ship = () => {
   const hullRef = useRef<THREE.Mesh>(null);
   const sailRef = useRef<THREE.Mesh>(null);
   
+  // Store initial ship config values to ensure consistency across restarts
+  const initialShipConfig = useRef({
+    shipHeight: useGameState.getState().shipHeight,
+    waveHeight: useGameState.getState().waveHeight,
+    waveSpeed: useGameState.getState().waveSpeed
+  });
+  
   // Textures
   const woodTexture = useTexture("/textures/wood.jpg");
   
@@ -117,7 +124,13 @@ const Ship = () => {
       setVelocity(new THREE.Vector3(0, 0, 0));
     }
     
-    console.log("Ship initialized", position);
+    // Log initialization with ship height for debugging
+    console.log("Ship initialized", {
+      position,
+      savedHeight: initialShipConfig.current.shipHeight,
+      constantHeight: POSITION.SHIP_HEIGHT,
+      gameStateHeight: useGameState.getState().shipHeight
+    });
   }, [position, setPosition, setRotation, setVelocity]);
   
   // Check fire control input
@@ -429,13 +442,17 @@ const Ship = () => {
     shipRef.current.position.copy(newPosition);
     shipRef.current.rotation.copy(newRotation);
     
-    // Make ship bob on the waves with configurable height
+    // Make ship bob on the waves with consistent height (using stored initial config)
     if (shipRef.current) {
-      const { shipHeight, waveHeight, waveSpeed } = useGameState.getState();
+      // Use stored initial config values to ensure consistency across restarts
+      const { shipHeight, waveHeight, waveSpeed } = initialShipConfig.current;
+      
       // Log the ship height and calculated position for debugging
       if (Math.random() < 0.01) { // Log only occasionally to prevent spam
-        console.log(`Ship height: ${shipHeight}, Wave height: ${waveHeight}, Ship Y: ${shipRef.current.position.y}`);
+        console.log(`Ship height (stored): ${shipHeight}, Wave height: ${waveHeight}, Ship Y: ${shipRef.current.position.y}`);
       }
+      
+      // Apply consistent ship height using stored initial config
       shipRef.current.position.y = Math.sin(Date.now() * waveSpeed) * waveHeight + shipHeight;
       shipRef.current.rotation.x = Math.sin(Date.now() * (waveSpeed - 0.0001)) * 0.01;
       shipRef.current.rotation.z = Math.cos(Date.now() * (waveSpeed - 0.0001)) * 0.01;
@@ -483,7 +500,7 @@ const Ship = () => {
           rotation={[0, Math.PI, 0]} // Fixed rotation to point forward
           scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP}
           modelAdjustment={MODEL_ADJUSTMENT.SHIP}
-          modelHeightOffset={POSITION.SHIP_HEIGHT} // Standardized height for all ships
+          modelHeightOffset={initialShipConfig.current.shipHeight} // Using saved height for consistency
           bob={true}
           bobHeight={0.03}
           bobSpeed={0.5}
