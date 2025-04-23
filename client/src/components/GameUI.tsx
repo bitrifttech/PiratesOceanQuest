@@ -72,12 +72,11 @@ const GameUI = () => {
   
   // Handle game restart
   const handleRestart = () => {
-    // Reset player and enemies
+    // Reset player
     resetPlayer();
-    resetEnemies();
     
-    // Reset victory tracking
-    hasDefeatedEnemies.current = false;
+    // Reset game timer
+    gameTimeRef.current = 0;
     
     // Return to menu
     setGameState('menu');
@@ -88,11 +87,8 @@ const GameUI = () => {
   
   // Continue after victory
   const handleContinue = () => {
-    // Spawn more enemies
-    resetEnemies();
-    
-    // Reset victory tracking
-    hasDefeatedEnemies.current = false;
+    // Reset game timer
+    gameTimeRef.current = 0;
     
     // Continue playing
     setShowVictory(false);
@@ -164,9 +160,6 @@ const GameUI = () => {
               
               <div>SPACEBAR</div>
               <div>Fire Cannons</div>
-              
-              <div>B</div>
-              <div>Board Enemy Ship</div>
             </div>
             
             <button
@@ -208,7 +201,7 @@ const GameUI = () => {
           <div className="bg-gray-900 p-8 rounded-lg max-w-md text-center border-2 border-[#FFD700]">
             <h2 className="text-4xl text-[#FFD700] font-['Pirata_One'] mb-4">Victory!</h2>
             
-            <p className="text-gray-300 mb-4">You've defeated all enemy ships in this area!</p>
+            <p className="text-gray-300 mb-4">You've successfully completed your voyage!</p>
             
             <div className="mb-6 bg-gray-800 p-4 rounded-lg">
               <div className="text-[#FFD700] text-lg">Loot Collected</div>
