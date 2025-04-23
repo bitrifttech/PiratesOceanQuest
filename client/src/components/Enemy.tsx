@@ -11,8 +11,8 @@ import { SCALE, MODEL_ADJUSTMENT, POSITION } from "../lib/constants";
 import Cannon from "./Cannon";
 import CustomModel from "./CustomModel";
 
-// Preload the tall multi-deck pirate ship model
-useGLTF.preload("/models/tall_pirate_ship.glb");
+// Preload the base pirate ship model
+useGLTF.preload("/models/base_pirate_ship.glb");
 
 interface EnemyProps {
   id: string;
