@@ -39,8 +39,8 @@ const ReferenceShip = () => {
   const shipScale = useGameState((state) => state.shipScale);
   const waveSpeed = useGameState((state) => state.waveSpeed);
   
-  // Use constant height to match model viewer configuration
-  const referenceHeight = 0.6;
+  // Use the same height as player ships
+  const referenceHeight = 2.6;
   
   // Add wave bobbing effect to match other ships
   useFrame(() => {

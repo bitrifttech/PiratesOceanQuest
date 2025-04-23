@@ -424,7 +424,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
         rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
         scale={useGameState.getState().shipScale * (SCALE.ENEMY_SHIP.MIN + (parseInt(id) % 4) * 0.1)}
         modelAdjustment={MODEL_ADJUSTMENT.SHIP}
-        modelHeightOffset={0.6} // Match model viewer settings
+        modelHeightOffset={2.6} // Updated height per user request
         bob={true}
         bobHeight={0.03} // Updated value from model test
         bobSpeed={0.5}

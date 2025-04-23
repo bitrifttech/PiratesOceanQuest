@@ -515,7 +515,7 @@ const Ship = () => {
           rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
           scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP}
           modelAdjustment={MODEL_ADJUSTMENT.SHIP}
-          modelHeightOffset={0.6} // Match model viewer settings
+          modelHeightOffset={2.6} // Updated height per user request
           bob={true}
           bobHeight={0.03} // Updated value from model test
           bobSpeed={0.5}
