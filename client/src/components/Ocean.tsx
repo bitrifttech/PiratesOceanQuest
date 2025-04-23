@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { MeshStandardMaterial } from "three";
 import * as THREE from "three";
 import { useGameState } from "../lib/stores/useGameState";
+import { STATIC } from "../lib/constants";
 
 const Ocean = () => {
   const meshRef = useRef<THREE.Mesh>(null);
@@ -99,7 +100,7 @@ const Ocean = () => {
       geometry={waveGeometry}
       material={material}
       receiveShadow
-      position={[0, -0.1, 0]} // Match the model viewer's ocean position
+      position={[0, STATIC.WATER_LEVEL, 0]} // Always use the static water level
     />
   );
 };

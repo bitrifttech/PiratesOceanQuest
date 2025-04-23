@@ -501,7 +501,7 @@ const Ship = () => {
           rotation={[0, Math.PI, 0]} // Fixed rotation to point forward
           scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP}
           modelAdjustment={MODEL_ADJUSTMENT.SHIP}
-          modelHeightOffset={initialShipConfig.current.shipHeight} // Using saved height for consistency
+          modelHeightOffset={STATIC.SHIP_OFFSET} // Using static offset from water
           bob={true}
           bobHeight={0.03}
           bobSpeed={0.5}

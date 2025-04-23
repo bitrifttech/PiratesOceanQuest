@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTF } from "three-stdlib";
-import { SCALE, MODEL_ADJUSTMENT, POSITION } from "../lib/constants";
+import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC } from "../lib/constants";
 
 // Define island types
 type IslandType = 'tropical' | 'mountain' | 'rocks';
@@ -97,15 +97,19 @@ const Island = ({
         heightOffset = POSITION.ISLAND.TROPICAL;
     }
     
-    // Set initial position with correct height
-    islandRef.current.position.set(position[0], heightOffset, position[2]);
+    // Set initial position with correct height relative to static water level
+    islandRef.current.position.set(position[0], STATIC.WATER_LEVEL + heightOffset, position[2]);
+    
+    // Log the positioning for debugging
+    console.log(`Island of type ${type} positioned at: Water level ${STATIC.WATER_LEVEL} + offset ${heightOffset}`);
     
     // Apply subtle bobbing animation
     const animate = () => {
       if (islandRef.current) {
         // All island types bob slightly to add life to the scene
         const time = Date.now() * 0.0005; // Slow bobbing (0.5 speed)
-        islandRef.current.position.y = heightOffset + Math.sin(time) * 0.03; // Subtle 0.03 height
+        // Always animate relative to the static water level
+        islandRef.current.position.y = STATIC.WATER_LEVEL + heightOffset + Math.sin(time) * 0.03; // Subtle 0.03 height
       }
       requestAnimationFrame(animate);
     };

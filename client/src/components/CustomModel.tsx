@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { useKeyboardControls, OrbitControls, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTF } from "three-stdlib";
-import { SCALE, MODEL_ADJUSTMENT } from "../lib/constants";
+import { SCALE, MODEL_ADJUSTMENT, STATIC, POSITION } from "../lib/constants";
 
 interface CustomModelProps {
   path: string;                           // Path to the GLB model file
@@ -87,12 +87,19 @@ const CustomModel = ({
   // Set initial position when component mounts or modelHeightOffset changes
   useEffect(() => {
     if (modelRef.current) {
-      // Apply the height offset to the model's position
-      modelRef.current.position.y = position[1] + modelHeightOffset;
-      // Update initialY reference for bobbing
-      initialY.current = position[1] + modelHeightOffset;
+      // Always use static water level as base reference
+      const heightFromWater = modelHeightOffset === undefined ? 0 : modelHeightOffset;
+      
+      // The y position is always STATIC.WATER_LEVEL + any model-specific offset
+      modelRef.current.position.y = STATIC.WATER_LEVEL + heightFromWater;
+      
+      // Log the positioning for debugging
+      console.log(`Model ${path} positioned at water level + ${heightFromWater} = ${modelRef.current.position.y}`);
+      
+      // Update initialY reference for bobbing - always relative to water level
+      initialY.current = STATIC.WATER_LEVEL + heightFromWater;
     }
-  }, [modelHeightOffset, position]);
+  }, [modelHeightOffset, position, path]);
   
   // Apply bobbing motion if enabled
   useFrame((_, delta) => {
