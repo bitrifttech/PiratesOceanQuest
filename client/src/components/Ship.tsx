@@ -5,7 +5,7 @@ import * as THREE from "three";
 
 import { Controls } from "../App";
 import { usePlayer } from "../lib/stores/usePlayer";
-import { useEnemies } from "../lib/stores/useEnemies";
+// import { useEnemies } from "../lib/stores/useEnemies"; // Removed enemies
 import { useGameState } from "../lib/stores/useGameState";
 import { checkCollision } from "../lib/helpers/collisionDetection";
 import { SCALE, MODEL_ADJUSTMENT, POSITION } from "../lib/constants";
@@ -65,9 +65,7 @@ const Ship = () => {
   // Textures
   const woodTexture = useTexture("/textures/wood.jpg");
   
-  // Get enemies
-  const enemies = useEnemies((state) => state.enemies);
-  const damageEnemy = useEnemies((state) => state.damageEnemy);
+  // Enemy state removed
   
   // Audio
   const playHit = useAudio((state) => state.playHit);
@@ -330,40 +328,7 @@ const Ship = () => {
     }
   }, [cannonReady, position, rotation, fireCannon, getKeys]);
   
-  // Check boarding initiation
-  useEffect(() => {
-    // Get current key states directly
-    const keys = getKeys();
-    
-    if (keys.board && position) {
-      console.log("Attempting to board");
-      
-      // Check if any enemy is close enough to board
-      enemies.forEach(enemy => {
-        const distance = new THREE.Vector3(
-          enemy.position.x - position.x,
-          0,
-          enemy.position.z - position.z
-        ).length();
-        
-        if (distance < 15 && enemy.health < 30) {
-          console.log("Boarding enemy ship", enemy.id);
-          // Calculate boarding success based on ship health
-          const boardingSuccess = Math.random() < (100 - enemy.health) / 100;
-          
-          if (boardingSuccess) {
-            // Successfully captured ship
-            damageEnemy(enemy.id, enemy.health);
-            console.log("DEBUG: Successfully captured enemy ship!");
-          } else {
-            // Failed boarding attempt
-            // takeDamage(10); // Disabled for debugging
-            console.log("DEBUG: Boarding attempt failed!");
-          }
-        }
-      });
-    }
-  }, [enemies, position, damageEnemy, takeDamage, getKeys]);
+  // Boarding functionality removed
   
   // Update ship position and rotation
   useFrame((_, delta) => {
@@ -479,16 +444,13 @@ const Ship = () => {
         ball.direction.clone().multiplyScalar(40 * delta)
       );
       
-      // Check for collisions with enemies
-      enemies.forEach(enemy => {
-        if (checkCollision(ball.position, enemy.position, 2, 5)) {
-          // Hit!
-          damageEnemy(enemy.id, 10);
-          // Mark for removal
-          cannonballs.current.splice(index, 1);
-          playHit();
-        }
-      });
+      // Enemy collision detection removed
+      
+      // Check for cannonball range/lifetime instead
+      if (ball.position.distanceTo(position) > 100) {
+        // Out of range, remove cannonball
+        cannonballs.current.splice(index, 1);
+      }
     });
     
     // Remove fire effects after their lifetime

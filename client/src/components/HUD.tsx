@@ -60,16 +60,7 @@ const HUD = () => {
       ctx.fill();
     });
     
-    // Draw enemies
-    ctx.fillStyle = '#F44336';
-    enemies.forEach(enemy => {
-      const mapX = centerX + (enemy.position.x - playerPosition.x) * scaleFactor;
-      const mapY = centerY + (enemy.position.z - playerPosition.z) * scaleFactor;
-      
-      ctx.beginPath();
-      ctx.arc(mapX, mapY, 3, 0, Math.PI * 2);
-      ctx.fill();
-    });
+    // Draw enemies section removed
     
     // Draw player
     ctx.fillStyle = '#4CAF50';
@@ -88,7 +79,7 @@ const HUD = () => {
     ctx.lineTo(dirX, dirY);
     ctx.stroke();
     
-  }, [playerPosition, playerRotation, enemies]);
+  }, [playerPosition, playerRotation]);
 
   // Handle window resize
   useEffect(() => {
@@ -148,32 +139,7 @@ const HUD = () => {
         </div>
         <div className="text-white mt-2 text-sm pointer-events-none">SPACEBAR to fire</div>
         
-        {/* Test controls - these have pointer events enabled */}
-        {gameState === 'playing' && (
-          <div className="mt-4 flex justify-center">
-            <div className="flex space-x-2">
-              <button 
-                className="bg-red-700 hover:bg-red-800 text-white px-3 py-2 rounded-lg text-sm transition-colors"
-                onClick={() => {
-                  spawnEnemies(1);
-                  console.log("Spawned a single enemy ship for testing");
-                }}
-              >
-                Spawn Test Enemy
-              </button>
-              
-              <button 
-                className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm transition-colors"
-                onClick={() => {
-                  resetEnemies();
-                  console.log("Removed all enemy ships");
-                }}
-              >
-                Remove All Enemies
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Enemy ship test controls removed */}
       </div>
       
       {/* Right side - mini-map */}
