@@ -510,7 +510,7 @@ const Ship = () => {
       <group ref={shipRef} position={position || [0, 0, 0]}>
         {/* 3D Ship Model using CustomModel component */}
         <CustomModel 
-          path="/models/base_pirate_ship.glb"
+          path='/models/base_pirate_ship.glb'
           position={[0, 0, 0]}
           rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
           scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP}
