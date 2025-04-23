@@ -111,18 +111,26 @@ const CustomModel = ({
     }
   }, [modelHeightOffset, position, path, customModel]);
   
-  // Apply bobbing motion if enabled
+  // In grid mode, we disable bobbing for consistent positioning
   useFrame((_, delta) => {
-    if (!modelRef.current || !bob) return;
+    if (!modelRef.current) return;
     
-    // Increment time
-    time.current += delta * bobSpeed;
+    // No bobbing in grid mode - models stay at fixed height
+    // This ensures consistent positioning for all game elements
     
-    // Calculate bob offset
-    const bobOffset = Math.sin(time.current) * bobHeight;
-    
-    // Apply offset to Y position
-    modelRef.current.position.y = initialY.current + bobOffset;
+    // Uncomment this block if bobbing is needed in the future
+    /*
+    if (bob) {
+      // Increment time
+      time.current += delta * bobSpeed;
+      
+      // Calculate bob offset
+      const bobOffset = Math.sin(time.current) * bobHeight;
+      
+      // Apply offset to Y position
+      modelRef.current.position.y = initialY.current + bobOffset;
+    }
+    */
   });
   
   // Determine final scale factor

@@ -500,9 +500,9 @@ const Ship = () => {
           scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP}
           modelAdjustment={MODEL_ADJUSTMENT.SHIP}
           modelHeightOffset={STATIC.SHIP_OFFSET} // Using static offset from water level
-          bob={true}
-          bobHeight={0.03}
-          bobSpeed={0.5}
+          bob={false}
+          bobHeight={0}
+          bobSpeed={0}
           castShadow
           receiveShadow
           onLoad={() => {

@@ -10,7 +10,7 @@ import Ship from "./Ship";
 import Island from "./Island";
 import DebugControls from "./DebugControls";
 import DebugControlsOverlay from "./DebugControlsOverlay";
-import { SCALE, MODEL_ADJUSTMENT, POSITION, WORLD } from "../lib/constants";
+import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC, WORLD } from "../lib/constants";
 
 import { usePlayer } from "../lib/stores/usePlayer";
 // import { useEnemies } from "../lib/stores/useEnemies"; // Removed enemies
