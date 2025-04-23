@@ -419,12 +419,12 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     <group ref={enemyRef} position={position} rotation={rotation}>
       {/* 3D Ship Model using CustomModel component */}
       <CustomModel 
-        path="/models/tall_pirate_ship.glb"
+        path="/models/base_pirate_ship.glb"
         position={[0, 0, 0]}
         rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
         scale={useGameState.getState().shipScale * (SCALE.ENEMY_SHIP.MIN + (parseInt(id) % 4) * 0.1)}
         modelAdjustment={MODEL_ADJUSTMENT.SHIP}
-        modelHeightOffset={useGameState.getState().shipHeight - 2.0} // Apply dynamic height offset from game state
+        modelHeightOffset={0.6} // Match model viewer settings
         bob={true}
         bobHeight={0.03} // Updated value from model test
         bobSpeed={0.5}

@@ -17,8 +17,8 @@ import { useAudio } from "../lib/stores/useAudio";
 
 // A reference ship that doesn't move - used to help with orientation
 const ReferenceShip = () => {
-  // Load the same tall multi-deck pirate ship model
-  const { scene: model } = useGLTF("/models/tall_pirate_ship.glb") as any;
+  // Load base pirate ship model to match model viewer
+  const { scene: model } = useGLTF("/models/base_pirate_ship.glb") as any;
   const [modelLoaded, setModelLoaded] = useState(false);
   const shipRef = useRef<THREE.Group>(null);
   
@@ -34,24 +34,25 @@ const ReferenceShip = () => {
   const shipModel = modelLoaded ? model.clone() : null;
   
   // Get game state for ship scale and height - using directly to always have latest values
-  const shipHeight = useGameState((state) => state.shipHeight);
   const shipScale = useGameState((state) => state.shipScale);
-  const waveHeight = useGameState((state) => state.waveHeight);
   const waveSpeed = useGameState((state) => state.waveSpeed);
+  
+  // Use constant height to match model viewer configuration
+  const referenceHeight = 0.6;
   
   // Add wave bobbing effect to match other ships
   useFrame(() => {
     if (!shipRef.current) return;
     
-    // Apply bobbing effect on waves
+    // Apply bobbing effect on waves with the same settings as model viewer
     const time = Date.now() * waveSpeed;
-    shipRef.current.position.y = Math.sin(time) * 0.03 + shipHeight; 
+    shipRef.current.position.y = Math.sin(time) * 0.03 + referenceHeight; 
     shipRef.current.rotation.x = Math.sin(time - 0.1) * 0.01;
     shipRef.current.rotation.z = Math.cos(time - 0.1) * 0.01;
   });
   
   return (
-    <group ref={shipRef} position={[20, shipHeight, 0]}>
+    <group ref={shipRef} position={[20, referenceHeight, 0]}>
       {modelLoaded && shipModel ? (
         <group 
           scale={[shipScale, shipScale, shipScale]} // Use dynamic ship scale
