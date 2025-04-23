@@ -23,7 +23,7 @@ export enum Controls {
   leftward = 'leftward',
   rightward = 'rightward',
   fire = 'fire',
-  board = 'board',
+  // board control removed
 }
 
 // Map controls to keys
@@ -33,7 +33,7 @@ const controlsMap = [
   { name: Controls.leftward, keys: ["KeyA", "ArrowLeft"] },
   { name: Controls.rightward, keys: ["KeyD", "ArrowRight"] },
   { name: Controls.fire, keys: ["Space"] },
-  { name: Controls.board, keys: ["KeyB"] },
+  // boarding key mapping removed
 ];
 
 // Log the control map configuration

@@ -11,10 +11,7 @@
 export const SCALE = {
   // Ship scaling - standardized sizes
   PLAYER_SHIP: 1.0, // Base reference (1.0 = standard size)
-  ENEMY_SHIP: {
-    BASE: 1.0,    // All enemy ships exactly same size as player
-    VARIATION: 0.1 // Small random variation for visual diversity
-  },
+  // Enemy ship scaling removed
   
   // Island scaling (as multiplier of base ship size) - increased to be notably larger than ships
   ISLAND: {

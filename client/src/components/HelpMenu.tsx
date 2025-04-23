@@ -45,28 +45,26 @@ const HelpMenu = () => {
               <div>SPACEBAR</div>
               <div>Fire Cannons</div>
               
-              <div>B</div>
-              <div>Board Enemy Ship</div>
+              {/* Boarding action removed */}
               
               <div>Mouse</div>
               <div>Click and drag to rotate camera</div>
             </div>
           </div>
           
-          {/* Combat Section */}
+          {/* Cannon Usage Section */}
           <div className="bg-[#0D47A1] bg-opacity-30 p-4 rounded-lg">
-            <h2 className="text-2xl font-['Pirata_One'] text-[#FFD700] mb-2">Naval Combat</h2>
+            <h2 className="text-2xl font-['Pirata_One'] text-[#FFD700] mb-2">Cannon Usage</h2>
             <p className="mb-2">
-              Position your ship for broadside attacks against enemy vessels. Your cannons will automatically 
-              fire from the appropriate side of your ship.
+              Your ship is equipped with cannons on both sides. Press SPACEBAR to fire - your cannons will automatically 
+              fire from both sides of your ship.
             </p>
             <p className="mb-2">
               Monitor your ship's health and cannon reload status in the HUD at the bottom of the screen.
             </p>
             <p>
-              When an enemy ship is weakened (health below 30%), you can attempt to board it by 
-              getting close and pressing the B key. Successful boarding will capture the ship 
-              and earn you extra loot!
+              Practice your aiming by firing at rock formations or empty ocean - it's a great way to get familiar
+              with your ship's firepower!
             </p>
           </div>
           
@@ -74,7 +72,7 @@ const HelpMenu = () => {
           <div className="bg-[#0D47A1] bg-opacity-30 p-4 rounded-lg">
             <h2 className="text-2xl font-['Pirata_One'] text-[#FFD700] mb-2">Ship Upgrades</h2>
             <p className="mb-2">
-              Collect loot by defeating enemy ships. Use this loot to upgrade your vessel:
+              Explore the seas and discover treasures. Use your findings to upgrade your vessel:
             </p>
             <ul className="list-disc pl-5 space-y-1">
               <li><strong>Hull Strength:</strong> Increases your ship's health and durability</li>
@@ -87,10 +85,10 @@ const HelpMenu = () => {
           <div className="bg-[#0D47A1] bg-opacity-30 p-4 rounded-lg">
             <h2 className="text-2xl font-['Pirata_One'] text-[#FFD700] mb-2">Tips for Success</h2>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Use the mini-map to track enemies and navigate around islands</li>
-              <li>Engage enemies one at a time when possible</li>
-              <li>Boarding weakened ships yields more loot than sinking them</li>
-              <li>Prioritize upgrades based on your playstyle: Hull for defense, Cannons for offense, Speed for maneuverability</li>
+              <li>Use the mini-map to navigate around islands and explore the ocean</li>
+              <li>Learn to master your cannon fire timing to maximize your shots</li>
+              <li>Watch out for obstacles and avoid crashing into rock formations</li>
+              <li>Prioritize upgrades based on your playstyle: Hull for durability, Cannons for firepower, Speed for maneuverability</li>
               <li>Your progress is saved locally, so you can return to your adventure anytime</li>
             </ul>
           </div>
