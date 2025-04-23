@@ -32,11 +32,11 @@ export const useGameState = create<GameStateStore>((set) => ({
     console.log("Game over!");
   },
   
-  // Initial parameters
-  shipHeight: 2.6, // Updated per user request
-  waveHeight: 0.03, // Default wave height to match bobHeight
-  waveSpeed: 0.0006,
-  shipScale: 4.5, // Updated per user request
+  // Initial parameters with standardized values
+  shipHeight: 0.5, // Standard height for all ships (matches POSITION.SHIP_HEIGHT)
+  waveHeight: 0.03, // Default wave height for bobbing effect
+  waveSpeed: 0.0006, // Wave animation speed
+  shipScale: 3.0, // Standard scale for all ships
   
   // Update functions
   setShipHeight: (height) => {

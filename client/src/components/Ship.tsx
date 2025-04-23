@@ -512,12 +512,12 @@ const Ship = () => {
         <CustomModel 
           path='/models/base_pirate_ship.glb'
           position={[0, 0, 0]}
-          rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
+          rotation={[0, Math.PI, 0]} // Fixed rotation to point forward
           scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP}
           modelAdjustment={MODEL_ADJUSTMENT.SHIP}
-          modelHeightOffset={2.6} // Updated height per user request
+          modelHeightOffset={POSITION.SHIP_HEIGHT} // Standardized height for all ships
           bob={true}
-          bobHeight={0.03} // Updated value from model test
+          bobHeight={0.03}
           bobSpeed={0.5}
           castShadow
           receiveShadow

@@ -9,29 +9,29 @@
 
 // Base scaling factors for different object types
 export const SCALE = {
-  // Ship scaling
-  PLAYER_SHIP: 1.0, // Base reference (1.0 = 30 meters)
+  // Ship scaling - standardized sizes
+  PLAYER_SHIP: 1.0, // Base reference (1.0 = standard size)
   ENEMY_SHIP: {
-    MIN: 0.8,  // Smaller enemy ships
-    MAX: 1.1,  // Larger enemy ships
+    BASE: 1.0,    // All enemy ships exactly same size as player
+    VARIATION: 0.1 // Small random variation for visual diversity
   },
   
-  // Island scaling (as multiplier of base ship size)
+  // Island scaling (as multiplier of base ship size) - increased to be notably larger than ships
   ISLAND: {
     TROPICAL: {
-      MIN: 2.0,  // Smaller tropical islands
-      MAX: 5.0,  // Larger tropical islands
-      BASE: 3.0,  // Default size (updated from model test)
+      MIN: 5.0,   // Smaller tropical islands - much larger than ships
+      MAX: 8.0,   // Larger tropical islands
+      BASE: 6.0,  // Default size - substantially larger than before
     },
     MOUNTAIN: {
-      MIN: 3.0,  // Smaller mountain islands
-      MAX: 8.0,  // Larger mountain islands
-      BASE: 5.0,  // Default size
+      MIN: 6.0,   // Smaller mountain islands - larger than tropical
+      MAX: 10.0,  // Larger mountain islands
+      BASE: 8.0,  // Default size
     },
     ROCKS: {
-      MIN: 6.0,  // Smaller rock formations (updated from model test)
-      MAX: 9.0,  // Larger rock formations (updated from model test)
-      BASE: 7.7,  // Default size (updated from model test)
+      MIN: 8.0,   // Smaller rock formations - largest environmental features
+      MAX: 12.0,  // Larger rock formations
+      BASE: 10.0, // Default size - significantly larger than before
     }
   },
   
@@ -52,21 +52,22 @@ export const SCALE = {
 
 // Model scaling adjustments (to correct for model-specific scaling issues)
 export const MODEL_ADJUSTMENT = {
-  SHIP: 1.6,      // Required multiplier to make ship model appropriate size (updated from model test)
-  TROPICAL: 4.8,  // Multiplier for tropical island models (updated from model test)
-  MOUNTAIN: 10.0, // Multiplier for mountain island models
-  ROCKS: 3.19,    // Multiplier for rock formation models (updated from model test)
+  SHIP: 1.5,      // Standardized multiplier for all ship models
+  TROPICAL: 4.0,  // Multiplier for tropical island models
+  MOUNTAIN: 8.0,  // Multiplier for mountain island models
+  ROCKS: 3.0,     // Multiplier for rock formation models
   CANNON: 20.0,   // Multiplier for cannon models
   CANNONBALL: 15.0 // Multiplier for cannonball models
 };
 
-// Position constants
+// Position constants - standardized positions
 export const POSITION = {
-  WATER_LEVEL: 0,
+  WATER_LEVEL: 0, // Reference water level
+  SHIP_HEIGHT: 0.5, // Standard height for all ships above water
   ISLAND: {
-    TROPICAL: 3.7,  // Height adjustment for tropical islands (updated from model test)
-    MOUNTAIN: -12, // Height adjustment for mountain islands
-    ROCKS: 5       // Height adjustment for rock formations (updated from model test)
+    TROPICAL: 5.0,  // Height adjustment for tropical islands
+    MOUNTAIN: 8.0,  // Height adjustment for mountain islands
+    ROCKS: 6.0      // Height adjustment for rock formations
   }
 };
 
