@@ -85,10 +85,9 @@ const Island = ({
     const animate = () => {
       if (islandRef.current) {
         // Apply very subtle bobbing - almost imperceptible but adds life
-        // Only for rocks - islands wouldn't visibly bob
-        if (type === 'rocks') {
-          const time = Date.now() * 0.0005;
-          islandRef.current.position.y = position[1] + Math.sin(time) * 0.1;
+        if (type === 'rocks' || type === 'tropical') {
+          const time = Date.now() * 0.0005; // Slower bobbing (0.5 speed)
+          islandRef.current.position.y = position[1] + Math.sin(time) * 0.03; // Subtle 0.03 height
         }
       }
       requestAnimationFrame(animate);

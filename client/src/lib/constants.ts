@@ -21,7 +21,7 @@ export const SCALE = {
     TROPICAL: {
       MIN: 2.0,  // Smaller tropical islands
       MAX: 5.0,  // Larger tropical islands
-      BASE: 3.0,  // Default size
+      BASE: 3.0,  // Default size (updated from model test)
     },
     MOUNTAIN: {
       MIN: 3.0,  // Smaller mountain islands
@@ -53,7 +53,7 @@ export const SCALE = {
 // Model scaling adjustments (to correct for model-specific scaling issues)
 export const MODEL_ADJUSTMENT = {
   SHIP: 1.6,      // Required multiplier to make ship model appropriate size (updated from model test)
-  TROPICAL: 8.0,  // Multiplier for tropical island models
+  TROPICAL: 4.8,  // Multiplier for tropical island models (updated from model test)
   MOUNTAIN: 10.0, // Multiplier for mountain island models
   ROCKS: 3.19,    // Multiplier for rock formation models (updated from model test)
   CANNON: 20.0,   // Multiplier for cannon models
@@ -64,7 +64,7 @@ export const MODEL_ADJUSTMENT = {
 export const POSITION = {
   WATER_LEVEL: 0,
   ISLAND: {
-    TROPICAL: -8,  // Height adjustment for tropical islands
+    TROPICAL: 3.7,  // Height adjustment for tropical islands (updated from model test)
     MOUNTAIN: -12, // Height adjustment for mountain islands
     ROCKS: 5       // Height adjustment for rock formations (updated from model test)
   }
