@@ -123,6 +123,8 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       newPosition.z += state.patrolDirection.z * 5 * delta;
       
       // Calculate rotation to face movement direction
+      // Orientation is reversed from standard Math.atan2 usage
+      // to match our ship's forward direction
       const targetRotation = Math.atan2(
         state.patrolDirection.x,
         state.patrolDirection.z
@@ -150,6 +152,7 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       newPosition.z += directionToPlayer.z * 10 * delta;
       
       // Calculate rotation to face player
+      // Ship needs to point in the direction of movement
       const targetRotation = Math.atan2(
         directionToPlayer.x,
         directionToPlayer.z

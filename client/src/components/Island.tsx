@@ -15,9 +15,9 @@ interface IslandProps {
 }
 
 // Preload all island models with correct paths
-useGLTF.preload('./models/tropical_island.glb');
-useGLTF.preload('./models/mountain_island.glb');
-useGLTF.preload('./models/rock_formation.glb');
+useGLTF.preload('/models/tropical_island.glb');
+useGLTF.preload('/models/mountain_island.glb');
+useGLTF.preload('/models/rock_formation.glb');
 
 const Island = ({ 
   position, 
@@ -28,12 +28,12 @@ const Island = ({
   const islandRef = useRef<THREE.Group>(null);
   const [modelLoaded, setModelLoaded] = useState(false);
   
-  // Get the proper model path based on island type - NOTE: Use ./models instead of /models
+  // Get the proper model path based on island type - standardized to match other components
   const modelPath = type === 'tropical' 
-    ? './models/tropical_island.glb' 
+    ? '/models/tropical_island.glb' 
     : type === 'mountain' 
-      ? './models/mountain_island.glb' 
-      : './models/rock_formation.glb';
+      ? '/models/mountain_island.glb' 
+      : '/models/rock_formation.glb';
   
   // Load the specified model with error handling
   let model: THREE.Group | null = null;
@@ -77,18 +77,35 @@ const Island = ({
     }
   }, [rotation]);
   
-  // Apply bobbing animation to simulate floating on water
-  // This is subtle to avoid looking unrealistic
+  // Set the appropriate height for each island type based on our standard positions
   useEffect(() => {
     if (!islandRef.current) return;
     
+    // Set base position with the appropriate height for this island type
+    let heightOffset: number;
+    switch (type) {
+      case 'tropical':
+        heightOffset = POSITION.ISLAND.TROPICAL;
+        break;
+      case 'mountain':
+        heightOffset = POSITION.ISLAND.MOUNTAIN;
+        break;
+      case 'rocks':
+        heightOffset = POSITION.ISLAND.ROCKS;
+        break;
+      default:
+        heightOffset = POSITION.ISLAND.TROPICAL;
+    }
+    
+    // Set initial position with correct height
+    islandRef.current.position.set(position[0], heightOffset, position[2]);
+    
+    // Apply subtle bobbing animation
     const animate = () => {
       if (islandRef.current) {
-        // Apply very subtle bobbing - almost imperceptible but adds life
-        if (type === 'rocks' || type === 'tropical') {
-          const time = Date.now() * 0.0005; // Slower bobbing (0.5 speed)
-          islandRef.current.position.y = position[1] + Math.sin(time) * 0.03; // Subtle 0.03 height
-        }
+        // All island types bob slightly to add life to the scene
+        const time = Date.now() * 0.0005; // Slow bobbing (0.5 speed)
+        islandRef.current.position.y = heightOffset + Math.sin(time) * 0.03; // Subtle 0.03 height
       }
       requestAnimationFrame(animate);
     };

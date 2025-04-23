@@ -415,7 +415,8 @@ const Ship = () => {
     setRotation(newRotation);
     
     // Calculate direction vector based on rotation
-    // Adjusted directional calculations for new ship orientation (90 degree adjustment)
+    // With our new ship orientation, the ship faces the negative Z direction at rotation 0
+    // So we need to adjust the direction calculation to match the model orientation
     const direction = new THREE.Vector3(
       Math.sin(newRotation.y),
       0,
@@ -427,17 +428,18 @@ const Ship = () => {
     
     // Check key states and apply acceleration
     if (keys.forward) {
-      // Apply acceleration in the direction the ship is facing (W key should move forward)
-      const forwardForce = direction.clone().multiplyScalar(-15 * delta); // Increased for better control with larger ship
+      // Apply acceleration in the direction the ship is facing (W key moves forward)
+      // No need for negative multiplier now that direction is correct
+      const forwardForce = direction.clone().multiplyScalar(15 * delta);
       acceleration.add(forwardForce);
-      // console.log("Accelerating forward:", direction, "Force:", forwardForce);
+      console.log("Moving forward in direction:", direction);
     }
     
     if (keys.backward) {
-      // Apply acceleration in the opposite direction the ship is facing (S key should move backward)
-      const backwardForce = direction.clone().multiplyScalar(7.5 * delta); // Increased for better control
+      // Apply acceleration in the opposite direction (S key moves backward)
+      const backwardForce = direction.clone().multiplyScalar(-7.5 * delta);
       acceleration.add(backwardForce);
-      // console.log("Accelerating backward:", direction, "Force:", backwardForce);
+      console.log("Moving backward, opposite of direction:", direction);
     }
     
     // Update velocity with acceleration and apply drag
