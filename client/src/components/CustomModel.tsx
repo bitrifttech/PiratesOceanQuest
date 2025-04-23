@@ -86,20 +86,30 @@ const CustomModel = ({
   
   // Set initial position when component mounts or modelHeightOffset changes
   useEffect(() => {
-    if (modelRef.current) {
+    if (modelRef.current && customModel) {
       // Always use static water level as base reference
       const heightFromWater = modelHeightOffset === undefined ? 0 : modelHeightOffset;
       
-      // The y position is always STATIC.WATER_LEVEL + any model-specific offset
-      modelRef.current.position.y = STATIC.WATER_LEVEL + heightFromWater;
+      // Analyze the model to determine its bounding box
+      const boundingBox = new THREE.Box3().setFromObject(customModel);
+      const modelHeight = boundingBox.max.y - boundingBox.min.y;
+      const modelBottom = boundingBox.min.y;
+      
+      // Calculate how much we need to offset so the model bottom is at water level
+      // Then add the heightFromWater offset to raise it above water as needed
+      const baselineOffset = -modelBottom;
+      
+      // The y position places the bottom of the model at water level, then adds the desired offset
+      modelRef.current.position.y = STATIC.WATER_LEVEL + baselineOffset + heightFromWater;
       
       // Log the positioning for debugging
-      console.log(`Model ${path} positioned at water level + ${heightFromWater} = ${modelRef.current.position.y}`);
+      console.log(`Model ${path} - Height: ${modelHeight.toFixed(2)}, Bottom at: ${modelBottom.toFixed(2)}`);
+      console.log(`Positioned at water level (${STATIC.WATER_LEVEL}) + baseline (${baselineOffset.toFixed(2)}) + offset (${heightFromWater}) = ${modelRef.current.position.y.toFixed(2)}`);
       
       // Update initialY reference for bobbing - always relative to water level
-      initialY.current = STATIC.WATER_LEVEL + heightFromWater;
+      initialY.current = STATIC.WATER_LEVEL + baselineOffset + heightFromWater;
     }
-  }, [modelHeightOffset, position, path]);
+  }, [modelHeightOffset, position, path, customModel]);
   
   // Apply bobbing motion if enabled
   useFrame((_, delta) => {
@@ -136,6 +146,13 @@ const CustomModel = ({
             scale={[finalScale, finalScale, finalScale]}
             castShadow={castShadow}
             receiveShadow={receiveShadow}
+            onUpdate={(self: THREE.Object3D) => {
+              // Recompute the bounding box when the model is updated
+              if (modelRef.current) {
+                const boundingBox = new THREE.Box3().setFromObject(self);
+                console.log(`Model ${path} updated - Bottom Y: ${boundingBox.min.y.toFixed(2)}`);
+              }
+            }}
           />
         </Suspense>
       ) : (

@@ -501,13 +501,16 @@ const Ship = () => {
           rotation={[0, Math.PI, 0]} // Fixed rotation to point forward
           scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP}
           modelAdjustment={MODEL_ADJUSTMENT.SHIP}
-          modelHeightOffset={STATIC.SHIP_OFFSET} // Using static offset from water
+          modelHeightOffset={STATIC.SHIP_OFFSET} // Using static offset from water level
           bob={true}
           bobHeight={0.03}
           bobSpeed={0.5}
           castShadow
           receiveShadow
-          onLoad={() => setModelLoaded(true)}
+          onLoad={() => {
+            setModelLoaded(true);
+            console.log(`Ship model loaded, positioned with bottom at water level + ${STATIC.SHIP_OFFSET} offset`);
+          }}
         />
         
         {/* Cannons are now part of the 3D model */}

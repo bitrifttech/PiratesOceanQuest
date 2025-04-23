@@ -159,7 +159,18 @@ const Island = ({
       {modelLoaded && islandModel ? (
         // Render loaded 3D model with standardized scaling
         <group scale={[finalScale, finalScale, finalScale]}>
-          <primitive object={islandModel} castShadow receiveShadow />
+          <primitive 
+            object={islandModel} 
+            castShadow 
+            receiveShadow 
+            onUpdate={(self: THREE.Object3D) => {
+              if (islandRef.current) {
+                // Analyze model to ensure bottom is at water level
+                const boundingBox = new THREE.Box3().setFromObject(self);
+                console.log(`Island ${type} model - Bottom Y: ${boundingBox.min.y.toFixed(2)}`);
+              }
+            }}
+          />
         </group>
       ) : (
         // Fallback while loading - sized according to island type
