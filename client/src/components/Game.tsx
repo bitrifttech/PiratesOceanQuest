@@ -17,116 +17,13 @@ import { usePlayer } from "../lib/stores/usePlayer";
 import { useGameState } from "../lib/stores/useGameState";
 import { useAudio } from "../lib/stores/useAudio";
 
-// A reference ship that doesn't move - used to help with orientation
+// Reference ship component removed
+/* 
 const ReferenceShip = () => {
-  // Load base pirate ship model to match model viewer
-  const { scene: model } = useGLTF("/models/base_pirate_ship.glb") as any;
-  const [modelLoaded, setModelLoaded] = useState(false);
-  const shipRef = useRef<THREE.Group>(null);
-  
-  // Make sure model is loaded
-  useEffect(() => {
-    if (model) {
-      console.log("Reference ship model loaded successfully");
-      setModelLoaded(true);
-    }
-  }, [model]);
-  
-  // Deep clone the model to prevent issues
-  const shipModel = modelLoaded ? model.clone() : null;
-  
-  // Get game state for ship scale and height - using directly to always have latest values
-  const shipScale = useGameState((state) => state.shipScale);
-  const waveSpeed = useGameState((state) => state.waveSpeed);
-  
-  // Use the same height as player ships
-  const referenceHeight = 2.6;
-  
-  // Add wave bobbing effect to match other ships
-  useFrame(() => {
-    if (!shipRef.current) return;
-    
-    // Apply bobbing effect on waves with the same settings as model viewer
-    const time = Date.now() * waveSpeed;
-    shipRef.current.position.y = Math.sin(time) * 0.03 + referenceHeight; 
-    shipRef.current.rotation.x = Math.sin(time - 0.1) * 0.01;
-    shipRef.current.rotation.z = Math.cos(time - 0.1) * 0.01;
-  });
-  
-  return (
-    <group ref={shipRef} position={[20, referenceHeight, 0]}>
-      {modelLoaded && shipModel ? (
-        <group 
-          scale={[shipScale, shipScale, shipScale]} // Use dynamic ship scale
-          rotation={[0, Math.PI - Math.PI/2, 0]} // Fix 90 degree rotation issue
-          position={[0, 0, 0]} // Centered at origin since parent handles height
-        >
-          <primitive object={shipModel} castShadow receiveShadow />
-          
-          {/* Orange flag to distinguish reference ship */}
-          <mesh position={[0, 6, 0]} rotation={[0, 0, 0]}>
-            <boxGeometry args={[0.1, 4, 2.5]} />
-            <meshStandardMaterial 
-              color="#FF5722" 
-              transparent={true} 
-              opacity={1.0} 
-              emissive="#FF5722"
-              emissiveIntensity={0.8}
-            />
-          </mesh>
-          
-          {/* Reference text */}
-          <Text
-            position={[0, 12, 0]}
-            fontSize={2}
-            color="#FF5722"
-            anchorX="center"
-            anchorY="middle"
-          >
-            REFERENCE
-          </Text>
-        </group>
-      ) : (
-        /* Fallback if model fails to load */
-        <group>
-          <mesh castShadow receiveShadow>
-            <boxGeometry args={[6, 3, 12]} />
-            <meshStandardMaterial color="#FF5722" roughness={0.8} />
-          </mesh>
-          
-          <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
-            <boxGeometry args={[5.5, 0.5, 11.5]} />
-            <meshStandardMaterial color="#E64A19" roughness={0.7} />
-          </mesh>
-          
-          <mesh position={[0, 8, 0]} castShadow>
-            <cylinderGeometry args={[0.3, 0.3, 14]} />
-            <meshStandardMaterial color="#795548" roughness={0.7} />
-          </mesh>
-          
-          <mesh position={[0, 8, 2]} castShadow>
-            <planeGeometry args={[8, 10]} />
-            <meshStandardMaterial
-              color="#FFEB3B"
-              side={THREE.DoubleSide}
-              roughness={0.8}
-            />
-          </mesh>
-          
-          <Text
-            position={[0, 10, 0]}
-            fontSize={2}
-            color="#FF5722"
-            anchorX="center"
-            anchorY="middle"
-          >
-            REFERENCE
-          </Text>
-        </group>
-      )}
-    </group>
-  );
+  // This component has been removed to eliminate the reference ship
+  return null;
 };
+*/
 
 // Direction indicators for debugging
 const DirectionIndicators = () => {
@@ -349,8 +246,8 @@ const Game = () => {
       {/* Ocean */}
       <Ocean />
       
-      {/* Reference elements */}
-      <ReferenceShip />
+      {/* Direction indicator elements */}
+      {/* Reference ship removed */}
       <DirectionIndicators />
       
       {/* Player ship */}
