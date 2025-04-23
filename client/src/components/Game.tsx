@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Sky, Environment, OrbitControls, Text, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
+import ReactDOM from "react-dom";
 
 import Ocean from "./Ocean";
 import Ship from "./Ship";
 import Enemy from "./Enemy";
 import Island from "./Island";
 import DebugControls from "./DebugControls";
+import DebugControlsOverlay from "./DebugControlsOverlay";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, WORLD } from "../lib/constants";
 
 import { usePlayer } from "../lib/stores/usePlayer";

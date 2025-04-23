@@ -99,6 +99,7 @@ const Ocean = () => {
       geometry={waveGeometry}
       material={material}
       receiveShadow
+      position={[0, -0.1, 0]} // Match the model viewer's ocean position
     />
   );
 };
