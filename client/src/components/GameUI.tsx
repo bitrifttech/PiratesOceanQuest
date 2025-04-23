@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useKeyboardControls } from "@react-three/drei";
 import { Controls } from "../App";
 import HUD from "./HUD";
@@ -55,12 +55,21 @@ const GameUI = () => {
     }
   }, [gameState]);
   
-  // Check for victory condition
+  // Create a ref to track if enemies have been defeated
+  const hasDefeatedEnemies = useRef(false);
+  
+  // Check for victory condition - but only when the player has defeated enemies
   useEffect(() => {
-    if (gameState === 'playing' && enemies.length === 0) {
+    // Only show victory when enemies have been spawned and then defeated
+    if (gameState === 'playing' && hasDefeatedEnemies.current && enemies.length === 0) {
       setShowVictory(true);
       // Add loot
       addLoot(Math.floor(Math.random() * 100) + 100);
+    }
+    
+    // If enemies exist, mark that the player has engaged with them
+    if (enemies.length > 0) {
+      hasDefeatedEnemies.current = true;
     }
   }, [gameState, enemies, addLoot]);
   
@@ -69,6 +78,9 @@ const GameUI = () => {
     // Reset player and enemies
     resetPlayer();
     resetEnemies();
+    
+    // Reset victory tracking
+    hasDefeatedEnemies.current = false;
     
     // Return to menu
     setGameState('menu');
@@ -81,6 +93,9 @@ const GameUI = () => {
   const handleContinue = () => {
     // Spawn more enemies
     resetEnemies();
+    
+    // Reset victory tracking
+    hasDefeatedEnemies.current = false;
     
     // Continue playing
     setShowVictory(false);
