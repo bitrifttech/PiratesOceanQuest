@@ -4,7 +4,7 @@ import { Sky, Environment, OrbitControls, Text, useGLTF } from "@react-three/dre
 import * as THREE from "three";
 import ReactDOM from "react-dom";
 
-import Ocean from "./Ocean";
+import GridPlane from "./GridPlane"; // Using GridPlane instead of Ocean
 import Ship from "./Ship";
 // Enemy component removed
 import Island from "./Island";
@@ -243,8 +243,17 @@ const Game = () => {
       />
       <Environment preset="sunset" />
       
-      {/* Ocean */}
-      <Ocean />
+      {/* Grid Plane (replaces Ocean) */}
+      <GridPlane 
+        size={1000}
+        divisions={100}
+        cellSize={10}
+        cellThickness={0.5}
+        cellColor="#444444"
+        sectionSize={50}
+        sectionThickness={1}
+        sectionColor="#888888"
+      />
       
       {/* Direction indicator elements */}
       {/* Reference ship removed */}
@@ -259,11 +268,7 @@ const Game = () => {
           key={`env-${feature.type}-${index}`} 
           position={[
             feature.x, 
-            feature.type === 'rocks' 
-              ? POSITION.ISLAND.ROCKS 
-              : feature.type === 'mountain' 
-                ? POSITION.ISLAND.MOUNTAIN 
-                : POSITION.ISLAND.TROPICAL, 
+            STATIC.WATER_LEVEL, // All islands placed directly on the grid 
             feature.z
           ]} 
           scale={feature.scale} 

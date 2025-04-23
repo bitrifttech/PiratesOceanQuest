@@ -442,21 +442,19 @@ const Ship = () => {
     shipRef.current.position.copy(newPosition);
     shipRef.current.rotation.copy(newRotation);
     
-    // Make ship bob on the waves with consistent height (using static water level)
+    // Position ship on flat grid (no bobbing)
     if (shipRef.current) {
-      // Always reference STATIC values for consistent positioning
-      const waveHeight = initialShipConfig.current.waveHeight;
-      const waveSpeed = initialShipConfig.current.waveSpeed;
-      
-      // Log the ship height and calculated position for debugging
+      // Log the ship position for debugging
       if (Math.random() < 0.01) { // Log only occasionally to prevent spam
-        console.log(`Ship position: Water level = ${STATIC.WATER_LEVEL}, Ship offset = ${STATIC.SHIP_OFFSET}, Ship Y: ${shipRef.current.position.y}`);
+        console.log(`Ship position: Grid level = ${STATIC.WATER_LEVEL}, Ship Y: ${shipRef.current.position.y}`);
       }
       
-      // Apply consistent ship height using universal static water level + offset
-      shipRef.current.position.y = Math.sin(Date.now() * waveSpeed) * waveHeight + (STATIC.WATER_LEVEL + STATIC.SHIP_OFFSET);
-      shipRef.current.rotation.x = Math.sin(Date.now() * (waveSpeed - 0.0001)) * 0.01;
-      shipRef.current.rotation.z = Math.cos(Date.now() * (waveSpeed - 0.0001)) * 0.01;
+      // Position ship consistently just above the grid
+      shipRef.current.position.y = STATIC.WATER_LEVEL + 0.5; // Small offset to prevent z-fighting
+      
+      // No rotation bobbing on flat grid
+      shipRef.current.rotation.x = 0;
+      shipRef.current.rotation.z = 0;
     }
     
     // Update cannon balls

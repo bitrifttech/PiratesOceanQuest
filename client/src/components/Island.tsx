@@ -77,44 +77,33 @@ const Island = ({
     }
   }, [rotation]);
   
-  // Set the appropriate height for each island type based on our standard positions
+  // Set the appropriate height for each island type based on flat grid
   useEffect(() => {
     if (!islandRef.current) return;
     
-    // Set base position with the appropriate height for this island type
+    // Set a standard height offset above the grid for each island type
     let heightOffset: number;
     switch (type) {
       case 'tropical':
-        heightOffset = POSITION.ISLAND.TROPICAL;
+        heightOffset = 0; // Place directly on the grid
         break;
       case 'mountain':
-        heightOffset = POSITION.ISLAND.MOUNTAIN;
+        heightOffset = 0; // Place directly on the grid
         break;
       case 'rocks':
-        heightOffset = POSITION.ISLAND.ROCKS;
+        heightOffset = 0; // Place directly on the grid
         break;
       default:
-        heightOffset = POSITION.ISLAND.TROPICAL;
+        heightOffset = 0;
     }
     
-    // Set initial position with correct height relative to static water level
+    // Set initial position with correct height relative to static grid level
     islandRef.current.position.set(position[0], STATIC.WATER_LEVEL + heightOffset, position[2]);
     
     // Log the positioning for debugging
-    console.log(`Island of type ${type} positioned at: Water level ${STATIC.WATER_LEVEL} + offset ${heightOffset}`);
+    console.log(`Island of type ${type} positioned at grid level + offset ${heightOffset}`);
     
-    // Apply subtle bobbing animation
-    const animate = () => {
-      if (islandRef.current) {
-        // All island types bob slightly to add life to the scene
-        const time = Date.now() * 0.0005; // Slow bobbing (0.5 speed)
-        // Always animate relative to the static water level
-        islandRef.current.position.y = STATIC.WATER_LEVEL + heightOffset + Math.sin(time) * 0.03; // Subtle 0.03 height
-      }
-      requestAnimationFrame(animate);
-    };
-    
-    animate();
+    // No bobbing animation - everything stays flat on the grid
     
     return () => {
       // Cleanup 
