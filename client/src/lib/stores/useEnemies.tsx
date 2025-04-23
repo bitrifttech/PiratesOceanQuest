@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { usePlayer } from "./usePlayer";
 import { useGameState } from "./useGameState";
 import { useUpgrades } from "./useUpgrades";
+import { POSITION } from "../constants";
 
 interface Enemy {
   id: string;
@@ -31,8 +32,7 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
     // Get player position to ensure enemies don't spawn too close
     const playerPosition = usePlayer.getState().position;
     
-    // Use standardized system from constants.ts
-    const { POSITION } = require('../constants');
+    // Use standardized position values from constants.ts that we imported at the top
     
     for (let i = 0; i < count; i++) {
       // Generate a random position away from the player
