@@ -60,7 +60,7 @@ export const MODEL_ADJUSTMENT = {
 // Position constants - standardized positions
 export const POSITION = {
   WATER_LEVEL: 0, // Reference water level
-  SHIP_HEIGHT: 1.45, // Standard height for all ships above water
+  SHIP_HEIGHT: 0.65, // Standard height for all ships above water
   ISLAND: {
     TROPICAL: 5.0,  // Height adjustment for tropical islands
     MOUNTAIN: 8.0,  // Height adjustment for mountain islands
