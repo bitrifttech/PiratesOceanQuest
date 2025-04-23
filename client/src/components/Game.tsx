@@ -303,13 +303,27 @@ const Game = () => {
     container.id = 'debug-controls-container';
     document.body.appendChild(container);
     
-    // Render the DebugControls component into the container
-    const root = document.createElement('div');
-    container.appendChild(root);
+    // Render the DebugControlsOverlay into the container
+    const overlay = document.createElement('div');
+    container.appendChild(overlay);
+    
+    // Render the DebugControlsOverlay component
+    ReactDOM.render(
+      <DebugControlsOverlay containerId="debug-controls-container" />,
+      overlay
+    );
     
     // Clean up on unmount
     return () => {
       if (document.body.contains(container)) {
+        // Clean up React component
+        try {
+          ReactDOM.unmountComponentAtNode(overlay);
+        } catch (e) {
+          console.error("Error unmounting debug controls:", e);
+        }
+        
+        // Remove container from DOM
         document.body.removeChild(container);
       }
     };
