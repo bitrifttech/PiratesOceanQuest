@@ -183,6 +183,7 @@ const Game = () => {
   // Get enemy state
   const enemies = useEnemies((state) => state.enemies);
   const spawnEnemies = useEnemies((state) => state.spawnEnemies);
+  const resetEnemies = useEnemies((state) => state.resetEnemies);
   
   // Sound effects
   const playBackgroundMusic = useAudio((state) => state.playBackgroundMusic);
@@ -240,8 +241,9 @@ const Game = () => {
     // Initialize player
     initializePlayer();
     
-    // Spawn initial enemies
-    spawnEnemies(3); // Reduced number of enemies to make debugging easier
+    // No longer automatically spawning enemies - now controlled by the HUD button
+    // Reset enemies to ensure we start with none
+    resetEnemies();
     
     // Play background music
     playBackgroundMusic();
@@ -250,7 +252,7 @@ const Game = () => {
     camera.position.set(0, 15, 30);
     camera.lookAt(0, 0, 0);
     
-  }, [initializePlayer, spawnEnemies, playBackgroundMusic, camera]);
+  }, [initializePlayer, resetEnemies, playBackgroundMusic, camera]);
   
   // Check for game over condition
   useEffect(() => {

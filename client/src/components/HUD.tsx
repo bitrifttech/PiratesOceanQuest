@@ -12,6 +12,7 @@ const HUD = () => {
   const playerRotation = usePlayer((state) => state.rotation);
   const enemies = useEnemies((state) => state.enemies);
   const spawnEnemies = useEnemies((state) => state.spawnEnemies);
+  const resetEnemies = useEnemies((state) => state.resetEnemies);
   const gameState = useGameState((state) => state.gameState);
   
   const [canvasSize, setCanvasSize] = useState({ width: 150, height: 150 });
@@ -152,15 +153,27 @@ const HUD = () => {
         {/* Test controls - these have pointer events enabled */}
         {gameState === 'playing' && (
           <div className="mt-4 flex justify-center">
-            <button 
-              className="bg-red-700 hover:bg-red-800 text-white px-3 py-2 rounded-lg text-sm transition-colors"
-              onClick={() => {
-                spawnEnemies(1);
-                console.log("Spawned a single enemy ship for testing");
-              }}
-            >
-              Spawn Test Enemy
-            </button>
+            <div className="flex space-x-2">
+              <button 
+                className="bg-red-700 hover:bg-red-800 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                onClick={() => {
+                  spawnEnemies(1);
+                  console.log("Spawned a single enemy ship for testing");
+                }}
+              >
+                Spawn Test Enemy
+              </button>
+              
+              <button 
+                className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                onClick={() => {
+                  resetEnemies();
+                  console.log("Removed all enemy ships");
+                }}
+              >
+                Remove All Enemies
+              </button>
+            </div>
           </div>
         )}
       </div>
