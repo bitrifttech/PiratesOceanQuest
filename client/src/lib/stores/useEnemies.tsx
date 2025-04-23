@@ -43,9 +43,12 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
         new THREE.Vector3(spawnX, 0, spawnZ).distanceTo(playerPosition) < 50
       );
       
+      // Get ship height from game state to match player ship
+      const { shipHeight } = useGameState.getState();
+      
       const enemy: Enemy = {
         id: `enemy-${Date.now()}-${i}`,
-        position: new THREE.Vector3(spawnX, 0, spawnZ),
+        position: new THREE.Vector3(spawnX, shipHeight, spawnZ), // Use same ship height as player
         rotation: new THREE.Euler(0, Math.random() * Math.PI * 2, 0),
         velocity: new THREE.Vector3(0, 0, 0),
         health: 100,

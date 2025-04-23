@@ -70,9 +70,9 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     
     // No need to update model scale here, CustomModel handles it internally
     
-    // Update position with correct shipHeight for the base group only (not the model)
-    // Model bobbing is now handled by CustomModel internally
-    enemyRef.current.position.y = shipHeight;
+    // Position is already being set from position object, which follows the player's height
+    // But ensure the y position is explicitly set to shipHeight to match player
+    enemyRef.current.position.y = shipHeight; // Match player ship height
     
     // Calculate distance to player
     const distanceToPlayer = new THREE.Vector3()
@@ -117,9 +117,10 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       }
       
       // Move in patrol direction
-      const newPosition = position.clone().add(
-        state.patrolDirection.clone().multiplyScalar(5 * delta)
-      );
+      const newPosition = position.clone();
+      // Only update X and Z, preserve Y position to keep ship at correct height
+      newPosition.x += state.patrolDirection.x * 5 * delta;
+      newPosition.z += state.patrolDirection.z * 5 * delta;
       
       // Calculate rotation to face movement direction
       const targetRotation = Math.atan2(
@@ -143,9 +144,10 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
       
     } else if (state.state === "chase") {
       // Chase behavior - move toward player
-      const newPosition = position.clone().add(
-        directionToPlayer.clone().multiplyScalar(10 * delta)
-      );
+      const newPosition = position.clone();
+      // Only update X and Z, preserve Y position to keep ship at correct height
+      newPosition.x += directionToPlayer.x * 10 * delta;
+      newPosition.z += directionToPlayer.z * 10 * delta;
       
       // Calculate rotation to face player
       const targetRotation = Math.atan2(
@@ -170,9 +172,13 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     } else if (state.state === "attack") {
       // Attack behavior - keep distance and fire cannons
       
-      // Calculate ideal attack position
-      const attackVector = directionToPlayer.clone().multiplyScalar(-20);
-      const idealPosition = playerPosition.clone().add(attackVector);
+      // Calculate ideal attack position (only in X and Z dimensions)
+      const attackVector = new THREE.Vector3(directionToPlayer.x, 0, directionToPlayer.z).normalize().multiplyScalar(-20);
+      const idealPosition = new THREE.Vector3(
+        playerPosition.x + attackVector.x,
+        position.y, // Keep the current enemy ship height
+        playerPosition.z + attackVector.z
+      );
       
       // Move toward ideal position
       const positionDifference = new THREE.Vector3().subVectors(
@@ -180,9 +186,11 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
         position
       );
       
-      const newPosition = position.clone().add(
-        positionDifference.normalize().multiplyScalar(8 * delta)
-      );
+      // Calculate new position while preserving Y
+      const newPosition = position.clone();
+      const movementVector = positionDifference.normalize().multiplyScalar(8 * delta);
+      newPosition.x += movementVector.x;
+      newPosition.z += movementVector.z;
       
       // Calculate rotation to face player (for broadside attacks)
       const perpendicularToPlayer = new THREE.Vector3(
