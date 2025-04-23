@@ -432,6 +432,10 @@ const Ship = () => {
     // Make ship bob on the waves with configurable height
     if (shipRef.current) {
       const { shipHeight, waveHeight, waveSpeed } = useGameState.getState();
+      // Log the ship height and calculated position for debugging
+      if (Math.random() < 0.01) { // Log only occasionally to prevent spam
+        console.log(`Ship height: ${shipHeight}, Wave height: ${waveHeight}, Ship Y: ${shipRef.current.position.y}`);
+      }
       shipRef.current.position.y = Math.sin(Date.now() * waveSpeed) * waveHeight + shipHeight;
       shipRef.current.rotation.x = Math.sin(Date.now() * (waveSpeed - 0.0001)) * 0.01;
       shipRef.current.rotation.z = Math.cos(Date.now() * (waveSpeed - 0.0001)) * 0.01;
