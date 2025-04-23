@@ -29,9 +29,9 @@ export const SCALE = {
       BASE: 5.0,  // Default size
     },
     ROCKS: {
-      MIN: 0.5,  // Smaller rock formations
-      MAX: 1.5,  // Larger rock formations
-      BASE: 1.0,  // Default size
+      MIN: 6.0,  // Smaller rock formations (updated from model test)
+      MAX: 9.0,  // Larger rock formations (updated from model test)
+      BASE: 7.7,  // Default size (updated from model test)
     }
   },
   
@@ -55,7 +55,7 @@ export const MODEL_ADJUSTMENT = {
   SHIP: 1.6,      // Required multiplier to make ship model appropriate size (updated from model test)
   TROPICAL: 8.0,  // Multiplier for tropical island models
   MOUNTAIN: 10.0, // Multiplier for mountain island models
-  ROCKS: 6.0,     // Multiplier for rock formation models
+  ROCKS: 3.19,    // Multiplier for rock formation models (updated from model test)
   CANNON: 20.0,   // Multiplier for cannon models
   CANNONBALL: 15.0 // Multiplier for cannonball models
 };
@@ -66,7 +66,7 @@ export const POSITION = {
   ISLAND: {
     TROPICAL: -8,  // Height adjustment for tropical islands
     MOUNTAIN: -12, // Height adjustment for mountain islands
-    ROCKS: -2      // Height adjustment for rock formations
+    ROCKS: 5       // Height adjustment for rock formations (updated from model test)
   }
 };
 

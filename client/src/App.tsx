@@ -88,6 +88,7 @@ function App() {
         <Route path="/model-test/advanced-ship" element={<ModelTestScene modelPath="/models/advanced_pirate_ship.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.SHIP} modelHeightOffset={2.5} enableBob={true} bobHeight={0.03} bobSpeed={0.5} />} />
         <Route path="/model-test/tropical" element={<ModelTestScene modelPath="/models/tropical_island.glb" modelScale={3.0} modelAdjustment={MODEL_ADJUSTMENT.TROPICAL} modelHeightOffset={0} />} />
         <Route path="/model-test/mountain" element={<ModelTestScene modelPath="/models/mountain_island.glb" modelScale={5.0} modelAdjustment={MODEL_ADJUSTMENT.MOUNTAIN} modelHeightOffset={0} />} />
+        <Route path="/model-test/rock" element={<ModelTestScene modelPath="/models/rock_formation.glb" modelScale={7.7} modelAdjustment={3.19} modelHeightOffset={5} enableBob={true} bobHeight={0.03} bobSpeed={0.5} />} />
         <Route path="/model-test/rocks" element={<ModelTestScene modelPath="/models/rock_formation.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.ROCKS} modelHeightOffset={0} />} />
         
         {/* Main Game Route */}
