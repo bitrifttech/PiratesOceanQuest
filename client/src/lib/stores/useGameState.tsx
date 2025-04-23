@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { POSITION, STATIC } from "../constants";
 
 export type GameState = 'title' | 'menu' | 'settings' | 'help' | 'upgrade' | 'playing' | 'gameOver';
 
@@ -32,8 +33,8 @@ export const useGameState = create<GameStateStore>((set) => ({
     console.log("Game over!");
   },
   
-  // Initial parameters with standardized values
-  shipHeight: 0.65, // Standard height for all ships (matches POSITION.SHIP_HEIGHT)
+  // Initial parameters with standardized values - using constants from STATIC
+  shipHeight: POSITION.SHIP_HEIGHT, // Always use the value from POSITION which references STATIC
   waveHeight: 0.03, // Default wave height for bobbing effect
   waveSpeed: 0.0006, // Wave animation speed
   shipScale: 3.0, // Standard scale for all ships

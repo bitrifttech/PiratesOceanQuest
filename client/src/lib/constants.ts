@@ -57,14 +57,20 @@ export const MODEL_ADJUSTMENT = {
   CANNONBALL: 15.0 // Multiplier for cannonball models
 };
 
-// Position constants - standardized positions
+// UNIVERSAL STATIC VALUES - These should never change during gameplay
+export const STATIC = {
+  WATER_LEVEL: 0, // The absolute reference point for all heights
+  SHIP_OFFSET: 1.5 // Height of ship above water level
+};
+
+// Position constants - all relative to STATIC.WATER_LEVEL
 export const POSITION = {
-  WATER_LEVEL: 0, // Reference water level
-  SHIP_HEIGHT: 0.65, // Standard height for all ships above water
+  WATER_LEVEL: STATIC.WATER_LEVEL, // Reference water level (always static)
+  SHIP_HEIGHT: STATIC.WATER_LEVEL + STATIC.SHIP_OFFSET, // Ship position = water level + offset
   ISLAND: {
-    TROPICAL: 5.0,  // Height adjustment for tropical islands
-    MOUNTAIN: 8.0,  // Height adjustment for mountain islands
-    ROCKS: 6.0      // Height adjustment for rock formations
+    TROPICAL: STATIC.WATER_LEVEL + 5.0,  // Height adjustment for tropical islands
+    MOUNTAIN: STATIC.WATER_LEVEL + 8.0,  // Height adjustment for mountain islands
+    ROCKS: STATIC.WATER_LEVEL + 6.0      // Height adjustment for rock formations
   }
 };
 

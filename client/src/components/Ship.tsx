@@ -8,7 +8,7 @@ import { usePlayer } from "../lib/stores/usePlayer";
 // import { useEnemies } from "../lib/stores/useEnemies"; // Removed enemies
 import { useGameState } from "../lib/stores/useGameState";
 import { checkCollision } from "../lib/helpers/collisionDetection";
-import { SCALE, MODEL_ADJUSTMENT, POSITION } from "../lib/constants";
+import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC } from "../lib/constants";
 import Cannon from "./Cannon";
 import Cannonball from "./Cannonball";
 import CannonFireEffect from "./CannonFireEffect";
@@ -64,7 +64,7 @@ const Ship = () => {
   
   // Store initial ship config values to ensure consistency across restarts
   const initialShipConfig = useRef({
-    shipHeight: useGameState.getState().shipHeight,
+    shipHeight: STATIC.WATER_LEVEL + STATIC.SHIP_OFFSET, // Use universal static values
     waveHeight: useGameState.getState().waveHeight,
     waveSpeed: useGameState.getState().waveSpeed
   });
@@ -442,18 +442,19 @@ const Ship = () => {
     shipRef.current.position.copy(newPosition);
     shipRef.current.rotation.copy(newRotation);
     
-    // Make ship bob on the waves with consistent height (using stored initial config)
+    // Make ship bob on the waves with consistent height (using static water level)
     if (shipRef.current) {
-      // Use stored initial config values to ensure consistency across restarts
-      const { shipHeight, waveHeight, waveSpeed } = initialShipConfig.current;
+      // Always reference STATIC values for consistent positioning
+      const waveHeight = initialShipConfig.current.waveHeight;
+      const waveSpeed = initialShipConfig.current.waveSpeed;
       
       // Log the ship height and calculated position for debugging
       if (Math.random() < 0.01) { // Log only occasionally to prevent spam
-        console.log(`Ship height (stored): ${shipHeight}, Wave height: ${waveHeight}, Ship Y: ${shipRef.current.position.y}`);
+        console.log(`Ship position: Water level = ${STATIC.WATER_LEVEL}, Ship offset = ${STATIC.SHIP_OFFSET}, Ship Y: ${shipRef.current.position.y}`);
       }
       
-      // Apply consistent ship height using stored initial config
-      shipRef.current.position.y = Math.sin(Date.now() * waveSpeed) * waveHeight + shipHeight;
+      // Apply consistent ship height using universal static water level + offset
+      shipRef.current.position.y = Math.sin(Date.now() * waveSpeed) * waveHeight + (STATIC.WATER_LEVEL + STATIC.SHIP_OFFSET);
       shipRef.current.rotation.x = Math.sin(Date.now() * (waveSpeed - 0.0001)) * 0.01;
       shipRef.current.rotation.z = Math.cos(Date.now() * (waveSpeed - 0.0001)) * 0.01;
     }
