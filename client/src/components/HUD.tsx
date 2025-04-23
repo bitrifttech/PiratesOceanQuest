@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
+import { useGameState } from "../lib/stores/useGameState";
 
 // HUD component - displays health, cannon status, mini-map
 const HUD = () => {
@@ -10,6 +11,8 @@ const HUD = () => {
   const playerPosition = usePlayer((state) => state.position);
   const playerRotation = usePlayer((state) => state.rotation);
   const enemies = useEnemies((state) => state.enemies);
+  const spawnEnemies = useEnemies((state) => state.spawnEnemies);
+  const gameState = useGameState((state) => state.gameState);
   
   const [canvasSize, setCanvasSize] = useState({ width: 150, height: 150 });
   
@@ -110,9 +113,9 @@ const HUD = () => {
   const healthColor = health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336";
   
   return (
-    <div className="absolute bottom-5 left-5 right-5 flex justify-between items-end pointer-events-none">
+    <div className="absolute bottom-5 left-5 right-5 flex justify-between items-end">
       {/* Left side - health display */}
-      <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700">
+      <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700 pointer-events-none">
         <div className="text-white mb-2 font-['Pirata_One'] text-xl">Ship Health</div>
         <div className="w-48 h-6 bg-gray-700 rounded-full overflow-hidden">
           <div 
@@ -126,10 +129,10 @@ const HUD = () => {
         <div className="text-white mt-1">{health}/100</div>
       </div>
       
-      {/* Center - Reload status */}
+      {/* Center - Reload status and test controls */}
       <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700">
         <div className="text-white mb-2 font-['Pirata_One'] text-xl">Cannons</div>
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center pointer-events-none">
           {cannonReady ? (
             <div className="text-green-500 text-lg font-bold">READY</div>
           ) : (
@@ -144,11 +147,26 @@ const HUD = () => {
             </>
           )}
         </div>
-        <div className="text-white mt-2 text-sm">SPACEBAR to fire</div>
+        <div className="text-white mt-2 text-sm pointer-events-none">SPACEBAR to fire</div>
+        
+        {/* Test controls - these have pointer events enabled */}
+        {gameState === 'playing' && (
+          <div className="mt-4 flex justify-center">
+            <button 
+              className="bg-red-700 hover:bg-red-800 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+              onClick={() => {
+                spawnEnemies(1);
+                console.log("Spawned a single enemy ship for testing");
+              }}
+            >
+              Spawn Test Enemy
+            </button>
+          </div>
+        )}
       </div>
       
       {/* Right side - mini-map */}
-      <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700">
+      <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700 pointer-events-none">
         <div className="text-white mb-2 font-['Pirata_One'] text-xl">Map</div>
         <canvas 
           id="mini-map" 

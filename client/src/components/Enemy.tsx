@@ -65,14 +65,15 @@ const Enemy = ({ id, position, rotation, health }: EnemyProps) => {
     enemyRef.current.position.copy(position);
     enemyRef.current.rotation.copy(rotation);
     
-    // Ship bobbing on waves with configurable height - use the same settings as player ship
+    // Set correct height and ensure consistency with player ship
     const { shipHeight, waveHeight, waveSpeed, shipScale } = useGameState.getState();
     
-    // No need to update model scale here, CustomModel handles it internally
+    // Don't update position directly - this is now handled by the CustomModel component
+    // via the modelHeightOffset property
     
-    // Position is already being set from position object, which follows the player's height
-    // But ensure the y position is explicitly set to shipHeight to match player
-    enemyRef.current.position.y = shipHeight; // Match player ship height
+    // Add debugging for this specific enemy ship
+    console.log(`Enemy ship ${id} - position: (${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)})`);
+    console.log(`Enemy ship ${id} - rotation: (${rotation.x.toFixed(1)}, ${rotation.y.toFixed(1)}, ${rotation.z.toFixed(1)})`);
     
     // Calculate distance to player
     const distanceToPlayer = new THREE.Vector3()

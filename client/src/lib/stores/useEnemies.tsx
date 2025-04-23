@@ -31,25 +31,36 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
     // Get player position to ensure enemies don't spawn too close
     const playerPosition = usePlayer.getState().position;
     
+    // Use standardized system from constants.ts
+    const { POSITION } = require('../constants');
+    
     for (let i = 0; i < count; i++) {
       // Generate a random position away from the player
       let spawnX, spawnZ;
       
-      do {
-        spawnX = (Math.random() * 400) - 200; // -200 to 200
-        spawnZ = (Math.random() * 400) - 200; // -200 to 200
-      } while (
-        playerPosition && 
-        new THREE.Vector3(spawnX, 0, spawnZ).distanceTo(playerPosition) < 50
-      );
-      
-      // Get ship height from game state to match player ship
-      const { shipHeight } = useGameState.getState();
+      if (playerPosition) {
+        // Ensure enemies spawn in view of the player, but at a safe distance
+        // Spawn between 70-90 units away from player in a random direction
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 70 + Math.random() * 20;
+        
+        spawnX = playerPosition.x + Math.sin(angle) * distance;
+        spawnZ = playerPosition.z + Math.cos(angle) * distance;
+        console.log(`Spawning enemy at (${spawnX.toFixed(1)}, ${spawnZ.toFixed(1)}), ${distance.toFixed(1)} units from player`);
+      } else {
+        // Fallback if player position not available
+        spawnX = (Math.random() * 200) - 100;
+        spawnZ = (Math.random() * 200) - 100;
+      }
       
       const enemy: Enemy = {
         id: `enemy-${Date.now()}-${i}`,
-        position: new THREE.Vector3(spawnX, shipHeight, spawnZ), // Use same ship height as player
-        rotation: new THREE.Euler(0, Math.random() * Math.PI * 2, 0),
+        // Use standard height from constants instead of gameState to avoid inconsistencies
+        position: new THREE.Vector3(spawnX, POSITION.SHIP_HEIGHT, spawnZ),
+        // Make enemy ships face the player initially
+        rotation: playerPosition ? 
+          new THREE.Euler(0, Math.atan2(playerPosition.x - spawnX, playerPosition.z - spawnZ), 0) :
+          new THREE.Euler(0, Math.random() * Math.PI * 2, 0),
         velocity: new THREE.Vector3(0, 0, 0),
         health: 100,
         maxHealth: 100,
@@ -138,9 +149,7 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
   resetEnemies: () => {
     set({ enemies: [] });
     
-    // Spawn new enemies with slight delay
-    setTimeout(() => {
-      get().spawnEnemies(5);
-    }, 500);
+    // Don't spawn enemies automatically
+    console.log("Enemy ships reset - no enemies will be spawned automatically");
   },
 }));
