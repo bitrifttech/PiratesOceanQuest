@@ -38,8 +38,8 @@ interface CannonPosition {
 }
 
 // Pre-load the ship models
-useGLTF.preload("/models/tall_pirate_ship.glb");
-useGLTF.preload("/models/advanced_pirate_ship.glb");
+useGLTF.preload('/models/base_pirate_ship.glb');
+useGLTF.preload('/models/advanced_pirate_ship.glb');
 
 const Ship = () => {
   // Get player state and controls
