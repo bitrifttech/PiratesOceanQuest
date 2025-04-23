@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { usePlayer } from "../lib/stores/usePlayer";
-import { useEnemies } from "../lib/stores/useEnemies";
+// import { useEnemies } from "../lib/stores/useEnemies"; // Removed enemies
 import { useGameState } from "../lib/stores/useGameState";
 
 // HUD component - displays health, cannon status, mini-map
@@ -10,9 +10,7 @@ const HUD = () => {
   const cooldownPercent = usePlayer((state) => state.cooldownPercent);
   const playerPosition = usePlayer((state) => state.position);
   const playerRotation = usePlayer((state) => state.rotation);
-  const enemies = useEnemies((state) => state.enemies);
-  const spawnEnemies = useEnemies((state) => state.spawnEnemies);
-  const resetEnemies = useEnemies((state) => state.resetEnemies);
+  // Enemy state removed
   const gameState = useGameState((state) => state.gameState);
   
   const [canvasSize, setCanvasSize] = useState({ width: 150, height: 150 });

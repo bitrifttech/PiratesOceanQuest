@@ -6,14 +6,14 @@ import ReactDOM from "react-dom";
 
 import Ocean from "./Ocean";
 import Ship from "./Ship";
-import Enemy from "./Enemy";
+// Enemy component removed
 import Island from "./Island";
 import DebugControls from "./DebugControls";
 import DebugControlsOverlay from "./DebugControlsOverlay";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, WORLD } from "../lib/constants";
 
 import { usePlayer } from "../lib/stores/usePlayer";
-import { useEnemies } from "../lib/stores/useEnemies";
+// import { useEnemies } from "../lib/stores/useEnemies"; // Removed enemies
 import { useGameState } from "../lib/stores/useGameState";
 import { useAudio } from "../lib/stores/useAudio";
 
@@ -180,10 +180,7 @@ const Game = () => {
   const playerRotation = usePlayer((state) => state.rotation);
   const initializePlayer = usePlayer((state) => state.initialize);
   
-  // Get enemy state
-  const enemies = useEnemies((state) => state.enemies);
-  const spawnEnemies = useEnemies((state) => state.spawnEnemies);
-  const resetEnemies = useEnemies((state) => state.resetEnemies);
+  // Enemy state removed
   
   // Sound effects
   const playBackgroundMusic = useAudio((state) => state.playBackgroundMusic);
@@ -241,10 +238,6 @@ const Game = () => {
     // Initialize player
     initializePlayer();
     
-    // No longer automatically spawning enemies - now controlled by the HUD button
-    // Reset enemies to ensure we start with none
-    resetEnemies();
-    
     // Play background music
     playBackgroundMusic();
     
@@ -252,7 +245,7 @@ const Game = () => {
     camera.position.set(0, 15, 30);
     camera.lookAt(0, 0, 0);
     
-  }, [initializePlayer, resetEnemies, playBackgroundMusic, camera]);
+  }, [initializePlayer, playBackgroundMusic, camera]);
   
   // Check for game over condition
   useEffect(() => {
@@ -382,16 +375,7 @@ const Game = () => {
         />
       ))}
       
-      {/* Enemy ships */}
-      {enemies.map((enemy) => (
-        <Enemy 
-          key={enemy.id} 
-          id={enemy.id} 
-          position={enemy.position} 
-          rotation={enemy.rotation} 
-          health={enemy.health}
-        />
-      ))}
+      {/* Enemy ships - removed */}
       
       {/* Interactive orbit controls for click-and-drag camera movement */}
       <OrbitControls 
