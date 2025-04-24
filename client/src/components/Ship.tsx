@@ -149,7 +149,7 @@ const Ship = () => {
       const direction = new THREE.Vector3(
         Math.sin(rotation.y),
         0,
-        -Math.cos(rotation.y)  // Negative because ship faces -Z
+        Math.cos(rotation.y)
       );
       
       // Configure horizontal cannon positions along the ship's sides
@@ -393,21 +393,13 @@ const Ship = () => {
     setRotation(newRotation);
     
     // Calculate direction vector based on rotation
-    // Important: Our ship model faces NEGATIVE Z at rotation 0
-    // So forward direction is (0,0,-1) when rotation.y = 0
+    // With our new ship orientation, the ship faces the negative Z direction at rotation 0
+    // So we need to adjust the direction calculation to match the model orientation
     const direction = new THREE.Vector3(
       Math.sin(newRotation.y),
       0,
-      -Math.cos(newRotation.y)  // Negative because ship faces -Z
+      Math.cos(newRotation.y)
     );
-    
-    // Debug direction vector
-    console.log("Ship direction vector:", {
-      x: direction.x.toFixed(2), 
-      y: direction.y.toFixed(2), 
-      z: direction.z.toFixed(2),
-      rotation: (newRotation.y * 180 / Math.PI).toFixed(0) + "°"
-    });
     
     // Apply acceleration from controls
     const acceleration = new THREE.Vector3(0, 0, 0);
