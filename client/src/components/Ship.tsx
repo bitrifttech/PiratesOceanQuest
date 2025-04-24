@@ -82,24 +82,25 @@ const Ship = () => {
   
   // Set up subscriptions to key states for better debugging
   useEffect(() => {
+    // Using silent subscriptions to avoid console spam
     const unsubForward = subscribeKeys(
       (state) => state.forward,
-      (pressed) => console.log("Forward key:", pressed)
+      (pressed) => { /* No logging */ }
     );
     
     const unsubBackward = subscribeKeys(
       (state) => state.backward,
-      (pressed) => console.log("Backward key:", pressed)
+      (pressed) => { /* No logging */ }
     );
     
     const unsubLeft = subscribeKeys(
       (state) => state.leftward,
-      (pressed) => console.log("Left key:", pressed)
+      (pressed) => { /* No logging */ }
     );
     
     const unsubRight = subscribeKeys(
       (state) => state.rightward,
-      (pressed) => console.log("Right key:", pressed)
+      (pressed) => { /* No logging */ }
     );
     
     // Clean up subscriptions
@@ -132,13 +133,7 @@ const Ship = () => {
       setVelocity(new THREE.Vector3(0, 0, 0));
     }
     
-    // Log initialization with ship height for debugging
-    console.log("Ship initialized", {
-      position,
-      savedHeight: initialShipConfig.current.shipHeight,
-      constantHeight: POSITION.SHIP_HEIGHT,
-      gameStateHeight: useGameState.getState().shipHeight
-    });
+    // No logging of ship initialization to reduce console spam
     
     // Mark as initialized
     isInitialized.current = true;
@@ -539,11 +534,8 @@ const Ship = () => {
           castShadow
           receiveShadow
           onLoad={() => {
-            // Only log if not already loaded
-            if (!shipModelLoadedRef.current) {
-              shipModelLoadedRef.current = true;
-              console.log(`Ship model loaded`);
-            }
+            // Silent loading to reduce console spam
+            shipModelLoadedRef.current = true;
           }}
         />
         
