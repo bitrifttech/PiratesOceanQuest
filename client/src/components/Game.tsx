@@ -3,6 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { Sky, Environment, OrbitControls, Text, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import ReactDOM from "react-dom";
+import WorldObject from "./WorldObject";
 
 import GridPlane from "./GridPlane"; // Using GridPlane instead of Ocean
 import Ship from "./Ship";
@@ -102,8 +103,85 @@ const Game = () => {
     rotation: [number, number, number];
   }
   
-  // Environment features array - emptied for rebuilding positioning system
-  const environmentFeatures = useRef<EnvironmentFeature[]>([]);
+  // Environment features with new, structured positioning system
+  const environmentFeatures = useRef<{ 
+    type: EnvironmentFeatureType;
+    position: THREE.Vector3;
+    rotation: THREE.Euler;
+    scale: number;
+  }[]>([]);
+  
+  // Generate environment features with structured positioning
+  useEffect(() => {
+    // Clear any existing features
+    environmentFeatures.current = [];
+    
+    // Define feature areas to ensure organized, intentional placement
+    // Each area has its own feature types, density, etc.
+    const areas = [
+      // Tropical island cluster (northeast quadrant)
+      {
+        name: "Tropical Isles",
+        center: new THREE.Vector3(40, 0, -40),
+        radius: 30,
+        featureCount: 3,
+        type: 'tropical' as const,
+        scaleRange: [0.8, 1.5]
+      },
+      
+      // Mountain range (northwest quadrant)
+      {
+        name: "Mountain Range",
+        center: new THREE.Vector3(-60, 0, -40), 
+        radius: 40,
+        featureCount: 3,
+        type: 'mountain' as const,
+        scaleRange: [1.0, 2.0]
+      },
+      
+      // Scattered rocks (near player start)
+      {
+        name: "Rock Formations",
+        center: new THREE.Vector3(0, 0, 20),
+        radius: 20,
+        featureCount: 4,
+        type: 'rocks' as const,
+        scaleRange: [0.5, 1.2]
+      }
+    ];
+    
+    // Generate features for each area
+    areas.forEach(area => {
+      console.log(`Generating ${area.featureCount} ${area.type} features in ${area.name}`);
+      
+      for (let i = 0; i < area.featureCount; i++) {
+        // Calculate position with a random offset from area center
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * area.radius;
+        
+        const x = area.center.x + Math.cos(angle) * distance;
+        const z = area.center.z + Math.sin(angle) * distance;
+        
+        // Random rotation around Y axis
+        const rotation = new THREE.Euler(0, Math.random() * Math.PI * 2, 0);
+        
+        // Random scale within range
+        const scale = area.scaleRange[0] + Math.random() * (area.scaleRange[1] - area.scaleRange[0]);
+        
+        // Add the feature to our environment
+        environmentFeatures.current.push({
+          type: area.type,
+          position: new THREE.Vector3(x, 0, z),
+          rotation,
+          scale
+        });
+        
+        console.log(`Added ${area.type} at (${x.toFixed(1)}, 0, ${z.toFixed(1)}) with scale ${scale.toFixed(2)}`);
+      }
+    });
+    
+    console.log(`Generated ${environmentFeatures.current.length} environmental features in organized areas`);
+  }, []);
 
   // Initialize game on first load
   useEffect(() => {
@@ -236,9 +314,51 @@ const Game = () => {
       {/* Reference ship removed */}
       <DirectionIndicators />
       
-      {/* Player ship removed for rebuilding positioning system */}
+      {/* Player Ship - New unified positioning approach */}
+      <WorldObject 
+        modelPath="/models/base_pirate_ship.glb"
+        position={playerPosition || new THREE.Vector3(0, 0, 0)}
+        rotation={playerRotation || new THREE.Euler(0, Math.PI, 0)} 
+        scale={useGameState.getState().shipScale * 0.05} 
+        offset={0.2} // Small offset above water
+        castShadow
+        receiveShadow
+        onLoad={() => {
+          console.log("Ship model loaded with new positioning system");
+        }}
+      />
       
-      {/* Environmental features removed for rebuilding positioning system */}
+      {/* Environment Features - New unified positioning system */}
+      {environmentFeatures.current.map((feature, index) => {
+        // Determine the appropriate model path based on feature type
+        const modelPath = 
+          feature.type === 'tropical' ? '/models/tropical_island.glb' :
+          feature.type === 'mountain' ? '/models/mountain_island.glb' : 
+          '/models/rock_formation.glb';
+          
+        // Determine appropriate offset and scale based on feature type
+        const modelOffset = 
+          feature.type === 'mountain' ? 0 :  // Mountains sit directly on the grid
+          feature.type === 'tropical' ? 0.1 : // Tropical islands slightly above
+          0.05;  // Rocks slightly above
+          
+        // Return WorldObject for each feature
+        return (
+          <WorldObject
+            key={`env-${feature.type}-${index}`}
+            modelPath={modelPath}
+            position={feature.position}
+            rotation={feature.rotation}
+            scale={feature.scale * 0.1} // Base scale factor for islands
+            offset={modelOffset}
+            castShadow
+            receiveShadow
+            onLoad={() => {
+              console.log(`Loaded ${feature.type} model at (${feature.position.x}, ${feature.position.z})`);
+            }}
+          />
+        );
+      })}
       
       {/* Enemy ships - removed */}
       
