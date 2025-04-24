@@ -534,7 +534,7 @@ const Ship = () => {
           xPosition={0}
           yPosition={0}
           zPosition={0}
-          rotation={[0, 0, 0]} // Reset to 0 degrees (equivalent to 360 degrees)
+          rotation={[0, -Math.PI / 3, 0]} // Rotate 60 degrees clockwise (1/3 of 180 degrees)
           scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP}
           modelAdjustment={MODEL_ADJUSTMENT.SHIP}
           modelHeightOffset={STATIC.SHIP_OFFSET} // Using static offset from water level
