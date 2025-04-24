@@ -43,7 +43,7 @@ const GridPlane: React.FC<GridPlaneProps> = ({
         fadeDistance={size}
       />
       
-      {/* Add a transparent plane at the same level for collisions/shadows */}
+      {/* Add a translucent water-like surface at the same level */}
       <mesh 
         rotation={[-Math.PI / 2, 0, 0]} 
         position={[0, STATIC.WATER_LEVEL, 0]}
@@ -51,10 +51,11 @@ const GridPlane: React.FC<GridPlaneProps> = ({
       >
         <planeGeometry args={[size, size]} />
         <meshStandardMaterial 
-          color="#222222" 
+          color="#0055AA" 
           transparent={true} 
-          opacity={0.1} 
-          roughness={0.8}
+          opacity={0.35} 
+          roughness={0.3}
+          metalness={0.4}
         />
       </mesh>
     </>

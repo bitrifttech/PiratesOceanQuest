@@ -442,17 +442,16 @@ const Ship = () => {
     shipRef.current.position.copy(newPosition);
     shipRef.current.rotation.copy(newRotation);
     
-    // Position ship on flat grid (no bobbing)
+    // No manual positioning needed - the CustomModel component 
+    // will handle precise grid alignment with the model's bottom at grid level.
+    // This ensures consistency across all game elements.
     if (shipRef.current) {
       // Log the ship position for debugging
       if (Math.random() < 0.01) { // Log only occasionally to prevent spam
-        console.log(`Ship position: Grid level = ${STATIC.WATER_LEVEL}, Ship Y: ${shipRef.current.position.y}`);
+        console.log(`Ship position Y: ${shipRef.current.position.y.toFixed(2)}`);
       }
       
-      // Position ship consistently just above the grid
-      shipRef.current.position.y = STATIC.WATER_LEVEL + 0.5; // Small offset to prevent z-fighting
-      
-      // No rotation bobbing on flat grid
+      // No bobbing rotation on flat grid
       shipRef.current.rotation.x = 0;
       shipRef.current.rotation.z = 0;
     }

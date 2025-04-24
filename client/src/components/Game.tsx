@@ -248,11 +248,11 @@ const Game = () => {
         size={1000}
         divisions={100}
         cellSize={10}
-        cellThickness={0.5}
-        cellColor="#444444"
+        cellThickness={0.3}
+        cellColor="#222266"
         sectionSize={50}
-        sectionThickness={1}
-        sectionColor="#888888"
+        sectionThickness={0.8}
+        sectionColor="#3333AA"
       />
       
       {/* Direction indicator elements */}

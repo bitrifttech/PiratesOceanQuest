@@ -81,34 +81,36 @@ const Island = ({
   useEffect(() => {
     if (!islandRef.current) return;
     
-    // Set a standard height offset above the grid for each island type
-    let heightOffset: number;
-    switch (type) {
-      case 'tropical':
-        heightOffset = 0; // Place directly on the grid
-        break;
-      case 'mountain':
-        heightOffset = 0; // Place directly on the grid
-        break;
-      case 'rocks':
-        heightOffset = 0; // Place directly on the grid
-        break;
-      default:
-        heightOffset = 0;
+    // For grid alignment, we need to calculate bottom of the model
+    if (islandModel) {
+      // Calculate the bounding box to find the bottom of the model
+      const boundingBox = new THREE.Box3().setFromObject(islandModel);
+      const modelBottom = boundingBox.min.y;
+      
+      // Calculate the offset needed to place the bottom exactly at grid level
+      const baselineOffset = -modelBottom;
+      
+      // Set initial position with bottom aligned precisely to grid level
+      islandRef.current.position.set(
+        position[0], 
+        STATIC.WATER_LEVEL + baselineOffset, 
+        position[2]
+      );
+      
+      // Log the positioning for debugging
+      console.log(`Island of type ${type} positioned with bottom at grid level, model bottom: ${modelBottom.toFixed(2)}, offset: ${baselineOffset.toFixed(2)}`);
+    } else {
+      // For fallback shapes, just place them directly on the grid
+      islandRef.current.position.set(position[0], STATIC.WATER_LEVEL, position[2]);
+      console.log(`Island of type ${type} fallback positioned at grid level`);
     }
-    
-    // Set initial position with correct height relative to static grid level
-    islandRef.current.position.set(position[0], STATIC.WATER_LEVEL + heightOffset, position[2]);
-    
-    // Log the positioning for debugging
-    console.log(`Island of type ${type} positioned at grid level + offset ${heightOffset}`);
     
     // No bobbing animation - everything stays flat on the grid
     
     return () => {
       // Cleanup 
     };
-  }, [position, type]);
+  }, [position, type, islandModel]);
   
   // Calculate scale based on island type using our standardized scale system
   const getScaleFactor = () => {
