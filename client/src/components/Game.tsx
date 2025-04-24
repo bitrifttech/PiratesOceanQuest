@@ -262,17 +262,19 @@ const Game = () => {
       {/* Player ship */}
       <Ship />
       
-      {/* Environmental features: Islands and rock formations */}
+      {/* Environmental features: Islands and rock formations - Temporarily removed to debug positioning issues */}
+      {/* 
       {environmentFeatures.current.map((feature, index) => (
         <Island 
           key={`env-${feature.type}-${index}`} 
           xPosition={feature.x}
-            zPosition={feature.z} 
+          zPosition={feature.z} 
           scale={feature.scale} 
           rotation={feature.rotation}
           type={feature.type}
         />
       ))}
+      */}
       
       {/* Enemy ships - removed */}
       
