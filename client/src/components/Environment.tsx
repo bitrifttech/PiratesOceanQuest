@@ -83,24 +83,46 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
     console.log(`[ENV] Positioning ${id} (${type}) at (${x}, ?, ${z})`);
     
     try {
-      // Calculate bounding box to determine bottom
+      // Calculate bounding box to determine bottom of model
       const boundingBox = new THREE.Box3().setFromObject(model.current);
       const modelBottom = boundingBox.min.y;
       
-      // Calculate the offset to place bottom at grid level
-      const baselineOffset = -modelBottom;
+      // Debug log
+      console.log(`[ENV] Model ${id} bounding box: min=${JSON.stringify({x: boundingBox.min.x, y: boundingBox.min.y, z: boundingBox.min.z})}, max=${JSON.stringify({x: boundingBox.max.x, y: boundingBox.max.y, z: boundingBox.max.z})}`);
+      console.log(`[ENV] Model bottom: ${modelBottom}`);
       
-      // Calculate final Y position
-      const yPosition = STATIC.WATER_LEVEL + baselineOffset;
+      // Calculate the offset needed to place bottom exactly at grid level (0)
+      // For most models, we need to account for the actual dimensions to place on grid
       
-      // Set the position once
+      // Models might have different coordinate spaces, so we need a reliable way to
+      // determine the true bottom for proper alignment with the grid
+      
+      // Get model height
+      const modelHeight = boundingBox.max.y - boundingBox.min.y;
+      console.log(`[ENV] Model ${id} height: ${modelHeight}`);
+      
+      // Calculate the offset needed to place bottom at grid level
+      const baselineOffset = -modelBottom; // This moves the model up so its bottom is at y=0
+      
+      // Calculate final Y position - we want bottom of model at exactly grid level
+      // STATIC.WATER_LEVEL is where our grid is positioned
+      const yPosition = STATIC.WATER_LEVEL;
+      
+      // Set the position once, but use a group to handle the vertical offset
       featureRef.current.position.set(x, yPosition, z);
+      
+      // Create a nested group for vertical adjustment within the positioned group
+      if (model.current) {
+        // Apply the vertical adjustment to the model itself
+        model.current.position.y = baselineOffset;
+        console.log(`[ENV] Applied vertical adjustment of ${baselineOffset} to model ${id}`);
+      }
       
       // Set rotation
       featureRef.current.rotation.set(rotation[0], rotation[1], rotation[2]);
       
-      // Log success
-      console.log(`[ENV] Successfully positioned ${id} at (${x}, ${yPosition}, ${z})`);
+      // Log success with detailed positioning information
+      console.log(`[ENV] Successfully positioned ${id} at (${x}, ${yPosition}, ${z}) with model offset ${baselineOffset}`);
       
       // Mark as positioned
       setPositioned(true);
@@ -121,8 +143,16 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
     <group ref={featureRef}>
       {loaded && model.current && (
         <group scale={[finalScale, finalScale, finalScale]}>
-          <primitive object={model.current} castShadow receiveShadow />
+          <primitive 
+            object={model.current} 
+            castShadow 
+            receiveShadow 
+          />
         </group>
+      )}
+      {/* Add a debug axis helper in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <axesHelper args={[5]} />
       )}
     </group>
   );
