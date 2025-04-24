@@ -277,8 +277,17 @@ const Game = () => {
     return features as EnvironmentFeature[];
   }, []);
 
-  // Initialize game on first load
+  // Track if game was already initialized to prevent multiple initializations
+  const initialized = useRef(false);
+  
+  // Initialize game on first load - only once
   useEffect(() => {
+    // Skip if already initialized
+    if (initialized.current) {
+      console.log("Game already initialized, skipping");
+      return;
+    }
+    
     console.log("Game initialized", {
       environmentFeatures: environmentFeatures.length,
       sampleFeature: environmentFeatures[0],
@@ -309,7 +318,12 @@ const Game = () => {
       shipScale: useGameState.getState().shipScale
     });
     
-  }, [initializePlayer, playBackgroundMusic, camera, environmentFeatures, playerPosition]);
+    // Mark as initialized
+    initialized.current = true;
+    
+  // Run only once on component mount, don't depend on changing values
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   // Check for game over condition
   useEffect(() => {

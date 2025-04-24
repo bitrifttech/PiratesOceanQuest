@@ -42,8 +42,14 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   cooldownMax: 3, // 3 seconds cooldown
   cooldownPercent: 100,
   
-  // Initialize player
+  // Initialize player - only call once when null
   initialize: () => {
+    // Check if player is already initialized
+    if (get().position !== null) {
+      console.log("Player already initialized, skipping initialization");
+      return;
+    }
+    
     const { hullLevel } = useUpgrades.getState();
     const maxHealth = 100 + (hullLevel * 10);
     
