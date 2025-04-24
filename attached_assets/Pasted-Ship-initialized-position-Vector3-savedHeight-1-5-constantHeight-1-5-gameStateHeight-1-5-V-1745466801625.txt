@@ -1,0 +1,19 @@
+Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+VM1714 eruda.js:2 
