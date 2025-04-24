@@ -36,8 +36,7 @@ const controlsMap = [
   // boarding key mapping removed
 ];
 
-// Log the control map configuration
-console.log("Control map configured:", controlsMap);
+// Control map configured for gameplay
 
 // Main App component
 function App() {

@@ -299,7 +299,7 @@ const Ship = () => {
         }
       });
       
-      console.log("Enhanced cannons fired!", cannonballs.current.length, "cannonballs and", cannonFireEffects.current.length, "effects");
+      // Cannons fired successfully
     }
   }, [cannonReady, position, rotation, fireCannon, getKeys]);
   
