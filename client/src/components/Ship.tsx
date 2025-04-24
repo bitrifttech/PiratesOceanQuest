@@ -478,19 +478,25 @@ const Ship = () => {
     }
     
     // Update cannon balls
-    cannonballs.current.forEach((ball, index) => {
+    // Use filter instead of forEach to safely handle removal during iteration
+    cannonballs.current = cannonballs.current.filter((ball) => {
       // Move the cannon ball
       ball.position.add(
         ball.direction.clone().multiplyScalar(40 * delta)
       );
       
-      // Enemy collision detection removed
-      
-      // Check for cannonball range/lifetime instead
-      if (ball.position.distanceTo(position) > 100) {
-        // Out of range, remove cannonball
-        cannonballs.current.splice(index, 1);
+      // Check if cannonball is below grid level (y < 0)
+      if (ball.position.y < 0) {
+        console.log(`Ship component: Removing cannonball below grid level at y=${ball.position.y.toFixed(2)}`);
+        return false; // Remove from array
       }
+      
+      // Check for cannonball range from ship
+      if (ball.position.distanceTo(position) > 100) {
+        return false; // Remove from array
+      }
+      
+      return true; // Keep the cannonball
     });
     
     // Remove fire effects after their lifetime

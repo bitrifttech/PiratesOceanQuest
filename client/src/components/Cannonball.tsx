@@ -99,8 +99,17 @@ const Cannonball = ({
       console.log("Splash! Cannonball hit water at", 
         `(${ballRef.current.position.x.toFixed(1)}, ${ballRef.current.position.y.toFixed(1)}, ${ballRef.current.position.z.toFixed(1)})`);
       
+      // Immediately set lifespan to zero to remove cannonball
       lifeRef.current = 0;
       if (onHit) onHit();
+      
+      // Immediately remove cannonball mesh from scene
+      if (ballRef.current && ballRef.current.parent) {
+        ballRef.current.parent.remove(ballRef.current);
+      }
+      
+      // Also move it far away to ensure it's completely gone
+      ballRef.current.position.set(0, -1000, 0);
     }
   });
   
