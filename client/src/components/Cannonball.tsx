@@ -39,21 +39,15 @@ const Cannonball = ({
   // Check if this cannonball has an upward arc in its initial direction
   const hasUpwardComponent = direction.y > 0;
   
-  // Initialize position and log trajectory data
+  // Initialize position without logging
   useEffect(() => {
     if (ballRef.current) {
       // Set initial position directly to avoid being parented to the ship
       ballRef.current.position.copy(localPosition);
       
-      // Log the initial trajectory details for debugging
-      console.log(`Cannonball fired with: 
-        Position: (${localPosition.x.toFixed(2)}, ${localPosition.y.toFixed(2)}, ${localPosition.z.toFixed(2)})
-        Direction: (${direction.x.toFixed(2)}, ${direction.y.toFixed(2)}, ${direction.z.toFixed(2)})
-        Speed: ${speed}
-        Upward Arc: ${hasUpwardComponent ? 'Yes' : 'No'}`
-      );
+      // No logging for better performance
     }
-  }, [localPosition, direction, speed, hasUpwardComponent]);
+  }, [localPosition]);
   
   // Update cannonball position and apply physics independently of ship
   useFrame((_, delta) => {
@@ -79,13 +73,7 @@ const Cannonball = ({
     ballRef.current.rotation.x += delta * 8;
     ballRef.current.rotation.z += delta * 5;
     
-    // Log trajectory data at regular intervals for debugging
-    if (Math.floor(elapsedTime * 10) % 10 === 0) {
-      console.log(`Cannonball at t=${elapsedTime.toFixed(1)}s: 
-        Position: (${ballRef.current.position.x.toFixed(1)}, ${ballRef.current.position.y.toFixed(1)}, ${ballRef.current.position.z.toFixed(1)})
-        Velocity: (${velocity.x.toFixed(1)}, ${velocity.y.toFixed(1)}, ${velocity.z.toFixed(1)})`
-      );
-    }
+    // No trajectory logging to reduce console clutter
     
     // Auto-remove when lifespan is up
     if (lifeRef.current <= 0) {
@@ -95,9 +83,7 @@ const Cannonball = ({
     
     // Check if cannonball has fallen into the water - raised to -1 for better visibility
     if (ballRef.current.position.y < -1) {
-      // Create water splash effect
-      console.log("Splash! Cannonball hit water at", 
-        `(${ballRef.current.position.x.toFixed(1)}, ${ballRef.current.position.y.toFixed(1)}, ${ballRef.current.position.z.toFixed(1)})`);
+      // No splash logging to reduce console clutter
       
       // Immediately set lifespan to zero to remove cannonball
       lifeRef.current = 0;
