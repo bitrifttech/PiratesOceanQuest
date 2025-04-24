@@ -107,6 +107,11 @@ export const environmentCollisions = {
     return this.features;
   },
   
+  // Get radius of a feature based on its type and scale
+  getFeatureRadius(type: EnvironmentFeatureType, scale: number): number {
+    return getFeatureRadius(type, scale);
+  },
+  
   // Check if a point collides with any feature
   checkPointCollision(point: THREE.Vector3, radius: number = 0): EnvironmentFeature | null {
     for (const feature of this.features) {

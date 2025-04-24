@@ -434,7 +434,64 @@ const Ship = () => {
     
     setVelocity(newVelocity);
     
-    // Calculate proposed new position with velocity
+    // First check if our current velocity would cause a collision in the next frame
+    // Create a look-ahead position to check for collisions before they happen
+    const lookAheadDistance = newVelocity.length() * delta * 2.0; // Look ahead by twice our velocity
+    const lookAheadDirection = newVelocity.clone().normalize();
+    const lookAheadPosition = position.clone().add(
+      lookAheadDirection.clone().multiplyScalar(lookAheadDistance)
+    );
+    
+    // Check for environment collisions using the look-ahead position
+    const shipRadius = 6; // Increased size for better collision detection
+    const upcomingCollision = environmentCollisions.checkPointCollision(lookAheadPosition, shipRadius);
+    
+    // If we're about to collide, stop or modify velocity
+    if (upcomingCollision) {
+      // Calculate distance to the collision object
+      const distanceToCollision = new THREE.Vector3(
+        upcomingCollision.x - position.x,
+        0,
+        upcomingCollision.z - position.z
+      ).length();
+      
+      // Get feature radius
+      const featureRadius = environmentCollisions.getFeatureRadius(upcomingCollision.type, upcomingCollision.scale);
+      
+      // Calculate stop distance (keep a margin from the feature)
+      const stopDistance = featureRadius + shipRadius + 0.5; // 0.5 units extra margin
+      
+      // If we're too close, stop the ship by zeroing velocity in that direction
+      if (distanceToCollision < stopDistance) {
+        // Determine directional stopping: only stop velocity component in the direction of collision
+        const toFeature = new THREE.Vector3(
+          upcomingCollision.x - position.x, 
+          0, 
+          upcomingCollision.z - position.z
+        ).normalize();
+        
+        // Calculate how much of our velocity is moving toward the feature
+        const movingTowardFeature = toFeature.dot(lookAheadDirection);
+        
+        // Only stop if we're moving toward the feature
+        if (movingTowardFeature > 0) {
+          // Calculate the component of velocity moving toward the feature
+          const stopComponent = toFeature.clone().multiplyScalar(
+            newVelocity.clone().dot(toFeature)
+          );
+          
+          // Remove that component from velocity (prevents moving into feature)
+          newVelocity.sub(stopComponent);
+          
+          // Apply additional friction to make ship slow down near obstacles
+          newVelocity.multiplyScalar(0.8);
+          
+          console.log(`[COLLISION] Ship avoiding ${upcomingCollision.type} at distance ${distanceToCollision.toFixed(2)} (min: ${stopDistance.toFixed(2)})`);
+        }
+      }
+    }
+    
+    // Now calculate new position with adjusted velocity
     const proposedPosition = position.clone().add(
       newVelocity.clone().multiplyScalar(delta)
     );
@@ -443,21 +500,20 @@ const Ship = () => {
     proposedPosition.x = Math.max(-500, Math.min(500, proposedPosition.x));
     proposedPosition.z = Math.max(-500, Math.min(500, proposedPosition.z));
     
-    // Check for environment collisions with the ship
-    const shipRadius = 5; // Size of collision detection for ship
+    // Final check for collisions at the proposed position (safety check)
     const collisionFeature = environmentCollisions.checkPointCollision(proposedPosition, shipRadius);
     
     // Handle collision if any
     let newPosition;
     if (collisionFeature) {
-      // Log collision for debugging
-      console.log(`[COLLISION] Ship collided with ${collisionFeature.type} at (${collisionFeature.x}, ${collisionFeature.z})`);
+      // In case we still have a collision, push the ship away from the feature
+      console.log(`[COLLISION] Emergency correction for ship collided with ${collisionFeature.type}`);
       
-      // Calculate collision response (slide along the feature)
+      // Calculate safe position
       newPosition = calculateCollisionResponse(position, newVelocity, collisionFeature);
       
-      // Reduce speed after collision
-      setVelocity(newVelocity.multiplyScalar(0.5));
+      // Reduce speed more dramatically after emergency collision
+      setVelocity(new THREE.Vector3(0, 0, 0));
     } else {
       // No collision, use the proposed position
       newPosition = proposedPosition;
