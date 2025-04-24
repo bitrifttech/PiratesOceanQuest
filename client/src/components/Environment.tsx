@@ -29,11 +29,6 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
   const [loaded, setLoaded] = useState(false);
   const [positioned, setPositioned] = useState(false);
   
-  // Collision box
-  const collisionBoxRef = useRef<THREE.Mesh>(null);
-  // Make the collision box visible in dev mode only for debugging
-  const DEBUG_COLLISION = false; // Keep this false in production
-  
   // Get the proper model path based on feature type
   const modelPath = type === 'tropical' 
     ? '/models/tropical_island.glb' 
@@ -144,51 +139,6 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
     }
   }, [id, type, x, z, rotation, loaded, positioned]);
   
-  // Use fixed collision dimensions based on feature type
-  const getCollisionSize = () => {
-    const baseSize = {
-      width: 0,
-      height: 0,
-      depth: 0
-    };
-    
-    switch (type) {
-      case 'tropical':
-        // Larger collider for tropical islands
-        baseSize.width = 10;
-        baseSize.height = 5;
-        baseSize.depth = 10;
-        break;
-      case 'mountain':
-        // Tallest collider for mountains
-        baseSize.width = 12;
-        baseSize.height = 7;
-        baseSize.depth = 12;
-        break;
-      case 'rocks':
-        // Smaller collider for rock formations
-        baseSize.width = 6;
-        baseSize.height = 3;
-        baseSize.depth = 6;
-        break;
-      default:
-        // Default fallback
-        baseSize.width = 8;
-        baseSize.height = 4;
-        baseSize.depth = 8;
-    }
-    
-    // Apply feature scale
-    return {
-      width: baseSize.width * scale,
-      height: baseSize.height * scale,
-      depth: baseSize.depth * scale
-    };
-  };
-  
-  // Get collision box dimensions for this feature
-  const collisionSize = getCollisionSize();
-  
   // Return the model within a group
   return (
     <group ref={featureRef}>
@@ -201,25 +151,7 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
           />
         </group>
       )}
-      
-      {/* Invisible box collider that matches the visual size of the model */}
-      <mesh 
-        ref={collisionBoxRef}
-        visible={DEBUG_COLLISION}
-        position={[0, collisionSize.height / 2, 0]} // Center vertically above ground
-      >
-        <boxGeometry args={[
-          collisionSize.width, 
-          collisionSize.height, 
-          collisionSize.depth
-        ]} />
-        <meshBasicMaterial 
-          color="red" 
-          wireframe={true} 
-          transparent={true} 
-          opacity={0.3} 
-        />
-      </mesh>
+      {/* Debug axis helper removed */}
     </group>
   );
 }, (prevProps, nextProps) => {
