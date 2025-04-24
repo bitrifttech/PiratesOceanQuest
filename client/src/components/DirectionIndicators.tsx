@@ -26,14 +26,20 @@ const DirectionIndicators = () => {
     }
     
     // Calculate the ship's direction vectors based on its rotation
-    // Forward vector (ship points in -Z direction with 0 rotation)
-    const forwardDir = new THREE.Vector3(0, 0, -1).applyEuler(rotation);
+    // The ship model is rotated by Math.PI, so it faces in -Z direction at rotation 0
+    // Calculate forward vector using the same logic as in Ship.tsx
+    const forwardDir = new THREE.Vector3(
+      Math.sin(rotation.y),
+      0,
+      Math.cos(rotation.y)
+    ).multiplyScalar(-1); // Negate since ship points in -Z
     
     // Backward vector (opposite of forward)
     const backwardDir = forwardDir.clone().multiplyScalar(-1);
     
-    // Right vector (perpendicular to forward)
-    const rightDir = new THREE.Vector3(1, 0, 0).applyEuler(rotation);
+    // Calculate the right vector (perpendicular to forward)
+    // Rotate the forward vector by 90 degrees clockwise around Y axis
+    const rightDir = new THREE.Vector3(forwardDir.z, 0, -forwardDir.x);
     
     // Left vector (opposite of right)
     const leftDir = rightDir.clone().multiplyScalar(-1);
@@ -88,6 +94,7 @@ const DirectionIndicators = () => {
           anchorY="middle"
           outlineWidth={0.05}
           outlineColor="#0088ff"
+          rotation={[0, Math.PI, 0]} // Rotate text to face camera
         >
           W - Forward
         </Text>
@@ -104,6 +111,7 @@ const DirectionIndicators = () => {
           anchorY="middle"
           outlineWidth={0.05}
           outlineColor="#ff3333"
+          rotation={[0, Math.PI, 0]} // Rotate text to face camera
         >
           S - Backward
         </Text>
@@ -120,6 +128,7 @@ const DirectionIndicators = () => {
           anchorY="middle"
           outlineWidth={0.05}
           outlineColor="#33cc33"
+          rotation={[0, Math.PI, 0]} // Rotate text to face camera
         >
           A - Left
         </Text>
@@ -136,6 +145,7 @@ const DirectionIndicators = () => {
           anchorY="middle"
           outlineWidth={0.05}
           outlineColor="#ffcc00"
+          rotation={[0, Math.PI, 0]} // Rotate text to face camera
         >
           D - Right
         </Text>
