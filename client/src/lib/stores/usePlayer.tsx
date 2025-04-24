@@ -105,7 +105,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
         cooldownPercent: 0,
       });
       
-      console.log("Cannon fired! Cooldown:", cooldownTime);
+      // No logging of cannon firing to reduce console spam
     }
   },
   
@@ -135,15 +135,10 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   takeDamage: (amount) => {
     const { health } = get();
     
-    // Get the stack trace to identify the caller
-    const stack = new Error().stack;
-    console.log(`DAMAGE SOURCE - Player is taking ${amount} damage from:`, stack);
-    
+    // Damage logging disabled to reduce console spam
     // Disabled for now to debug health drain issue
     // const newHealth = Math.max(0, health - amount);
     // set({ health: newHealth });
-    
-    console.log(`DEBUG: Player would have taken ${amount} damage. Current health remains: ${health}`);
     
     return health; // Return current health without modifying it
   },
