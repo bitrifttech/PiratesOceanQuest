@@ -9,6 +9,7 @@ import { usePlayer } from "../lib/stores/usePlayer";
 import { useGameState } from "../lib/stores/useGameState";
 import { checkCollision } from "../lib/helpers/collisionDetection";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC } from "../lib/constants";
+import { environmentCollisions, calculateCollisionResponse } from "../lib/collision";
 import Cannon from "./Cannon";
 import Cannonball from "./Cannonball";
 import CannonFireEffect from "./CannonFireEffect";
@@ -433,14 +434,34 @@ const Ship = () => {
     
     setVelocity(newVelocity);
     
-    // Update position with velocity
-    const newPosition = position.clone().add(
+    // Calculate proposed new position with velocity
+    const proposedPosition = position.clone().add(
       newVelocity.clone().multiplyScalar(delta)
     );
     
     // Limit boundaries of the game area
-    newPosition.x = Math.max(-500, Math.min(500, newPosition.x));
-    newPosition.z = Math.max(-500, Math.min(500, newPosition.z));
+    proposedPosition.x = Math.max(-500, Math.min(500, proposedPosition.x));
+    proposedPosition.z = Math.max(-500, Math.min(500, proposedPosition.z));
+    
+    // Check for environment collisions with the ship
+    const shipRadius = 5; // Size of collision detection for ship
+    const collisionFeature = environmentCollisions.checkPointCollision(proposedPosition, shipRadius);
+    
+    // Handle collision if any
+    let newPosition;
+    if (collisionFeature) {
+      // Log collision for debugging
+      console.log(`[COLLISION] Ship collided with ${collisionFeature.type} at (${collisionFeature.x}, ${collisionFeature.z})`);
+      
+      // Calculate collision response (slide along the feature)
+      newPosition = calculateCollisionResponse(position, newVelocity, collisionFeature);
+      
+      // Reduce speed after collision
+      setVelocity(newVelocity.multiplyScalar(0.5));
+    } else {
+      // No collision, use the proposed position
+      newPosition = proposedPosition;
+    }
     
     // Store the current Y position so we don't override the model's vertical positioning
     const currentY = shipRef.current.position.y;

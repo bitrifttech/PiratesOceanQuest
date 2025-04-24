@@ -3,6 +3,7 @@ import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTF } from "three-stdlib";
 import { SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
+import { environmentCollisions } from "../lib/collision";
 
 // Preload all models once at module level
 useGLTF.preload('/models/tropical_island.glb');
@@ -160,9 +161,12 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
 
 // Main Environment component - renders all features
 const Environment = ({ features }: { features: EnvironmentFeature[] }) => {
-  // Log once on mount
+  // Log once on mount and register features with collision system
   useEffect(() => {
     console.log(`[ENV] Environment initialized with ${features.length} features`, features);
+    
+    // Register features with the collision system
+    environmentCollisions.setFeatures(features);
     
     // Add crash protection and debug info
     if (!features || features.length === 0) {
