@@ -89,109 +89,71 @@ const Island = ({
   // Keep track of position history for debugging
   const positionHistory = useRef<{x: number, y: number, z: number}[]>([]);
   
-  // Create a stable position key that will only change when intended position changes
-  const positionKey = useRef(`${xPosition.toFixed(2)}_${zPosition.toFixed(2)}`);
+  // Store fixed Y position once calculated
+  const fixedYPosition = useRef<number | null>(null);
   
   // Track if model is being updated
   const updateInProgress = useRef(false);
   
   useEffect(() => {
-    if (!islandRef.current) return;
+    if (!islandRef.current || !islandModel) return;
     
     const instanceId = instanceIdRef.current;
     
-    // Create a new position key
-    const newPositionKey = `${xPosition.toFixed(2)}_${zPosition.toFixed(2)}`;
-    const positionChanged = positionKey.current !== newPositionKey;
-    
-    console.log(`[ISLAND-DEBUG][${instanceId}] Positioning effect triggered:`, {
-      islandType: type,
-      xPosition,
-      zPosition,
-      isModelLoaded: !!islandModel,
-      alreadyPositioned: positionedRef.current,
-      positionChanged
-    });
-    
-    // Update position key if it changed
-    if (positionChanged) {
-      console.log(`[ISLAND-DEBUG][${instanceId}] Position key changed from ${positionKey.current} to ${newPositionKey}`);
-      positionKey.current = newPositionKey;
-      // Reset positioned flag when position actually changes
-      positionedRef.current = false;
-    }
-    
-    // We'll position the model if:
-    // 1. It hasn't been positioned yet, OR
-    // 2. The position has actually changed
-    if (!positionedRef.current || positionChanged) {
+    // Only calculate position if we haven't done it before
+    if (fixedYPosition.current === null) {
       // Lock to prevent concurrent updates
       if (updateInProgress.current) {
         console.log(`[ISLAND-DEBUG][${instanceId}] Skipping update - another update in progress`);
         return;
       }
-      updateInProgress.current = true;
       
-      // For grid alignment, we need to calculate bottom of the model
-      if (islandModel) {
-        // Determine the reason for positioning
-        const reason = !positionedRef.current ? "INITIAL SETUP" : "POSITION CHANGED";
-        console.log(`[ISLAND-DEBUG][${instanceId}] ${reason} - setting position`);
-        
-        // Add to position history
-        positionHistory.current.push({
-          x: islandRef.current.position.x,
-          y: islandRef.current.position.y,
-          z: islandRef.current.position.z
-        });
-        // Keep history limited to last 5 positions
-        if (positionHistory.current.length > 5) {
-          positionHistory.current.shift();
-        }
-        
-        // Calculate the bounding box to find the bottom of the model
-        const boundingBox = new THREE.Box3().setFromObject(islandModel);
-        const modelBottom = boundingBox.min.y;
-        
-        // Calculate the offset needed to place the bottom exactly at grid level
-        const baselineOffset = -modelBottom;
-        
-        // Store the current position before changing
-        const oldPosition = islandRef.current.position.clone();
-        
-        // Set initial position with bottom aligned precisely to grid level
-        const newY = STATIC.WATER_LEVEL + baselineOffset;
-        islandRef.current.position.set(
-          xPosition, 
-          newY, 
-          zPosition
-        );
-        
-        // Log the positioning for debugging
-        console.log(`[ISLAND-DEBUG][${instanceId}] POSITIONED from (${oldPosition.x.toFixed(2)}, ${oldPosition.y.toFixed(2)}, ${oldPosition.z.toFixed(2)}) to (${xPosition.toFixed(2)}, ${newY.toFixed(2)}, ${zPosition.toFixed(2)}):`, {
-          islandType: type,
-          modelBottom: modelBottom.toFixed(2),
-          baselineOffset: baselineOffset.toFixed(2),
-          waterLevel: STATIC.WATER_LEVEL,
-          positionHistory: positionHistory.current
-        });
-      } else {
-        console.log(`[ISLAND-DEBUG][${instanceId}] POSITIONING using FALLBACK`);
-        // For fallback shapes, just place them directly on the grid
-        islandRef.current.position.set(xPosition, STATIC.WATER_LEVEL, zPosition);
-        console.log(`[ISLAND-DEBUG][${instanceId}] Fallback positioned at (${xPosition}, ${STATIC.WATER_LEVEL}, ${zPosition})`);
-      }
+      updateInProgress.current = true;
+      console.log(`[ISLAND-DEBUG][${instanceId}] INITIAL SETUP - calculating fixed position`);
+      
+      // Calculate the bounding box to find the bottom of the model
+      const boundingBox = new THREE.Box3().setFromObject(islandModel);
+      const modelBottom = boundingBox.min.y;
+      
+      // Calculate the offset needed to place the bottom exactly at grid level
+      const baselineOffset = -modelBottom;
+      
+      // Calculate the fixed Y position once
+      const newY = STATIC.WATER_LEVEL + baselineOffset;
+      fixedYPosition.current = newY;
+      
+      // Apply the fixed position
+      islandRef.current.position.set(xPosition, newY, zPosition);
+      
+      console.log(`[ISLAND-DEBUG][${instanceId}] FIXED POSITION CALCULATED:`, {
+        islandType: type,
+        fixedY: newY.toFixed(2),
+        modelBottom: modelBottom.toFixed(2),
+        baselineOffset: baselineOffset.toFixed(2),
+        waterLevel: STATIC.WATER_LEVEL
+      });
       
       // Mark as positioned and release lock
       positionedRef.current = true;
       updateInProgress.current = false;
     } else {
-      console.log(`[ISLAND-DEBUG][${instanceId}] SKIPPING position update - no change in position`);
+      // If position has already been calculated, just update X and Z coordinates
+      islandRef.current.position.set(
+        xPosition, 
+        fixedYPosition.current, 
+        zPosition
+      );
+      
+      // Only log occasionally to reduce spam
+      if (Math.random() < 0.01) {
+        console.log(`[ISLAND-DEBUG][${instanceId}] Using pre-calculated Y position: ${fixedYPosition.current?.toFixed(2)}`);
+      }
     }
     
     return () => {
-      // Reset the position flag when component unmounts
+      // Reset the position calculations when component unmounts
       positionedRef.current = false;
+      fixedYPosition.current = null;
     };
   }, [xPosition, zPosition, type, islandModel]);
   
@@ -238,13 +200,8 @@ const Island = ({
             object={islandModel} 
             castShadow 
             receiveShadow 
-            onUpdate={(self: THREE.Object3D) => {
-              if (islandRef.current) {
-                // Analyze model to ensure bottom is at water level
-                const boundingBox = new THREE.Box3().setFromObject(self);
-                console.log(`Island ${type} model - Bottom Y: ${boundingBox.min.y.toFixed(2)}`);
-              }
-            }}
+            // Remove the onUpdate handler to prevent bounding box calculations during rendering
+            // This was a likely cause of flickering
           />
         </group>
       ) : (
