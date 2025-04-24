@@ -116,8 +116,16 @@ const Ship = () => {
   const cannonFireEffects = useRef<CannonFireEffectInfo[]>([]);
   let cannonBallId = useRef(0);
   
-  // Initialize ship position if needed
+  // Track initialization status
+  const isInitialized = useRef(false);
+  
+  // Initialize ship position if needed - only once
   useEffect(() => {
+    // Skip if already initialized
+    if (isInitialized.current) {
+      return;
+    }
+    
     if (!position) {
       setPosition(new THREE.Vector3(0, 0, 0));
       setRotation(new THREE.Euler(0, 0, 0));
@@ -131,7 +139,10 @@ const Ship = () => {
       constantHeight: POSITION.SHIP_HEIGHT,
       gameStateHeight: useGameState.getState().shipHeight
     });
-  }, [position, setPosition, setRotation, setVelocity]);
+    
+    // Mark as initialized
+    isInitialized.current = true;
+  }, []);
   
   // Check fire control input
   useEffect(() => {
@@ -524,8 +535,11 @@ const Ship = () => {
           castShadow
           receiveShadow
           onLoad={() => {
-            shipModelLoadedRef.current = true;
-            console.log(`Ship initialized`);
+            // Only log if not already loaded
+            if (!shipModelLoadedRef.current) {
+              shipModelLoadedRef.current = true;
+              console.log(`Ship model loaded`);
+            }
           }}
         />
         
