@@ -279,7 +279,11 @@ const Game = () => {
 
   // Initialize game on first load
   useEffect(() => {
-    console.log("Game initialized");
+    console.log("Game initialized", {
+      environmentFeatures: environmentFeatures.length,
+      sampleFeature: environmentFeatures[0],
+      playerPosition
+    });
     
     // Initialize player
     initializePlayer();
@@ -291,7 +295,21 @@ const Game = () => {
     camera.position.set(0, 15, 30);
     camera.lookAt(0, 0, 0);
     
-  }, [initializePlayer, playBackgroundMusic, camera]);
+    // Log key game elements
+    console.log("[GAME-INIT] Environment features sample:", 
+                environmentFeatures.slice(0, 3)); 
+    console.log("[GAME-INIT] Player state:", {
+      position: usePlayer.getState().position,
+      rotation: usePlayer.getState().rotation,
+      health: usePlayer.getState().health
+    });
+    console.log("[GAME-INIT] Game state:", {
+      gameState: useGameState.getState().gameState,
+      shipHeight: useGameState.getState().shipHeight,
+      shipScale: useGameState.getState().shipScale
+    });
+    
+  }, [initializePlayer, playBackgroundMusic, camera, environmentFeatures, playerPosition]);
   
   // Check for game over condition
   useEffect(() => {

@@ -150,10 +150,7 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
           />
         </group>
       )}
-      {/* Add a debug axis helper in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <axesHelper args={[5]} />
-      )}
+      {/* Debug axis helper removed */}
     </group>
   );
 }, (prevProps, nextProps) => {
@@ -165,8 +162,31 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
 const Environment = ({ features }: { features: EnvironmentFeature[] }) => {
   // Log once on mount
   useEffect(() => {
-    console.log(`[ENV] Environment initialized with ${features.length} features`);
-  }, [features.length]);
+    console.log(`[ENV] Environment initialized with ${features.length} features`, features);
+    
+    // Add crash protection and debug info
+    if (!features || features.length === 0) {
+      console.warn('[ENV] No features provided to Environment component!');
+    } else {
+      // Check validity of features
+      features.forEach((feature, index) => {
+        console.log(`[ENV] Feature ${index}: ${feature.id} type=${feature.type} at x=${feature.x}, z=${feature.z}`);
+        
+        // Check for invalid rotation values
+        if (!feature.rotation || feature.rotation.length !== 3) {
+          console.error(`[ENV] Invalid rotation for feature ${feature.id}:`, feature.rotation);
+        }
+      });
+    }
+  }, [features.length, features]);
+  
+  // Render nothing if no features
+  if (!features || features.length === 0) {
+    console.warn('[ENV-RENDER] No features to render!');
+    return null;
+  }
+  
+  console.log('[ENV-RENDER] Rendering environment features');
   
   return (
     <group name="environment">
