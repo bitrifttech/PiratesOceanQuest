@@ -12,6 +12,7 @@ import Island from "./Island";
 import DebugControls from "./DebugControls";
 import DebugControlsOverlay from "./DebugControlsOverlay";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC, WORLD } from "../lib/constants";
+import { BASE_SCALE, HEIGHT_OFFSET, GRID, RELATIVE_SIZE } from "../lib/ModelScaleSystem";
 
 import { usePlayer } from "../lib/stores/usePlayer";
 // import { useEnemies } from "../lib/stores/useEnemies"; // Removed enemies
@@ -314,21 +315,21 @@ const Game = () => {
       {/* Reference ship removed */}
       <DirectionIndicators />
       
-      {/* Player Ship - New unified positioning approach */}
+      {/* Player Ship - Using unified scale system where ship = 1 grid unit */}
       <WorldObject 
         modelPath="/models/base_pirate_ship.glb"
         position={playerPosition || new THREE.Vector3(0, 0, 0)}
         rotation={playerRotation || new THREE.Euler(0, Math.PI, 0)} 
-        scale={useGameState.getState().shipScale * 0.05} 
-        offset={0.2} // Small offset above water
+        scale={BASE_SCALE.SHIP.BASE * useGameState.getState().shipScale}
+        offset={HEIGHT_OFFSET.SHIP}
         castShadow
         receiveShadow
         onLoad={() => {
-          console.log("Ship model loaded with new positioning system");
+          console.log("Ship model loaded with unified scale system - 1 grid unit length");
         }}
       />
       
-      {/* Environment Features - New unified positioning system */}
+      {/* Environment Features - Using unified scale system relative to ship size */}
       {environmentFeatures.current.map((feature, index) => {
         // Determine the appropriate model path based on feature type
         const modelPath = 
@@ -336,11 +337,19 @@ const Game = () => {
           feature.type === 'mountain' ? '/models/mountain_island.glb' : 
           '/models/rock_formation.glb';
           
-        // Determine appropriate offset and scale based on feature type
-        const modelOffset = 
-          feature.type === 'mountain' ? 0 :  // Mountains sit directly on the grid
-          feature.type === 'tropical' ? 0.1 : // Tropical islands slightly above
-          0.05;  // Rocks slightly above
+        // Get appropriate base scale and height offset based on feature type
+        const baseScale = 
+          feature.type === 'tropical' ? BASE_SCALE.ISLAND.TROPICAL :
+          feature.type === 'mountain' ? BASE_SCALE.ISLAND.MOUNTAIN : 
+          BASE_SCALE.ISLAND.ROCKS;
+        
+        const heightOffset =
+          feature.type === 'tropical' ? HEIGHT_OFFSET.TROPICAL_ISLAND :
+          feature.type === 'mountain' ? HEIGHT_OFFSET.MOUNTAIN_ISLAND : 
+          HEIGHT_OFFSET.ROCKS;
+          
+        // Calculate final scale - base scale * feature-specific multiplier
+        const finalScale = baseScale * feature.scale;
           
         // Return WorldObject for each feature
         return (
@@ -349,12 +358,12 @@ const Game = () => {
             modelPath={modelPath}
             position={feature.position}
             rotation={feature.rotation}
-            scale={feature.scale * 0.1} // Base scale factor for islands
-            offset={modelOffset}
+            scale={finalScale}
+            offset={heightOffset}
             castShadow
             receiveShadow
             onLoad={() => {
-              console.log(`Loaded ${feature.type} model at (${feature.position.x}, ${feature.position.z})`);
+              console.log(`Loaded ${feature.type} model at (${feature.position.x}, ${feature.position.z}) with scale ${finalScale.toFixed(3)}`);
             }}
           />
         );

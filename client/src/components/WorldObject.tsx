@@ -4,6 +4,7 @@ import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTF } from "three-stdlib";
 import { STATIC } from "../lib/constants";
+import { BASE_SCALE, HEIGHT_OFFSET, GRID } from "../lib/ModelScaleSystem";
 
 interface WorldObjectProps {
   // Required properties
