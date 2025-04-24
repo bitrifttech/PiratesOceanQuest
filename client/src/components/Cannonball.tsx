@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { Trail } from "@react-three/drei";
 import { SCALE, MODEL_ADJUSTMENT } from "../lib/constants";
+import { useEnemies } from "../lib/stores/useEnemies";
 
 interface CannonballProps {
   position: THREE.Vector3;

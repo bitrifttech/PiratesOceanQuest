@@ -72,7 +72,7 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
       enemies: [...state.enemies, ...newEnemies],
     }));
     
-    console.log(`Spawned ${count} enemies`);
+    // Log removed to reduce console spam
   },
   
   // Move an enemy
@@ -111,8 +111,6 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
       const lootAmount = Math.floor(Math.random() * 50) + 50;
       addLoot(lootAmount);
       
-      console.log(`Enemy ${id} destroyed! +${lootAmount} gold`);
-      
       // Remove the enemy
       set((state) => ({
         enemies: state.enemies.filter((e) => e.id !== id),
@@ -121,8 +119,6 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
       // Check if all enemies are defeated
       const remainingEnemies = get().enemies.filter((e) => e.id !== id);
       if (remainingEnemies.length === 0) {
-        console.log("All enemies defeated!");
-        
         // If all enemies are defeated, set game state to show victory screen
         // This will be handled by the GameUI component
       }
@@ -140,7 +136,7 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
         }),
       }));
       
-      console.log(`Enemy ${id} took ${scaledDamage.toFixed(1)} damage. Health: ${newHealth}`);
+      // Log removed to reduce console spam
     }
   },
   
@@ -148,7 +144,6 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
   resetEnemies: () => {
     set({ enemies: [] });
     
-    // Don't spawn enemies automatically
-    console.log("Enemy ships reset - no enemies will be spawned automatically");
+    // Don't spawn enemies automatically - logging removed
   },
 }));
