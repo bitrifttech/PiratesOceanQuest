@@ -56,28 +56,37 @@ const CustomModel = ({
     scene: THREE.Group
   };
   
-  // When model loads
+  // When model loads - track if we've already processed this model to avoid infinite loop
+  const modelProcessedRef = useRef(false);
+  
   useEffect(() => {
-    if (customModel) {
-      console.log(`Model loaded: ${path}`);
-      setModelLoaded(true);
-      
-      // Apply shadows to all meshes
-      if (receiveShadow || castShadow) {
-        customModel.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            child.castShadow = castShadow;
-            child.receiveShadow = receiveShadow;
-          }
-        });
-      }
-      
-      // Execute callback if provided
-      if (onLoad) onLoad();
+    // If we already processed this model instance or don't have a model yet, skip
+    if (modelProcessedRef.current || !customModel) return;
+    
+    console.log(`Model loaded: ${path}`);
+    
+    // Set flag first to prevent infinite loops
+    modelProcessedRef.current = true;
+    
+    // Apply shadows to all meshes
+    if (receiveShadow || castShadow) {
+      customModel.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = castShadow;
+          child.receiveShadow = receiveShadow;
+        }
+      });
     }
+    
+    // Set model as loaded AFTER processing everything
+    setModelLoaded(true);
+    
+    // Execute callback if provided
+    if (onLoad) onLoad();
     
     return () => {
       // Cleanup
+      modelProcessedRef.current = false;
     };
   }, [customModel, path, castShadow, receiveShadow, onLoad]);
   
@@ -276,13 +285,13 @@ const CustomModel = ({
           </mesh>
         }>
           <primitive 
-            object={customModel.clone()} 
+            object={customModel} // Don't clone here - we handle cloning once in useEffect if needed
             scale={[finalScale, finalScale, finalScale]}
             castShadow={castShadow}
             receiveShadow={receiveShadow}
             onUpdate={(self: THREE.Object3D) => {
-              // Recompute the bounding box when the model is updated
-              if (modelRef.current) {
+              // Only log the first time it updates to avoid spamming the console
+              if (modelRef.current && !modelProcessedRef.current) {
                 const boundingBox = new THREE.Box3().setFromObject(self);
                 console.log(`Model ${path} updated - Bottom Y: ${boundingBox.min.y.toFixed(2)}`);
               }
