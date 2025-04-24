@@ -78,11 +78,19 @@ const Island = ({
   }, [rotation]);
   
   // Set the appropriate height for each island type based on flat grid
+  // Using a ref to track whether we've already positioned this model
+  const positionedRef = useRef(false);
+  
   useEffect(() => {
     if (!islandRef.current) return;
     
+    // Only do positioning once per model to prevent flickering
+    if (positionedRef.current) return;
+    
     // For grid alignment, we need to calculate bottom of the model
     if (islandModel) {
+      positionedRef.current = true;
+      
       // Calculate the bounding box to find the bottom of the model
       const boundingBox = new THREE.Box3().setFromObject(islandModel);
       const modelBottom = boundingBox.min.y;
@@ -105,10 +113,9 @@ const Island = ({
       console.log(`Island of type ${type} fallback positioned at grid level`);
     }
     
-    // No bobbing animation - everything stays flat on the grid
-    
     return () => {
-      // Cleanup 
+      // Reset the position flag when component unmounts
+      positionedRef.current = false;
     };
   }, [position, type, islandModel]);
   
@@ -144,7 +151,8 @@ const Island = ({
   return (
     <group 
       ref={islandRef} 
-      position={position} 
+      // Don't set position prop, we'll handle it completely in the useEffect
+      // to avoid double-positioning and flickering
       rotation={rotation}
     >
       {modelLoaded && islandModel ? (

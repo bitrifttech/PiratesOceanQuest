@@ -84,9 +84,20 @@ const CustomModel = ({
     };
   }, [customModel, path, castShadow, receiveShadow, onLoad]);
   
+  // Track whether the model has been positioned already to prevent flickering
+  const positionedRef = useRef(false);
+  
   // Set initial position when component mounts or modelHeightOffset changes
   useEffect(() => {
     if (modelRef.current && customModel) {
+      // Only position once to avoid flickering
+      if (positionedRef.current) return;
+      positionedRef.current = true;
+      
+      // Set X and Z from the base position
+      modelRef.current.position.x = basePosition[0];
+      modelRef.current.position.z = basePosition[2];
+      
       // Always use static water level as base reference
       const heightFromWater = modelHeightOffset === undefined ? 0 : modelHeightOffset;
       
@@ -109,7 +120,12 @@ const CustomModel = ({
       // Update initialY reference for future positioning
       initialY.current = STATIC.WATER_LEVEL + baselineOffset + heightFromWater;
     }
-  }, [modelHeightOffset, position, path, customModel]);
+    
+    return () => {
+      // Reset when component unmounts
+      positionedRef.current = false;
+    };
+  }, [modelHeightOffset, basePosition, path, customModel]);
   
   // In grid mode, we disable bobbing for consistent positioning
   useFrame((_, delta) => {
@@ -138,7 +154,7 @@ const CustomModel = ({
   
   return (
     <group
-      position={basePosition}
+      // Don't set position here, handle it entirely in useEffect
       rotation={rotation as unknown as THREE.Euler}
       ref={modelRef}
     >
