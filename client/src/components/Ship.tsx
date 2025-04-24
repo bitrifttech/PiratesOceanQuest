@@ -509,8 +509,8 @@ const Ship = () => {
     }
   });
 
-  // Track model loading state - now handled by CustomModel component
-  const [modelLoaded, setModelLoaded] = useState(false);
+  // Track model loading through a ref to avoid state issues
+  const shipModelLoadedRef = useRef(false);
 
   return (
     <>
@@ -540,33 +540,31 @@ const Ship = () => {
           castShadow
           receiveShadow
           onLoad={() => {
-            setModelLoaded(true);
+            shipModelLoadedRef.current = true;
             console.log(`Ship model loaded, positioned with bottom at water level + ${STATIC.SHIP_OFFSET} offset`);
           }}
         />
         
-        {/* Cannons are now part of the 3D model */}
-        {!modelLoaded && (
-          <>
-            {/* Cannons - port side (left) - shown only in fallback mode */}
-            {[-6, -3, 0, 3, 6].map((z, i) => (
-              <Cannon
-                key={`port-${i}`}
-                position={[-3.5, 0.8, z]}
-                rotation={[0, -Math.PI / 2, 0]}
-              />
-            ))}
-            
-            {/* Cannons - starboard side (right) - shown only in fallback mode */}
-            {[-6, -3, 0, 3, 6].map((z, i) => (
-              <Cannon
-                key={`starboard-${i}`}
-                position={[3.5, 0.8, z]}
-                rotation={[0, Math.PI / 2, 0]}
-              />
-            ))}
-          </>
-        )}
+        {/* Fallback cannons - shown only until model loads */}
+        <group visible={!shipModelLoadedRef.current}>
+          {/* Cannons - port side (left) - shown only in fallback mode */}
+          {[-6, -3, 0, 3, 6].map((z, i) => (
+            <Cannon
+              key={`port-${i}`}
+              position={[-3.5, 0.8, z]}
+              rotation={[0, -Math.PI / 2, 0]}
+            />
+          ))}
+          
+          {/* Cannons - starboard side (right) - shown only in fallback mode */}
+          {[-6, -3, 0, 3, 6].map((z, i) => (
+            <Cannon
+              key={`starboard-${i}`}
+              position={[3.5, 0.8, z]}
+              rotation={[0, Math.PI / 2, 0]}
+            />
+          ))}
+        </group>
         
         {/* Health indicator (only shown when damaged) - positioned above ship */}
         {health < 100 && (

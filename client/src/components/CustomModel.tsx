@@ -24,6 +24,7 @@ interface CustomModelProps {
 
 /**
  * Renders a custom GLB model with standardized scaling
+ * Completely rewritten to avoid infinite loops caused by setState in effects
  */
 const CustomModel = ({
   path,
@@ -44,265 +45,150 @@ const CustomModel = ({
   // Model reference
   const modelRef = useRef<THREE.Group>(null);
   
-  // Track initial position and bob state
-  const initialY = useRef<number>(yPosition);
-  const time = useRef<number>(Math.random() * 100); // Random start time for varied bobbing
+  // One-time initialization flags to prevent multiple processing
+  const initialized = useRef(false);
+  const positioned = useRef(false);
+  const debugLogged = useRef(false);
+  const instanceId = useRef(`model_${Math.random().toString(36).substr(2, 9)}`);
   
-  // Track loading state
-  const [modelLoaded, setModelLoaded] = useState(false);
+  // For controlling bob effect
+  const initialY = useRef<number>(yPosition);
+  const time = useRef<number>(Math.random() * 100);
+  
+  // Use a ref for model loaded state instead of state to prevent re-renders
+  const modelLoadedRef = useRef(false);
+  const [fallbackVisible, setFallbackVisible] = useState(true);
   
   // Load the model
-  const { scene: customModel } = useGLTF(path) as GLTF & {
-    scene: THREE.Group
-  };
+  const result = useGLTF(path) as GLTF & { scene: THREE.Group };
+  const { scene: originalModel } = result;
   
-  // When model loads - track if we've already processed this model to avoid infinite loop
-  const modelProcessedRef = useRef(false);
+  // Clone model once to avoid sharing materials
+  const modelClone = useRef<THREE.Group | null>(null);
   
-  useEffect(() => {
-    // If we already processed this model instance or don't have a model yet, skip
-    if (modelProcessedRef.current || !customModel) return;
-    
-    console.log(`Model loaded: ${path}`);
-    
-    // Set flag first to prevent infinite loops
-    modelProcessedRef.current = true;
-    
-    // Apply shadows to all meshes
-    if (receiveShadow || castShadow) {
-      customModel.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.castShadow = castShadow;
-          child.receiveShadow = receiveShadow;
-        }
-      });
-    }
-    
-    // Set model as loaded AFTER processing everything
-    setModelLoaded(true);
-    
-    // Execute callback if provided
-    if (onLoad) onLoad();
-    
-    return () => {
-      // Cleanup
-      modelProcessedRef.current = false;
-    };
-  }, [customModel, path, castShadow, receiveShadow, onLoad]);
-  
-  // Track whether the model has been positioned already to prevent flickering
-  const positionedRef = useRef(false);
-  
-  // Use a ref to store a unique ID for this component instance
-  const instanceIdRef = useRef(`model_${Math.random().toString(36).substr(2, 9)}`);
-  
-  // Keep track of position history for debugging
-  const positionHistory = useRef<{x: number, y: number, z: number}[]>([]);
-  
-  // Create a stable position key that will only change when model's intended position changes
+  // Position key to track changes
   const positionKey = useRef(`${xPosition.toFixed(2)}_${zPosition.toFixed(2)}_${modelHeightOffset}`);
   
-  // Track if model is being updated
-  const updateInProgress = useRef(false);
-  
-  // Set initial position when component mounts or position changes
+  // Initialize model on first render only
   useEffect(() => {
-    const instanceId = instanceIdRef.current;
+    // Skip if already initialized or no model loaded
+    if (initialized.current || !originalModel) return;
     
-    // Create a new position key
+    try {
+      // Clone once
+      modelClone.current = originalModel.clone();
+      
+      // Set shadows
+      if (modelClone.current) {
+        modelClone.current.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.castShadow = castShadow;
+            child.receiveShadow = receiveShadow;
+          }
+        });
+      }
+      
+      // Mark as initialized and loaded
+      initialized.current = true;
+      modelLoadedRef.current = true;
+      
+      // Hide fallback after a short delay to avoid flickering
+      setTimeout(() => {
+        setFallbackVisible(false);
+      }, 100);
+      
+      console.log(`Model initialized: ${path}`);
+      
+      // Execute callback
+      if (onLoad) onLoad();
+    } catch (err) {
+      console.error(`Failed to initialize model ${path}:`, err);
+    }
+    
+    // This effect runs only once per component lifecycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  
+  // Position model when needed
+  useEffect(() => {
+    if (!modelRef.current || !modelClone.current || !initialized.current) return;
+    
     const newPositionKey = `${xPosition.toFixed(2)}_${zPosition.toFixed(2)}_${modelHeightOffset}`;
     const positionChanged = positionKey.current !== newPositionKey;
     
-    console.log(`[DEBUG][${instanceId}] Positioning effect triggered with:`, {
-      isModelLoaded: !!customModel,
-      hasModelRef: !!modelRef.current,
-      alreadyPositioned: positionedRef.current,
-      positionChanged,
-      xPosition,
-      zPosition,
-      path
-    });
-    
-    // Update position key if it changed
-    if (positionChanged) {
-      console.log(`[DEBUG][${instanceId}] Position key changed from ${positionKey.current} to ${newPositionKey}`);
-      positionKey.current = newPositionKey;
-      // Reset positioned flag when position actually changes
-      positionedRef.current = false;
-    }
-    
-    if (modelRef.current && customModel) {
-      // Check if parent might be setting position via group
-      if (modelRef.current.parent) {
-        const parentPos = modelRef.current.parent.position;
-        const isShipGroup = modelRef.current.parent.userData?.isShipGroup === true;
-        console.log(`[DEBUG][${instanceId}] PARENT GROUP CHECK:`, {
-          parentX: parentPos.x.toFixed(2),
-          parentY: parentPos.y.toFixed(2),
-          parentZ: parentPos.z.toFixed(2),
-          isShipGroup,
-          parentType: modelRef.current.parent.type,
-          parentName: modelRef.current.parent.name || "unnamed"
-        });
-      }
-      
-      // Check current position before any changes
-      console.log(`[DEBUG][${instanceId}] CURRENT POSITION:`, {
-        x: modelRef.current.position.x.toFixed(2),
-        y: modelRef.current.position.y.toFixed(2),
-        z: modelRef.current.position.z.toFixed(2)
-      });
-      
-      // We'll position the model if:
-      // 1. It hasn't been positioned yet, OR
-      // 2. The position has actually changed
-      if (!positionedRef.current || positionChanged) {
-        // Lock to prevent concurrent updates
-        if (updateInProgress.current) {
-          console.log(`[DEBUG][${instanceId}] Skipping update - another update in progress`);
-          return;
-        }
-        updateInProgress.current = true;
+    // Only reposition if position changed or not positioned yet
+    if (!positioned.current || positionChanged) {
+      try {
+        // Update position key
+        positionKey.current = newPositionKey;
         
-        // Determine the reason for positioning
-        const reason = !positionedRef.current ? "INITIAL SETUP" : "POSITION CHANGED";
-        console.log(`[DEBUG][${instanceId}] ${reason} - setting position`);
-        
-        // Add to position history
-        positionHistory.current.push({
-          x: modelRef.current.position.x,
-          y: modelRef.current.position.y,
-          z: modelRef.current.position.z
-        });
-        // Keep history limited to last 5 positions
-        if (positionHistory.current.length > 5) {
-          positionHistory.current.shift();
-        }
-        
-        // Set X and Z from the position props
+        // Set X and Z positions directly
         modelRef.current.position.x = xPosition;
         modelRef.current.position.z = zPosition;
         
-        // Always use static water level as base reference
-        const heightFromWater = modelHeightOffset === undefined ? 0 : modelHeightOffset;
-        
-        // Analyze the model to determine its bounding box
-        const boundingBox = new THREE.Box3().setFromObject(customModel);
-        const modelHeight = boundingBox.max.y - boundingBox.min.y;
+        // Calculate proper Y position based on model dimensions
+        const boundingBox = new THREE.Box3().setFromObject(modelClone.current);
         const modelBottom = boundingBox.min.y;
-        
-        // Calculate how much we need to offset so the model bottom is exactly at grid level
-        // This ensures the bottom of all models aligns perfectly with the grid
         const baselineOffset = -modelBottom;
         
-        // The y position places the bottom of the model precisely at grid level, then adds the desired offset
-        const finalYPosition = STATIC.WATER_LEVEL + baselineOffset + heightFromWater;
+        // Calculate final position - model bottom at water level + desired offset
+        const finalYPosition = STATIC.WATER_LEVEL + baselineOffset + modelHeightOffset;
         modelRef.current.position.y = finalYPosition;
         
-        // Log the positioning for debugging
-        console.log(`[DEBUG][${instanceId}] POSITIONED at Y=${finalYPosition.toFixed(2)}:`, {
-          modelBottom: modelBottom.toFixed(2),
-          baselineOffset: baselineOffset.toFixed(2),
-          waterLevel: STATIC.WATER_LEVEL,
-          heightOffset: heightFromWater,
-          modelPath: path,
-          positionHistory: positionHistory.current
-        });
-        
-        // Update initialY reference for future positioning
+        // Store initial Y for bobbing
         initialY.current = finalYPosition;
         
-        // Mark as positioned and release lock
-        positionedRef.current = true;
-        updateInProgress.current = false;
-      } else {
-        console.log(`[DEBUG][${instanceId}] SKIPPING position update - no change in position key`);
+        // Log once for debugging
+        if (!debugLogged.current) {
+          console.log(`Model ${path} positioned at (${xPosition}, ${finalYPosition}, ${zPosition})`);
+          console.log(`- Model bottom: ${modelBottom.toFixed(2)}, offset: ${baselineOffset.toFixed(2)}`);
+          debugLogged.current = true;
+        }
+        
+        // Mark as positioned
+        positioned.current = true;
+      } catch (err) {
+        console.error(`Failed to position model ${path}:`, err);
       }
     }
     
-  }, [modelHeightOffset, xPosition, zPosition, path, customModel]);
+    // Dependencies include position params but NOT the model itself (to avoid re-renders)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [xPosition, zPosition, modelHeightOffset]);
   
-  // Add a second effect to monitor position changes from outside
-  useEffect(() => {
-    if (!modelRef.current) return;
-    
-    const instanceId = instanceIdRef.current;
-    const checkPosition = () => {
-      if (modelRef.current) {
-        console.log(`[DEBUG][${instanceId}] POSITION CHECK:`, {
-          x: modelRef.current.position.x.toFixed(2),
-          y: modelRef.current.position.y.toFixed(2),
-          z: modelRef.current.position.z.toFixed(2),
-          positionedFlag: positionedRef.current
-        });
-      }
-    };
-    
-    // Check position less frequently to reduce log spam
-    const interval = setInterval(checkPosition, 5000);
-    
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
-  
-  // In grid mode, we disable bobbing for consistent positioning
-  useFrame((_, delta) => {
-    if (!modelRef.current) return;
-    
-    // No bobbing in grid mode - models stay at fixed height
-    // This ensures consistent positioning for all game elements
-    
-    // Uncomment this block if bobbing is needed in the future
-    /*
-    if (bob) {
-      // Increment time
-      time.current += delta * bobSpeed;
-      
-      // Calculate bob offset
-      const bobOffset = Math.sin(time.current) * bobHeight;
-      
-      // Apply offset to Y position
-      modelRef.current.position.y = initialY.current + bobOffset;
-    }
-    */
-  });
-  
-  // Determine final scale factor
+  // Calculate final scale
   const finalScale = scale * (modelAdjustment || 1.0);
+  
+  // Skip bobbing for now - uncomment if needed later
+  /*
+  useFrame((_, delta) => {
+    if (!modelRef.current || !bob) return;
+    
+    time.current += delta * bobSpeed;
+    const bobOffset = Math.sin(time.current) * bobHeight;
+    modelRef.current.position.y = initialY.current + bobOffset;
+  });
+  */
   
   return (
     <group
-      // Don't set position here, handle it entirely in useEffect
       rotation={rotation as unknown as THREE.Euler}
       ref={modelRef}
     >
-      {modelLoaded ? (
-        <Suspense fallback={
-          <mesh castShadow={castShadow} receiveShadow={receiveShadow}>
-            <boxGeometry args={[1, 1, 1]} />
-            <meshStandardMaterial color="#AAAAAA" />
-          </mesh>
-        }>
-          <primitive 
-            object={customModel} // Don't clone here - we handle cloning once in useEffect if needed
-            scale={[finalScale, finalScale, finalScale]}
-            castShadow={castShadow}
-            receiveShadow={receiveShadow}
-            onUpdate={(self: THREE.Object3D) => {
-              // Only log the first time it updates to avoid spamming the console
-              if (modelRef.current && !modelProcessedRef.current) {
-                const boundingBox = new THREE.Box3().setFromObject(self);
-                console.log(`Model ${path} updated - Bottom Y: ${boundingBox.min.y.toFixed(2)}`);
-              }
-            }}
-          />
-        </Suspense>
-      ) : (
+      {fallbackVisible && (
         <mesh castShadow={castShadow} receiveShadow={receiveShadow}>
           <boxGeometry args={[1, 1, 1]} />
           <meshStandardMaterial color="#AAAAAA" />
         </mesh>
+      )}
+      
+      {initialized.current && modelClone.current && (
+        <primitive 
+          object={modelClone.current}
+          scale={[finalScale, finalScale, finalScale]} 
+          castShadow={castShadow}
+          receiveShadow={receiveShadow}
+        />
       )}
     </group>
   );

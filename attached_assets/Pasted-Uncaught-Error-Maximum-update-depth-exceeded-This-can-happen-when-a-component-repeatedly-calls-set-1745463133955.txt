@@ -1,0 +1,97 @@
+Uncaught Error: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.
+    at checkForNestedUpdates (chunk-T6SUJGNB.js?v=1860c008:14095:19)
+    at scheduleUpdateOnFiber (chunk-T6SUJGNB.js?v=1860c008:12933:11)
+    at dispatchSetState (chunk-T6SUJGNB.js?v=1860c008:6741:24)
+    at CustomModel.tsx:82:5
+    at commitHookEffectListMount (chunk-T6SUJGNB.js?v=1860c008:10911:34)
+    at commitPassiveMountOnFiber (chunk-T6SUJGNB.js?v=1860c008:12219:19)
+    at commitPassiveMountEffects_complete (chunk-T6SUJGNB.js?v=1860c008:12191:17)
+    at commitPassiveMountEffects_begin (chunk-T6SUJGNB.js?v=1860c008:12181:15)
+    at commitPassiveMountEffects (chunk-T6SUJGNB.js?v=1860c008:12171:11)
+    at flushPassiveEffectsImpl (chunk-T6SUJGNB.js?v=1860c008:13939:11)
+checkForNestedUpdates @ chunk-T6SUJGNB.js?v=1860c008:14095
+scheduleUpdateOnFiber @ chunk-T6SUJGNB.js?v=1860c008:12933
+dispatchSetState @ chunk-T6SUJGNB.js?v=1860c008:6741
+(anonymous) @ CustomModel.tsx:82
+commitHookEffectListMount @ chunk-T6SUJGNB.js?v=1860c008:10911
+commitPassiveMountOnFiber @ chunk-T6SUJGNB.js?v=1860c008:12219
+commitPassiveMountEffects_complete @ chunk-T6SUJGNB.js?v=1860c008:12191
+commitPassiveMountEffects_begin @ chunk-T6SUJGNB.js?v=1860c008:12181
+commitPassiveMountEffects @ chunk-T6SUJGNB.js?v=1860c008:12171
+flushPassiveEffectsImpl @ chunk-T6SUJGNB.js?v=1860c008:13939
+flushPassiveEffects @ chunk-T6SUJGNB.js?v=1860c008:13902
+commitRootImpl @ chunk-T6SUJGNB.js?v=1860c008:13871
+commitRoot @ chunk-T6SUJGNB.js?v=1860c008:13743
+performSyncWorkOnRoot @ chunk-T6SUJGNB.js?v=1860c008:13332
+flushSyncCallbacks @ chunk-T6SUJGNB.js?v=1860c008:2766
+flushPassiveEffectsImpl @ chunk-T6SUJGNB.js?v=1860c008:13955
+flushPassiveEffects @ chunk-T6SUJGNB.js?v=1860c008:13902
+(anonymous) @ chunk-T6SUJGNB.js?v=1860c008:13793
+workLoop @ chunk-T6SUJGNB.js?v=1860c008:274
+flushWork @ chunk-T6SUJGNB.js?v=1860c008:253
+performWorkUntilDeadline @ chunk-T6SUJGNB.js?v=1860c008:461Understand this error
+Console.js:61 The above error occurred in the <ForwardRef(Canvas)> component:
+
+    at Canvas (https://16328751-71a0-420e-bc4b-9929b44921ba-00-ysnrt7u6ovqz.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-T6SUJGNB.js?v=1860c008:18236:3)
+    at FiberProvider (https://16328751-71a0-420e-bc4b-9929b44921ba-00-ysnrt7u6ovqz.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-T6SUJGNB.js?v=1860c008:18170:21)
+    at CanvasWrapper
+    at KeyboardControls (https://16328751-71a0-420e-bc4b-9929b44921ba-00-ysnrt7u6ovqz.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@react-three_drei.js?v=1860c008:9176:8)
+    at div
+    at RenderedRoute (https://16328751-71a0-420e-bc4b-9929b44921ba-00-ysnrt7u6ovqz.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-router-dom.js?v=1860c008:4089:5)
+    at Routes (https://16328751-71a0-420e-bc4b-9929b44921ba-00-ysnrt7u6ovqz.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-router-dom.js?v=1860c008:4559:5)
+    at Router (https://16328751-71a0-420e-bc4b-9929b44921ba-00-ysnrt7u6ovqz.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-router-dom.js?v=1860c008:4502:15)
+    at BrowserRouter (https://16328751-71a0-420e-bc4b-9929b44921ba-00-ysnrt7u6ovqz.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-router-dom.js?v=1860c008:5248:5)
+    at App (https://16328751-71a0-420e-bc4b-9929b44921ba-00-ysnrt7u6ovqz.spock.replit.dev/src/App.tsx?t=1745462912049&v=QXJUpEPoK6kYUt2e62kp6:54:21)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+Mt.forEach.n.<computed> @ Console.js:61
+console.error @ chunk-T6SUJGNB.js?v=1860c008:18167
+logCapturedError @ chunk-PJEEZAML.js?v=1860c008:14032
+update.callback @ chunk-PJEEZAML.js?v=1860c008:14052
+callCallback @ chunk-PJEEZAML.js?v=1860c008:11248
+commitUpdateQueue @ chunk-PJEEZAML.js?v=1860c008:11265
+commitLayoutEffectOnFiber @ chunk-PJEEZAML.js?v=1860c008:17093
+commitLayoutMountEffects_complete @ chunk-PJEEZAML.js?v=1860c008:17980
+commitLayoutEffects_begin @ chunk-PJEEZAML.js?v=1860c008:17969
+commitLayoutEffects @ chunk-PJEEZAML.js?v=1860c008:17920
+commitRootImpl @ chunk-PJEEZAML.js?v=1860c008:19353
+commitRoot @ chunk-PJEEZAML.js?v=1860c008:19277
+finishConcurrentRender @ chunk-PJEEZAML.js?v=1860c008:18760
+performConcurrentWorkOnRoot @ chunk-PJEEZAML.js?v=1860c008:18718
+workLoop @ chunk-PJEEZAML.js?v=1860c008:197
+flushWork @ chunk-PJEEZAML.js?v=1860c008:176
+performWorkUntilDeadline @ chunk-PJEEZAML.js?v=1860c008:384Understand this error
+chunk-PJEEZAML.js?v=1860c008:19413 Uncaught Error: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.
+    at checkForNestedUpdates (chunk-T6SUJGNB.js?v=1860c008:14095:19)
+    at scheduleUpdateOnFiber (chunk-T6SUJGNB.js?v=1860c008:12933:11)
+    at dispatchSetState (chunk-T6SUJGNB.js?v=1860c008:6741:24)
+    at CustomModel.tsx:82:5
+    at commitHookEffectListMount (chunk-T6SUJGNB.js?v=1860c008:10911:34)
+    at commitPassiveMountOnFiber (chunk-T6SUJGNB.js?v=1860c008:12219:19)
+    at commitPassiveMountEffects_complete (chunk-T6SUJGNB.js?v=1860c008:12191:17)
+    at commitPassiveMountEffects_begin (chunk-T6SUJGNB.js?v=1860c008:12181:15)
+    at commitPassiveMountEffects (chunk-T6SUJGNB.js?v=1860c008:12171:11)
+    at flushPassiveEffectsImpl (chunk-T6SUJGNB.js?v=1860c008:13939:11)
+checkForNestedUpdates @ chunk-T6SUJGNB.js?v=1860c008:14095
+scheduleUpdateOnFiber @ chunk-T6SUJGNB.js?v=1860c008:12933
+dispatchSetState @ chunk-T6SUJGNB.js?v=1860c008:6741
+(anonymous) @ CustomModel.tsx:82
+commitHookEffectListMount @ chunk-T6SUJGNB.js?v=1860c008:10911
+commitPassiveMountOnFiber @ chunk-T6SUJGNB.js?v=1860c008:12219
+commitPassiveMountEffects_complete @ chunk-T6SUJGNB.js?v=1860c008:12191
+commitPassiveMountEffects_begin @ chunk-T6SUJGNB.js?v=1860c008:12181
+commitPassiveMountEffects @ chunk-T6SUJGNB.js?v=1860c008:12171
+flushPassiveEffectsImpl @ chunk-T6SUJGNB.js?v=1860c008:13939
+flushPassiveEffects @ chunk-T6SUJGNB.js?v=1860c008:13902
+commitRootImpl @ chunk-T6SUJGNB.js?v=1860c008:13871
+commitRoot @ chunk-T6SUJGNB.js?v=1860c008:13743
+performSyncWorkOnRoot @ chunk-T6SUJGNB.js?v=1860c008:13332
+flushSyncCallbacks @ chunk-T6SUJGNB.js?v=1860c008:2766
+flushPassiveEffectsImpl @ chunk-T6SUJGNB.js?v=1860c008:13955
+flushPassiveEffects @ chunk-T6SUJGNB.js?v=1860c008:13902
+(anonymous) @ chunk-T6SUJGNB.js?v=1860c008:13793
+workLoop @ chunk-T6SUJGNB.js?v=1860c008:274
+flushWork @ chunk-T6SUJGNB.js?v=1860c008:253
+performWorkUntilDeadline @ chunk-T6SUJGNB.js?v=1860c008:461Understand this error
+Console.js:61 
