@@ -436,13 +436,20 @@ const Ship = () => {
     newPosition.x = Math.max(-500, Math.min(500, newPosition.x));
     newPosition.z = Math.max(-500, Math.min(500, newPosition.z));
     
+    // Store the current Y position so we don't override the model's vertical positioning
+    const currentY = shipRef.current.position.y;
+    
     setPosition(newPosition);
     
     // Track changes before applying
     const oldPosition = shipRef.current.position.clone();
     
-    // Update the mesh position and rotation
-    shipRef.current.position.copy(newPosition);
+    // Update the mesh position and rotation, but preserve Y to avoid interfering with model positioning
+    shipRef.current.position.set(
+      newPosition.x,
+      currentY, // Preserve the Y position calculated by the model
+      newPosition.z
+    );
     shipRef.current.rotation.copy(newRotation);
     
     // Debug: Log position changes to track when parent group moves
@@ -505,8 +512,16 @@ const Ship = () => {
   return (
     <>
       {/* Ship Group - contains only the ship model and health indicator */}
-      <group ref={shipRef} position={position || [0, 0, 0]}>
-        {/* 3D Ship Model using CustomModel component */}
+      <group 
+        ref={shipRef} 
+        position={position || [0, 0, 0]}
+        userData={{ isShipGroup: true }} // Mark for debugging
+      >
+        {/* 3D Ship Model using CustomModel component 
+          * Position is always 0,0,0 relative to parent group
+          * Parent group handles all movement
+          * CustomModel handles vertical alignment to grid
+        */}
         <CustomModel 
           path='/models/base_pirate_ship.glb'
           xPosition={0}

@@ -86,60 +86,107 @@ const Island = ({
   // Create a unique ID for debugging
   const instanceIdRef = useRef(`island_${Math.random().toString(36).substr(2, 9)}`);
   
+  // Keep track of position history for debugging
+  const positionHistory = useRef<{x: number, y: number, z: number}[]>([]);
+  
+  // Create a stable position key that will only change when intended position changes
+  const positionKey = useRef(`${xPosition.toFixed(2)}_${zPosition.toFixed(2)}`);
+  
+  // Track if model is being updated
+  const updateInProgress = useRef(false);
+  
   useEffect(() => {
     if (!islandRef.current) return;
     
     const instanceId = instanceIdRef.current;
+    
+    // Create a new position key
+    const newPositionKey = `${xPosition.toFixed(2)}_${zPosition.toFixed(2)}`;
+    const positionChanged = positionKey.current !== newPositionKey;
     
     console.log(`[ISLAND-DEBUG][${instanceId}] Positioning effect triggered:`, {
       islandType: type,
       xPosition,
       zPosition,
       isModelLoaded: !!islandModel,
-      alreadyPositioned: positionedRef.current
+      alreadyPositioned: positionedRef.current,
+      positionChanged
     });
     
-    // Only do positioning once per model to prevent flickering
-    if (positionedRef.current) {
-      console.log(`[ISLAND-DEBUG][${instanceId}] SKIPPING positioning - already positioned`);
-      return;
+    // Update position key if it changed
+    if (positionChanged) {
+      console.log(`[ISLAND-DEBUG][${instanceId}] Position key changed from ${positionKey.current} to ${newPositionKey}`);
+      positionKey.current = newPositionKey;
+      // Reset positioned flag when position actually changes
+      positionedRef.current = false;
     }
     
-    // For grid alignment, we need to calculate bottom of the model
-    if (islandModel) {
-      console.log(`[ISLAND-DEBUG][${instanceId}] POSITIONING new island for the first time`);
+    // We'll position the model if:
+    // 1. It hasn't been positioned yet, OR
+    // 2. The position has actually changed
+    if (!positionedRef.current || positionChanged) {
+      // Lock to prevent concurrent updates
+      if (updateInProgress.current) {
+        console.log(`[ISLAND-DEBUG][${instanceId}] Skipping update - another update in progress`);
+        return;
+      }
+      updateInProgress.current = true;
+      
+      // For grid alignment, we need to calculate bottom of the model
+      if (islandModel) {
+        // Determine the reason for positioning
+        const reason = !positionedRef.current ? "INITIAL SETUP" : "POSITION CHANGED";
+        console.log(`[ISLAND-DEBUG][${instanceId}] ${reason} - setting position`);
+        
+        // Add to position history
+        positionHistory.current.push({
+          x: islandRef.current.position.x,
+          y: islandRef.current.position.y,
+          z: islandRef.current.position.z
+        });
+        // Keep history limited to last 5 positions
+        if (positionHistory.current.length > 5) {
+          positionHistory.current.shift();
+        }
+        
+        // Calculate the bounding box to find the bottom of the model
+        const boundingBox = new THREE.Box3().setFromObject(islandModel);
+        const modelBottom = boundingBox.min.y;
+        
+        // Calculate the offset needed to place the bottom exactly at grid level
+        const baselineOffset = -modelBottom;
+        
+        // Store the current position before changing
+        const oldPosition = islandRef.current.position.clone();
+        
+        // Set initial position with bottom aligned precisely to grid level
+        const newY = STATIC.WATER_LEVEL + baselineOffset;
+        islandRef.current.position.set(
+          xPosition, 
+          newY, 
+          zPosition
+        );
+        
+        // Log the positioning for debugging
+        console.log(`[ISLAND-DEBUG][${instanceId}] POSITIONED from (${oldPosition.x.toFixed(2)}, ${oldPosition.y.toFixed(2)}, ${oldPosition.z.toFixed(2)}) to (${xPosition.toFixed(2)}, ${newY.toFixed(2)}, ${zPosition.toFixed(2)}):`, {
+          islandType: type,
+          modelBottom: modelBottom.toFixed(2),
+          baselineOffset: baselineOffset.toFixed(2),
+          waterLevel: STATIC.WATER_LEVEL,
+          positionHistory: positionHistory.current
+        });
+      } else {
+        console.log(`[ISLAND-DEBUG][${instanceId}] POSITIONING using FALLBACK`);
+        // For fallback shapes, just place them directly on the grid
+        islandRef.current.position.set(xPosition, STATIC.WATER_LEVEL, zPosition);
+        console.log(`[ISLAND-DEBUG][${instanceId}] Fallback positioned at (${xPosition}, ${STATIC.WATER_LEVEL}, ${zPosition})`);
+      }
+      
+      // Mark as positioned and release lock
       positionedRef.current = true;
-      
-      // Calculate the bounding box to find the bottom of the model
-      const boundingBox = new THREE.Box3().setFromObject(islandModel);
-      const modelBottom = boundingBox.min.y;
-      
-      // Calculate the offset needed to place the bottom exactly at grid level
-      const baselineOffset = -modelBottom;
-      
-      // Store the current position before changing
-      const oldPosition = islandRef.current.position.clone();
-      
-      // Set initial position with bottom aligned precisely to grid level
-      const newY = STATIC.WATER_LEVEL + baselineOffset;
-      islandRef.current.position.set(
-        xPosition, 
-        newY, 
-        zPosition
-      );
-      
-      // Log the positioning for debugging
-      console.log(`[ISLAND-DEBUG][${instanceId}] POSITIONED from (${oldPosition.x.toFixed(2)}, ${oldPosition.y.toFixed(2)}, ${oldPosition.z.toFixed(2)}) to (${xPosition.toFixed(2)}, ${newY.toFixed(2)}, ${zPosition.toFixed(2)}):`, {
-        islandType: type,
-        modelBottom: modelBottom.toFixed(2),
-        baselineOffset: baselineOffset.toFixed(2),
-        waterLevel: STATIC.WATER_LEVEL
-      });
+      updateInProgress.current = false;
     } else {
-      console.log(`[ISLAND-DEBUG][${instanceId}] POSITIONING using FALLBACK`);
-      // For fallback shapes, just place them directly on the grid
-      islandRef.current.position.set(xPosition, STATIC.WATER_LEVEL, zPosition);
-      console.log(`[ISLAND-DEBUG][${instanceId}] Fallback positioned at (${xPosition}, ${STATIC.WATER_LEVEL}, ${zPosition})`);
+      console.log(`[ISLAND-DEBUG][${instanceId}] SKIPPING position update - no change in position`);
     }
     
     return () => {

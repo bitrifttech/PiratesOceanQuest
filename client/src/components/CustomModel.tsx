@@ -87,80 +87,129 @@ const CustomModel = ({
   // Use a ref to store a unique ID for this component instance
   const instanceIdRef = useRef(`model_${Math.random().toString(36).substr(2, 9)}`);
   
-  // Set initial position when component mounts or modelHeightOffset changes
+  // Keep track of position history for debugging
+  const positionHistory = useRef<{x: number, y: number, z: number}[]>([]);
+  
+  // Create a stable position key that will only change when model's intended position changes
+  const positionKey = useRef(`${xPosition.toFixed(2)}_${zPosition.toFixed(2)}_${modelHeightOffset}`);
+  
+  // Track if model is being updated
+  const updateInProgress = useRef(false);
+  
+  // Set initial position when component mounts or position changes
   useEffect(() => {
     const instanceId = instanceIdRef.current;
+    
+    // Create a new position key
+    const newPositionKey = `${xPosition.toFixed(2)}_${zPosition.toFixed(2)}_${modelHeightOffset}`;
+    const positionChanged = positionKey.current !== newPositionKey;
     
     console.log(`[DEBUG][${instanceId}] Positioning effect triggered with:`, {
       isModelLoaded: !!customModel,
       hasModelRef: !!modelRef.current,
       alreadyPositioned: positionedRef.current,
+      positionChanged,
       xPosition,
       zPosition,
       path
     });
     
+    // Update position key if it changed
+    if (positionChanged) {
+      console.log(`[DEBUG][${instanceId}] Position key changed from ${positionKey.current} to ${newPositionKey}`);
+      positionKey.current = newPositionKey;
+      // Reset positioned flag when position actually changes
+      positionedRef.current = false;
+    }
+    
     if (modelRef.current && customModel) {
       // Check if parent might be setting position via group
       if (modelRef.current.parent) {
         const parentPos = modelRef.current.parent.position;
-        console.log(`[DEBUG][${instanceId}] PARENT POSITION CHECK:`, {
-          parentX: parentPos.x,
-          parentY: parentPos.y,
-          parentZ: parentPos.z
+        const isShipGroup = modelRef.current.parent.userData?.isShipGroup === true;
+        console.log(`[DEBUG][${instanceId}] PARENT GROUP CHECK:`, {
+          parentX: parentPos.x.toFixed(2),
+          parentY: parentPos.y.toFixed(2),
+          parentZ: parentPos.z.toFixed(2),
+          isShipGroup,
+          parentType: modelRef.current.parent.type,
+          parentName: modelRef.current.parent.name || "unnamed"
         });
       }
       
       // Check current position before any changes
       console.log(`[DEBUG][${instanceId}] CURRENT POSITION:`, {
-        x: modelRef.current.position.x,
-        y: modelRef.current.position.y,
-        z: modelRef.current.position.z
+        x: modelRef.current.position.x.toFixed(2),
+        y: modelRef.current.position.y.toFixed(2),
+        z: modelRef.current.position.z.toFixed(2)
       });
       
-      // Only position once to avoid flickering
-      if (positionedRef.current) {
-        console.log(`[DEBUG][${instanceId}] SKIPPING position update - already positioned`);
-        return;
+      // We'll position the model if:
+      // 1. It hasn't been positioned yet, OR
+      // 2. The position has actually changed
+      if (!positionedRef.current || positionChanged) {
+        // Lock to prevent concurrent updates
+        if (updateInProgress.current) {
+          console.log(`[DEBUG][${instanceId}] Skipping update - another update in progress`);
+          return;
+        }
+        updateInProgress.current = true;
+        
+        // Determine the reason for positioning
+        const reason = !positionedRef.current ? "INITIAL SETUP" : "POSITION CHANGED";
+        console.log(`[DEBUG][${instanceId}] ${reason} - setting position`);
+        
+        // Add to position history
+        positionHistory.current.push({
+          x: modelRef.current.position.x,
+          y: modelRef.current.position.y,
+          z: modelRef.current.position.z
+        });
+        // Keep history limited to last 5 positions
+        if (positionHistory.current.length > 5) {
+          positionHistory.current.shift();
+        }
+        
+        // Set X and Z from the position props
+        modelRef.current.position.x = xPosition;
+        modelRef.current.position.z = zPosition;
+        
+        // Always use static water level as base reference
+        const heightFromWater = modelHeightOffset === undefined ? 0 : modelHeightOffset;
+        
+        // Analyze the model to determine its bounding box
+        const boundingBox = new THREE.Box3().setFromObject(customModel);
+        const modelHeight = boundingBox.max.y - boundingBox.min.y;
+        const modelBottom = boundingBox.min.y;
+        
+        // Calculate how much we need to offset so the model bottom is exactly at grid level
+        // This ensures the bottom of all models aligns perfectly with the grid
+        const baselineOffset = -modelBottom;
+        
+        // The y position places the bottom of the model precisely at grid level, then adds the desired offset
+        const finalYPosition = STATIC.WATER_LEVEL + baselineOffset + heightFromWater;
+        modelRef.current.position.y = finalYPosition;
+        
+        // Log the positioning for debugging
+        console.log(`[DEBUG][${instanceId}] POSITIONED at Y=${finalYPosition.toFixed(2)}:`, {
+          modelBottom: modelBottom.toFixed(2),
+          baselineOffset: baselineOffset.toFixed(2),
+          waterLevel: STATIC.WATER_LEVEL,
+          heightOffset: heightFromWater,
+          modelPath: path,
+          positionHistory: positionHistory.current
+        });
+        
+        // Update initialY reference for future positioning
+        initialY.current = finalYPosition;
+        
+        // Mark as positioned and release lock
+        positionedRef.current = true;
+        updateInProgress.current = false;
+      } else {
+        console.log(`[DEBUG][${instanceId}] SKIPPING position update - no change in position key`);
       }
-      
-      console.log(`[DEBUG][${instanceId}] POSITIONING MODEL for the first time`);
-      positionedRef.current = true;
-      
-      // Set X and Z from the position props
-      modelRef.current.position.x = xPosition;
-      modelRef.current.position.z = zPosition;
-      
-      // Always use static water level as base reference
-      const heightFromWater = modelHeightOffset === undefined ? 0 : modelHeightOffset;
-      
-      // Analyze the model to determine its bounding box
-      const boundingBox = new THREE.Box3().setFromObject(customModel);
-      const modelHeight = boundingBox.max.y - boundingBox.min.y;
-      const modelBottom = boundingBox.min.y;
-      
-      // Calculate how much we need to offset so the model bottom is exactly at grid level
-      // This ensures the bottom of all models aligns perfectly with the grid
-      const baselineOffset = -modelBottom;
-      
-      // The y position places the bottom of the model precisely at grid level, then adds the desired offset
-      const finalYPosition = STATIC.WATER_LEVEL + baselineOffset + heightFromWater;
-      modelRef.current.position.y = finalYPosition;
-      
-      // Log the positioning for debugging
-      console.log(`[DEBUG][${instanceId}] POSITIONED at Y=${finalYPosition.toFixed(2)}:`, {
-        modelBottom: modelBottom.toFixed(2),
-        baselineOffset: baselineOffset.toFixed(2),
-        waterLevel: STATIC.WATER_LEVEL,
-        heightOffset: heightFromWater,
-        modelPath: path
-      });
-      
-      // Update initialY reference for future positioning
-      initialY.current = finalYPosition;
     }
-    
-    // Do NOT reset the positioned flag on cleanup - breaks persistence
     
   }, [modelHeightOffset, xPosition, zPosition, path, customModel]);
   
@@ -180,8 +229,8 @@ const CustomModel = ({
       }
     };
     
-    // Check position every second
-    const interval = setInterval(checkPosition, 1000);
+    // Check position less frequently to reduce log spam
+    const interval = setInterval(checkPosition, 5000);
     
     return () => {
       clearInterval(interval);
