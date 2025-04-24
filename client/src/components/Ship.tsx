@@ -80,36 +80,7 @@ const Ship = () => {
   // Direct access to keyboard controls through subscribe (more reliable)
   const [subscribeKeys, getKeys] = useKeyboardControls<Controls>();
   
-  // Set up subscriptions to key states for better debugging
-  useEffect(() => {
-    const unsubForward = subscribeKeys(
-      (state) => state.forward,
-      (pressed) => console.log("Forward key:", pressed)
-    );
-    
-    const unsubBackward = subscribeKeys(
-      (state) => state.backward,
-      (pressed) => console.log("Backward key:", pressed)
-    );
-    
-    const unsubLeft = subscribeKeys(
-      (state) => state.leftward,
-      (pressed) => console.log("Left key:", pressed)
-    );
-    
-    const unsubRight = subscribeKeys(
-      (state) => state.rightward,
-      (pressed) => console.log("Right key:", pressed)
-    );
-    
-    // Clean up subscriptions
-    return () => {
-      unsubForward();
-      unsubBackward();
-      unsubLeft();
-      unsubRight();
-    };
-  }, [subscribeKeys]);
+  // Key state subscriptions removed for production
   
   // Track cannonballs and effects using our defined interfaces
   const cannonballs = useRef<CannonballInfo[]>([]);
@@ -124,13 +95,7 @@ const Ship = () => {
       setVelocity(new THREE.Vector3(0, 0, 0));
     }
     
-    // Log initialization with ship height for debugging
-    console.log("Ship initialized", {
-      position,
-      savedHeight: initialShipConfig.current.shipHeight,
-      constantHeight: POSITION.SHIP_HEIGHT,
-      gameStateHeight: useGameState.getState().shipHeight
-    });
+    // Ship initialized with consistent height values
   }, [position, setPosition, setRotation, setVelocity]);
   
   // Check fire control input
@@ -171,7 +136,7 @@ const Ship = () => {
         shipPositions.push(position);
       }
       
-      console.log("Ship cannon positions:", shipPositions);
+      // Ship cannon positions calculated
       
       // Add cannons along the length of the ship, all at the same height
       shipPositions.forEach(zOffset => {
@@ -223,8 +188,7 @@ const Ship = () => {
         });
       });
       
-      // Log the distribution of positions for debugging
-      console.log("Cannon positions distribution:", selectedPositions.map(pos => pos.zOffset));
+      // Cannon positions distributed along ship length
       
       // Create cannonballs and effects for selected cannon positions
       selectedPositions.forEach((deck) => {
@@ -278,8 +242,7 @@ const Ship = () => {
           const spreadMatrix = new THREE.Matrix4().makeRotationY(horizontalSpreadAngle);
           const finalDir = baseDir.clone().applyMatrix4(spreadMatrix).normalize();
           
-          // Log the firing details for debugging
-          console.log(`Right ${cannonPosition} cannon: pos=(${rightPosX.toFixed(1)}, ${rightPosY.toFixed(1)}, ${rightPosZ.toFixed(1)}), dir=(${finalDir.x.toFixed(2)}, ${finalDir.y.toFixed(2)}, ${finalDir.z.toFixed(2)})`);
+          // Right side cannon firing
           
           // Add cannonball
           cannonballs.current.push({
@@ -318,8 +281,7 @@ const Ship = () => {
           const spreadMatrix = new THREE.Matrix4().makeRotationY(horizontalSpreadAngle);
           const finalDir = baseDir.clone().applyMatrix4(spreadMatrix).normalize();
           
-          // Log the firing details for debugging
-          console.log(`Left ${cannonPosition} cannon: pos=(${leftPosX.toFixed(1)}, ${leftPosY.toFixed(1)}, ${leftPosZ.toFixed(1)}), dir=(${finalDir.x.toFixed(2)}, ${finalDir.y.toFixed(2)}, ${finalDir.z.toFixed(2)})`);
+          // Left side cannon firing
           
           // Add cannonball
           cannonballs.current.push({
