@@ -341,11 +341,11 @@ const Game = () => {
       
       {/* Enhanced sky with procedural clouds */}
       <SkyWithClouds
-        cloudCount={25}
-        cloudDensity={6}
-        cloudHeight={70}
+        cloudCount={35}
+        cloudDensity={8}
+        cloudHeight={60}
         dayNightCycle={true}
-        cycleSpeed={0.1}
+        cycleSpeed={0.05}
         initialTimeOfDay={0.3}
       />
       <ThreeEnvironment preset="sunset" />
