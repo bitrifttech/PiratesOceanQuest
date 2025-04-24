@@ -422,14 +422,15 @@ const Ship = () => {
     // Check key states and apply acceleration
     if (keys.forward) {
       // Apply acceleration in the direction the ship is facing (W key moves forward)
-      // No need for negative multiplier now that direction is correct
-      const forwardForce = direction.clone().multiplyScalar(15 * delta);
+      // Reduced to 40% of original speed (from 15 to 6)
+      const forwardForce = direction.clone().multiplyScalar(6 * delta);
       acceleration.add(forwardForce);
     }
     
     if (keys.backward) {
       // Apply acceleration in the opposite direction (S key moves backward)
-      const backwardForce = direction.clone().multiplyScalar(-7.5 * delta);
+      // Reduced to 40% of original speed (from 7.5 to 3)
+      const backwardForce = direction.clone().multiplyScalar(-3 * delta);
       acceleration.add(backwardForce);
     }
     
