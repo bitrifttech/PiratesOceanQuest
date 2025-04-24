@@ -1,15 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Sky, Environment, OrbitControls, Text, useGLTF } from "@react-three/drei";
+import { Sky, Environment as ThreeEnvironment, OrbitControls, Text, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
-import ReactDOM from "react-dom";
 
 import GridPlane from "./GridPlane"; // Using GridPlane instead of Ocean
 import Ship from "./Ship";
 // Enemy component removed
-import Island from "./Island";
-import DebugControls from "./DebugControls";
-import DebugControlsOverlay from "./DebugControlsOverlay";
+import EnvironmentComponent, { EnvironmentFeature, EnvironmentFeatureType } from "./Environment";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC, WORLD } from "../lib/constants";
 
 import { usePlayer } from "../lib/stores/usePlayer";
@@ -91,42 +88,39 @@ const Game = () => {
   const setShipHeight = useGameState((state) => state.setShipHeight);
   const setWaveParameters = useGameState((state) => state.setWaveParameters);
   
-  // Define types for environmental features
-  type EnvironmentFeatureType = 'tropical' | 'mountain' | 'rocks';
-  
-  interface EnvironmentFeature {
-    type: EnvironmentFeatureType;
-    x: number;
-    z: number;
-    scale: number;
-    rotation: [number, number, number];
-  }
+  // Type definitions imported at the top of the file
   
   // Island positions and other environment features (pre-calculated for consistency)
-  // Each feature has type, position, scale, and rotation
-  const environmentFeatures = useRef<EnvironmentFeature[]>([
-    // Tropical islands - positioned closer to the starting point
-    { type: 'tropical', x: 40, z: 40, scale: 1.5, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'tropical', x: -60, z: -30, scale: 1.2, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'tropical', x: 80, z: -50, scale: 0.8, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'tropical', x: -90, z: 70, scale: 1.0, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    
-    // Mountain islands - medium distance
-    { type: 'mountain', x: 70, z: -60, scale: 1.8, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'mountain', x: -40, z: 80, scale: 2.0, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'mountain', x: 100, z: 90, scale: 2.2, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'mountain', x: -100, z: -80, scale: 1.7, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    
-    // Rock formations - much closer to create immediate obstacles (increased scale)
-    { type: 'rocks', x: 20, z: 25, scale: 2.0, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: -15, z: 30, scale: 1.8, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: 25, z: -20, scale: 1.7, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: -25, z: -25, scale: 2.2, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: 40, z: 15, scale: 1.5, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: -20, z: -40, scale: 2.1, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: 5, z: 45, scale: 1.6, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: 50, z: 30, scale: 1.9, rotation: [0, Math.random() * Math.PI * 2, 0] },
-  ]);
+  // Only create this data once and never update it
+  const environmentFeatures = useMemo(() => {
+    console.log("[GAME] Creating environment features once");
+    return [
+      // Tropical islands - positioned closer to the starting point
+      { id: 'tropical_1', type: 'tropical', x: 40, z: 40, scale: 1.5, rotation: [0, Math.PI * 0.5, 0] },
+      { id: 'tropical_2', type: 'tropical', x: -60, z: -30, scale: 1.2, rotation: [0, Math.PI * 1.2, 0] },
+      { id: 'tropical_3', type: 'tropical', x: 80, z: -50, scale: 0.8, rotation: [0, Math.PI * 0.8, 0] },
+      { id: 'tropical_4', type: 'tropical', x: -90, z: 70, scale: 1.0, rotation: [0, Math.PI * 1.7, 0] },
+      
+      // Mountain islands - medium distance
+      { id: 'mountain_1', type: 'mountain', x: 70, z: -60, scale: 1.8, rotation: [0, Math.PI * 0.3, 0] },
+      { id: 'mountain_2', type: 'mountain', x: -40, z: 80, scale: 2.0, rotation: [0, Math.PI * 1.1, 0] },
+      { id: 'mountain_3', type: 'mountain', x: 100, z: 90, scale: 2.2, rotation: [0, Math.PI * 0.7, 0] },
+      { id: 'mountain_4', type: 'mountain', x: -100, z: -80, scale: 1.7, rotation: [0, Math.PI * 1.5, 0] },
+      
+      // Rock formations - much closer to create immediate obstacles (increased scale)
+      { id: 'rocks_1', type: 'rocks', x: 20, z: 25, scale: 2.0, rotation: [0, Math.PI * 0.2, 0] },
+      { id: 'rocks_2', type: 'rocks', x: -15, z: 30, scale: 1.8, rotation: [0, Math.PI * 1.4, 0] },
+      { id: 'rocks_3', type: 'rocks', x: 25, z: -20, scale: 1.7, rotation: [0, Math.PI * 0.9, 0] },
+      { id: 'rocks_4', type: 'rocks', x: -25, z: -25, scale: 2.2, rotation: [0, Math.PI * 1.3, 0] },
+      { id: 'rocks_5', type: 'rocks', x: 40, z: 15, scale: 1.5, rotation: [0, Math.PI * 0.4, 0] },
+      { id: 'rocks_6', type: 'rocks', x: -20, z: -40, scale: 2.1, rotation: [0, Math.PI * 1.6, 0] },
+      { id: 'rocks_7', type: 'rocks', x: 5, z: 45, scale: 1.6, rotation: [0, Math.PI * 0.6, 0] },
+      { id: 'rocks_8', type: 'rocks', x: 50, z: 30, scale: 1.9, rotation: [0, Math.PI * 1.8, 0] },
+      
+      // Single test island
+      { id: 'test_island', type: 'tropical', x: 100, z: 100, scale: 1.5, rotation: [0, 0, 0] },
+    ] as EnvironmentFeature[];
+  }, []);
 
   // Initialize game on first load
   useEffect(() => {
@@ -211,7 +205,7 @@ const Game = () => {
         inclination={0.5} 
         azimuth={0.25} 
       />
-      <Environment preset="sunset" />
+      <ThreeEnvironment preset="sunset" />
       
       {/* Grid Plane (replaces Ocean) */}
       <GridPlane 
@@ -232,16 +226,9 @@ const Game = () => {
       {/* Player ship */}
       <Ship />
       
-      {/* Environmental features: Islands and rock formations - Just adding one for testing */}
-      {/* Add a single island far from the player ship */}
-      <Island 
-        key="test-island"
-        xPosition={100} 
-        zPosition={100}
-        scale={1.5}
-        rotation={[0, 0, 0]}
-        type="tropical"
-      />
+      {/* Environmental features: Islands and rock formations using the new stable Environment component */}
+      {/* This component only loads and positions models once */}
+      <EnvironmentComponent features={environmentFeatures} />
       
       {/* Enemy ships - removed */}
       
