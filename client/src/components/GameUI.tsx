@@ -16,13 +16,6 @@ const GameUI = () => {
   // Game state
   const gameState = useGameState((state) => state.gameState);
   const setGameState = useGameState((state) => state.setGameState);
-  const shipHeight = useGameState((state) => state.shipHeight);
-  const waveHeight = useGameState((state) => state.waveHeight);
-  const waveSpeed = useGameState((state) => state.waveSpeed);
-  const shipScale = useGameState((state) => state.shipScale); // Add ship scale
-  const setShipHeight = useGameState((state) => state.setShipHeight);
-  const setWaveParameters = useGameState((state) => state.setWaveParameters);
-  const setShipScale = useGameState((state) => state.setShipScale); // Add ship scale setter
   
   // Player state
   const playerHealth = usePlayer((state) => state.health);
