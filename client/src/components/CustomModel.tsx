@@ -78,12 +78,37 @@ const CustomModel = ({
       // Clone once
       modelClone.current = originalModel.clone();
       
-      // Set shadows
+      // Set shadows and optimize materials for performance
       if (modelClone.current) {
         modelClone.current.traverse((child) => {
           if (child instanceof THREE.Mesh) {
+            // Apply shadow settings
             child.castShadow = castShadow;
             child.receiveShadow = receiveShadow;
+            
+            // Optimize materials for performance
+            if (child.material) {
+              // Handle array of materials
+              if (Array.isArray(child.material)) {
+                child.material.forEach(material => {
+                  if (material instanceof THREE.MeshStandardMaterial) {
+                    // Disable expensive reflections
+                    material.metalness = 0;
+                    material.roughness = 1;
+                    material.envMapIntensity = 0;
+                    material.needsUpdate = true;
+                  }
+                });
+              } 
+              // Handle single material
+              else if (child.material instanceof THREE.MeshStandardMaterial) {
+                // Disable expensive reflections
+                child.material.metalness = 0;
+                child.material.roughness = 1;
+                child.material.envMapIntensity = 0;
+                child.material.needsUpdate = true;
+              }
+            }
           }
         });
       }

@@ -36,14 +36,18 @@ const SkyWithClouds: React.FC<SkyWithCloudsProps> = ({
   // Sun properties
   const calculatedSunPosition = useRef<THREE.Vector3>(new THREE.Vector3(...sunPosition));
   
-  // Handle day-night cycle
+  // Handle day-night cycle - using a ref to avoid state updates each frame
+  const timeRef = useRef(initialTimeOfDay);
+  
   useFrame((state, delta) => {
     if (dayNightCycle) {
-      // Update time of day
-      setTimeOfDay(prevTime => {
-        const newTime = (prevTime + delta * cycleSpeed / 60) % 1; // full cycle in ~10 minutes at default speed
-        return newTime;
-      });
+      // Update time of day in ref
+      timeRef.current = (timeRef.current + delta * cycleSpeed / 60) % 1; // full cycle in ~10 minutes at default speed
+      
+      // Only update state every 2 seconds for better performance
+      if (Math.floor(state.clock.elapsedTime) % 2 === 0 && !state.clock.running) {
+        setTimeOfDay(timeRef.current);
+      }
     }
   });
   
