@@ -15,8 +15,23 @@ const MainMenu = () => {
   const resetPlayer = usePlayer((state) => state.resetPlayer);
   const resetEnemies = useEnemies((state) => state.resetEnemies);
   const loadUpgrades = useUpgrades((state) => state.loadUpgrades);
-  const toggleMute = useAudio((state) => state.toggleMute);
+  
+  // Audio functions (extracted individually to avoid unnecessary re-renders)
   const isMuted = useAudio((state) => state.isMuted);
+  const toggleMute = useAudio((state) => state.toggleMute);
+  const loadSounds = useAudio((state) => state.loadSounds);
+  const playBackgroundMusic = useAudio((state) => state.playBackgroundMusic);
+  
+  // Initialize audio system on component mount
+  useEffect(() => {
+    // Load audio files
+    loadSounds();
+    
+    // Try to play background music (will only play if not muted)
+    playBackgroundMusic();
+    
+    console.log("Audio system initialized");
+  }, [loadSounds, playBackgroundMusic]);
   
   // Check for saved progress
   useEffect(() => {
@@ -149,9 +164,9 @@ const MainMenu = () => {
         {/* Sound toggle */}
         <button 
           className="absolute top-4 right-4 text-white hover:text-[#FFD700]"
-          onClick={toggleMute}
+          onClick={audioControls.toggleMute}
         >
-          {isMuted ? (
+          {audioControls.isMuted ? (
             <i className="fas fa-volume-mute text-xl"></i>
           ) : (
             <i className="fas fa-volume-up text-xl"></i>

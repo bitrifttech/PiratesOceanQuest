@@ -5,17 +5,26 @@ import { useAudio } from "../lib/stores/useAudio";
 const TitleScreen = () => {
   const [animate, setAnimate] = useState(false);
   const setGameState = useGameState((state) => state.setGameState);
-  const toggleMute = useAudio((state) => state.toggleMute);
-  const isMuted = useAudio((state) => state.isMuted);
   
+  // Audio functions (each function is extracted separately to avoid infinite loop warning)
+  const isMuted = useAudio((state) => state.isMuted);
+  const toggleMute = useAudio((state) => state.toggleMute);
+  const loadSounds = useAudio((state) => state.loadSounds);
+  const playBackgroundMusic = useAudio((state) => state.playBackgroundMusic);
+  
+  // Initialize animations and audio
   useEffect(() => {
     // Start animation after a brief delay
     const timeout = setTimeout(() => {
       setAnimate(true);
     }, 500);
     
+    // Initialize audio system if not already loaded
+    loadSounds();
+    playBackgroundMusic();
+    
     return () => clearTimeout(timeout);
-  }, []);
+  }, [loadSounds, playBackgroundMusic]);
   
   return (
     <div className="h-screen w-screen bg-[#0A1C3B] flex flex-col items-center justify-center relative overflow-hidden">

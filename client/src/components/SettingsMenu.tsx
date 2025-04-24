@@ -1,12 +1,37 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGameState } from "../lib/stores/useGameState";
-import { useAudio } from "../lib/stores/useAudio";
+import { useAudio, MusicTrack } from "../lib/stores/useAudio";
 
 const SettingsMenu = () => {
   const [sensitivity, setSensitivity] = useState(50);
+  const [volumeLevel, setVolumeLevel] = useState(30);
   const setGameState = useGameState((state) => state.setGameState);
-  const isMuted = useAudio((state) => state.isMuted);
-  const toggleMute = useAudio((state) => state.toggleMute);
+  
+  // Audio state and functions
+  const audioState = useAudio((state) => ({
+    isMuted: state.isMuted,
+    currentTrack: state.currentTrack,
+    volume: state.volume,
+    toggleMute: state.toggleMute,
+    switchTrack: state.switchTrack,
+    setVolume: state.setVolume
+  }));
+  
+  // Initialize volume slider from store on component mount
+  useEffect(() => {
+    setVolumeLevel(Math.round(audioState.volume * 100));
+  }, [audioState.volume]);
+  
+  // Handle volume change
+  const handleVolumeChange = (newVolume: number) => {
+    setVolumeLevel(newVolume);
+    audioState.setVolume(newVolume / 100);
+  };
+  
+  // Handle track change
+  const handleTrackChange = (track: MusicTrack) => {
+    audioState.switchTrack(track);
+  };
   
   // Handle back button
   const handleBack = () => {
@@ -26,16 +51,59 @@ const SettingsMenu = () => {
           <div className="bg-[#0D47A1] bg-opacity-30 p-4 rounded-lg">
             <h2 className="text-2xl font-['Pirata_One'] text-white mb-4">Sound</h2>
             
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <span className="text-white">Game Audio</span>
               <button
-                className={`w-14 h-7 rounded-full relative transition-colors ${isMuted ? 'bg-gray-600' : 'bg-green-500'}`}
-                onClick={toggleMute}
+                className={`w-14 h-7 rounded-full relative transition-colors ${audioState.isMuted ? 'bg-gray-600' : 'bg-green-500'}`}
+                onClick={audioState.toggleMute}
               >
                 <span 
-                  className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${isMuted ? 'left-1' : 'left-8'}`}
+                  className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${audioState.isMuted ? 'left-1' : 'left-8'}`}
                 />
               </button>
+            </div>
+            
+            {/* Volume Slider */}
+            <div className="mb-4">
+              <div className="flex justify-between mb-2">
+                <span className="text-white">Volume</span>
+                <span className="text-white">{volumeLevel}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={volumeLevel}
+                onChange={(e) => handleVolumeChange(parseInt(e.target.value))}
+                className="w-full"
+              />
+            </div>
+            
+            {/* Music Track Selection */}
+            <div className="mt-4">
+              <span className="text-white block mb-2">Music Track</span>
+              <div className="flex gap-3">
+                <button
+                  className={`px-4 py-2 rounded-md transition-colors ${
+                    audioState.currentTrack === 'main' 
+                      ? 'bg-[#FFD700] text-[#0A1C3B] font-bold' 
+                      : 'bg-[#1A3E80] text-white hover:bg-[#254d94]'
+                  }`}
+                  onClick={() => handleTrackChange('main')}
+                >
+                  Main Theme
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-md transition-colors ${
+                    audioState.currentTrack === 'alternate' 
+                      ? 'bg-[#FFD700] text-[#0A1C3B] font-bold' 
+                      : 'bg-[#1A3E80] text-white hover:bg-[#254d94]'
+                  }`}
+                  onClick={() => handleTrackChange('alternate')}
+                >
+                  Alternate Theme
+                </button>
+              </div>
             </div>
           </div>
           
