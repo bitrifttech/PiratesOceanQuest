@@ -102,31 +102,8 @@ const Game = () => {
     rotation: [number, number, number];
   }
   
-  // Island positions and other environment features (pre-calculated for consistency)
-  // Each feature has type, position, scale, and rotation
-  const environmentFeatures = useRef<EnvironmentFeature[]>([
-    // Tropical islands - positioned closer to the starting point
-    { type: 'tropical', x: 40, z: 40, scale: 1.5, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'tropical', x: -60, z: -30, scale: 1.2, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'tropical', x: 80, z: -50, scale: 0.8, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'tropical', x: -90, z: 70, scale: 1.0, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    
-    // Mountain islands - medium distance
-    { type: 'mountain', x: 70, z: -60, scale: 1.8, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'mountain', x: -40, z: 80, scale: 2.0, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'mountain', x: 100, z: 90, scale: 2.2, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'mountain', x: -100, z: -80, scale: 1.7, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    
-    // Rock formations - much closer to create immediate obstacles (increased scale)
-    { type: 'rocks', x: 20, z: 25, scale: 2.0, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: -15, z: 30, scale: 1.8, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: 25, z: -20, scale: 1.7, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: -25, z: -25, scale: 2.2, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: 40, z: 15, scale: 1.5, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: -20, z: -40, scale: 2.1, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: 5, z: 45, scale: 1.6, rotation: [0, Math.random() * Math.PI * 2, 0] },
-    { type: 'rocks', x: 50, z: 30, scale: 1.9, rotation: [0, Math.random() * Math.PI * 2, 0] },
-  ]);
+  // Environment features array - emptied for rebuilding positioning system
+  const environmentFeatures = useRef<EnvironmentFeature[]>([]);
 
   // Initialize game on first load
   useEffect(() => {
@@ -259,20 +236,9 @@ const Game = () => {
       {/* Reference ship removed */}
       <DirectionIndicators />
       
-      {/* Player ship */}
-      <Ship />
+      {/* Player ship removed for rebuilding positioning system */}
       
-      {/* Environmental features: Islands and rock formations */}
-      {environmentFeatures.current.map((feature, index) => (
-        <Island 
-          key={`env-${feature.type}-${index}`} 
-          xPosition={feature.x}
-            zPosition={feature.z} 
-          scale={feature.scale} 
-          rotation={feature.rotation}
-          type={feature.type}
-        />
-      ))}
+      {/* Environmental features removed for rebuilding positioning system */}
       
       {/* Enemy ships - removed */}
       
