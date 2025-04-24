@@ -35,13 +35,13 @@ const DirectionIndicators = () => {
     }
     
     // Calculate the ship's direction vectors based on its rotation
-    // The ship model is now aligned with game coordinates (no Math.PI rotation)
-    // Forward should be along positive Z axis when rotation.y = 0
+    // Ship model has Math.PI rotation, so it points opposite to where it visually faces
+    // We need to negate the direction to match visual orientation
     const forwardDir = new THREE.Vector3(
       Math.sin(rotation.y),
       0,
       Math.cos(rotation.y)
-    ); // No negation - ship now points in +Z
+    ).multiplyScalar(-1); // Must negate since ship is rotated by Math.PI
     
     // Backward vector (opposite of forward)
     const backwardDir = forwardDir.clone().multiplyScalar(-1);

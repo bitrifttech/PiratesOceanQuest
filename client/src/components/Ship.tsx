@@ -393,16 +393,17 @@ const Ship = () => {
     setRotation(newRotation);
     
     // Calculate direction vector based on rotation
-    // The ship model is rotated by Math.PI (180 degrees) in the CustomModel component,
-    // meaning the model is "backwards" compared to its "forward" direction in the game
-    // We should NOT negate the direction vector as that's what's causing the problem
+    // Since the ship model is rotated by Math.PI (180 degrees) in the CustomModel component,
+    // the visual "front" of the model is actually the opposite of its movement direction
+    // We must negate the direction vector to match the visual orientation
     const direction = new THREE.Vector3(
       Math.sin(newRotation.y),
       0,
       Math.cos(newRotation.y)
     );
     
-    // No longer negating the vector - this fixes the reversed direction issue
+    // Negate the vector to match the ship's visual orientation with its movement
+    direction.multiplyScalar(-1);
     
     // Log direction vector for debugging
     console.log("Ship direction vector:", direction);
@@ -533,7 +534,7 @@ const Ship = () => {
           xPosition={0}
           yPosition={0}
           zPosition={0}
-          rotation={[0, 0, 0]} // No rotation needed - align with game coordinates
+          rotation={[0, Math.PI, 0]} // Rotate 180 degrees to point model in opposite direction
           scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP}
           modelAdjustment={MODEL_ADJUSTMENT.SHIP}
           modelHeightOffset={STATIC.SHIP_OFFSET} // Using static offset from water level
