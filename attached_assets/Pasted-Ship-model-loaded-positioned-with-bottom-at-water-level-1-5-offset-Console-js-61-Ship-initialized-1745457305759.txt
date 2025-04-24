@@ -1,0 +1,90 @@
+Ship model loaded, positioned with bottom at water level + 1.5 offset
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 [ISLAND][island_w5dzcift2] Positioning island tropical_100.00_100.00
+Console.js:61 [ISLAND][island_w5dzcift2] Using stored position Y=10.032519578933716 for tropical_100.00_100.00
+Console.js:61 Successfully loaded model from /models/tropical_island.glb
+Console.js:61 Model /models/base_pirate_ship.glb updated - Bottom Y: -0.23
+Console.js:61 [ISLAND][island_w5dzcift2] Cleanup for tropical_100.00_100.00
+Console.js:61 Model loaded: /models/base_pirate_ship.glb
+Console.js:61 Ship model loaded, positioned with bottom at water level + 1.5 offset
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 [ISLAND][island_w5dzcift2] Positioning island tropical_100.00_100.00
+Console.js:61 [ISLAND][island_w5dzcift2] Using stored position Y=10.032519578933716 for tropical_100.00_100.00
+Console.js:61 Successfully loaded model from /models/tropical_island.glb
+Console.js:61 Model /models/base_pirate_ship.glb updated - Bottom Y: -0.23
+Console.js:61 [ISLAND][island_w5dzcift2] Cleanup for tropical_100.00_100.00
+Console.js:61 Model loaded: /models/base_pirate_ship.glb
+Console.js:61 Ship model loaded, positioned with bottom at water level + 1.5 offset
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 [ISLAND][island_w5dzcift2] Positioning island tropical_100.00_100.00
+Console.js:61 [ISLAND][island_w5dzcift2] Using stored position Y=10.032519578933716 for tropical_100.00_100.00
+Console.js:61 Successfully loaded model from /models/tropical_island.glb
+Console.js:61 Model /models/base_pirate_ship.glb updated - Bottom Y: -0.23
+Console.js:61 [ISLAND][island_w5dzcift2] Cleanup for tropical_100.00_100.00
+Console.js:61 Model loaded: /models/base_pirate_ship.glb
+Console.js:61 Ship model loaded, positioned with bottom at water level + 1.5 offset
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 [ISLAND][island_w5dzcift2] Positioning island tropical_100.00_100.00
+Console.js:61 [ISLAND][island_w5dzcift2] Using stored position Y=10.032519578933716 for tropical_100.00_100.00
+Console.js:61 Successfully loaded model from /models/tropical_island.glb
+Console.js:61 Model /models/base_pirate_ship.glb updated - Bottom Y: -0.23
+Console.js:61 [ISLAND][island_w5dzcift2] Cleanup for tropical_100.00_100.00
+Console.js:61 Model loaded: /models/base_pirate_ship.glb
+Console.js:61 Ship model loaded, positioned with bottom at water level + 1.5 offset
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 [ISLAND][island_w5dzcift2] Positioning island tropical_100.00_100.00
+Console.js:61 [ISLAND][island_w5dzcift2] Using stored position Y=10.032519578933716 for tropical_100.00_100.00
+Console.js:61 [SHIP-DEBUG] Ship position Y: 0.00
+Console.js:61 Successfully loaded model from /models/tropical_island.glb
+Console.js:61 Model /models/base_pirate_ship.glb updated - Bottom Y: -0.23
+Console.js:61 [ISLAND][island_w5dzcift2] Cleanup for tropical_100.00_100.00
+Console.js:61 Model loaded: /models/base_pirate_ship.glb
+Console.js:61 Ship model loaded, positioned with bottom at water level + 1.5 offset
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 [ISLAND][island_w5dzcift2] Positioning island tropical_100.00_100.00
+Console.js:61 [ISLAND][island_w5dzcift2] Using stored position Y=10.032519578933716 for tropical_100.00_100.00
+Console.js:61 Successfully loaded model from /models/tropical_island.glb
+Console.js:61 Model /models/base_pirate_ship.glb updated - Bottom Y: -0.23
+Console.js:61 [ISLAND][island_w5dzcift2] Cleanup for tropical_100.00_100.00
+Console.js:61 Model loaded: /models/base_pirate_ship.glb
+Console.js:61 Ship model loaded, positioned with bottom at water level + 1.5 offset
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 [ISLAND][island_w5dzcift2] Positioning island tropical_100.00_100.00
+Console.js:61 [ISLAND][island_w5dzcift2] Using stored position Y=10.032519578933716 for tropical_100.00_100.00
+Console.js:61 Successfully loaded model from /models/tropical_island.glb
+Console.js:61 Model /models/base_pirate_ship.glb updated - Bottom Y: -0.23
+Console.js:61 [ISLAND][island_w5dzcift2] Cleanup for tropical_100.00_100.00
+Console.js:61 Model loaded: /models/base_pirate_ship.glb
+Console.js:61 Ship model loaded, positioned with bottom at water level + 1.5 offset
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 [ISLAND][island_w5dzcift2] Positioning island tropical_100.00_100.00
+Console.js:61 [ISLAND][island_w5dzcift2] Using stored position Y=10.032519578933716 for tropical_100.00_100.00
+Console.js:61 Successfully loaded model from /models/tropical_island.glb
+Console.js:61 Model /models/base_pirate_ship.glb updated - Bottom Y: -0.23
+Console.js:61 [ISLAND][island_w5dzcift2] Cleanup for tropical_100.00_100.00
+Console.js:61 Model loaded: /models/base_pirate_ship.glb
+Console.js:61 Ship model loaded, positioned with bottom at water level + 1.5 offset
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 [ISLAND][island_w5dzcift2] Positioning island tropical_100.00_100.00
+Console.js:61 [ISLAND][island_w5dzcift2] Using stored position Y=10.032519578933716 for tropical_100.00_100.00
+Console.js:61 Successfully loaded model from /models/tropical_island.glb
+Console.js:61 Model /models/base_pirate_ship.glb updated - Bottom Y: -0.23
+Console.js:61 [ISLAND][island_w5dzcift2] Cleanup for tropical_100.00_100.00
+Console.js:61 Model loaded: /models/base_pirate_ship.glb
+Console.js:61 Ship model loaded, positioned with bottom at water level + 1.5 offset
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 [ISLAND][island_w5dzcift2] Positioning island tropical_100.00_100.00
+Console.js:61 [ISLAND][island_w5dzcift2] Using stored position Y=10.032519578933716 for tropical_100.00_100.00
+Console.js:61 Successfully loaded model from /models/tropical_island.glb
+Console.js:61 Model /models/base_pirate_ship.glb updated - Bottom Y: -0.23
+Console.js:61 [ISLAND][island_w5dzcift2] Cleanup for tropical_100.00_100.00
+Console.js:61 Model loaded: /models/base_pirate_ship.glb
+Console.js:61 Ship model loaded, positioned with bottom at water level + 1.5 offset
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 [ISLAND][island_w5dzcift2] Positioning island tropical_100.00_100.00
+Console.js:61 [ISLAND][island_w5dzcift2] Using stored position Y=10.032519578933716 for tropical_100.00_100.00
+Console.js:61 Successfully loaded model from /models/tropical_island.glb
+Console.js:61 Model /models/base_pirate_ship.glb updated - Bottom Y: -0.23
+Console.js:61 [ISLAND][island_w5dzcift2] Cleanup for tropical_100.00_100.00
+Console.js:61 Model loaded: /models/base_pirate_ship.glb
+Console.js:61 Ship model loaded, positioned with bottom at water level + 1.5 offset

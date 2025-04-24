@@ -190,38 +190,8 @@ const Game = () => {
     }
   });
 
-  // Add the DebugControls UI overlay
-  useEffect(() => {
-    // Create container for debug controls
-    const container = document.createElement('div');
-    container.id = 'debug-controls-container';
-    document.body.appendChild(container);
-    
-    // Render the DebugControlsOverlay into the container
-    const overlay = document.createElement('div');
-    container.appendChild(overlay);
-    
-    // Render the DebugControlsOverlay component
-    ReactDOM.render(
-      <DebugControlsOverlay containerId="debug-controls-container" />,
-      overlay
-    );
-    
-    // Clean up on unmount
-    return () => {
-      if (document.body.contains(container)) {
-        // Clean up React component
-        try {
-          ReactDOM.unmountComponentAtNode(overlay);
-        } catch (e) {
-          console.error("Error unmounting debug controls:", e);
-        }
-        
-        // Remove container from DOM
-        document.body.removeChild(container);
-      }
-    };
-  }, []);
+  // Add the DebugControls UI directly in the render tree
+  // This avoids repeated mounting/unmounting that was causing flickering
 
   return (
     <>
