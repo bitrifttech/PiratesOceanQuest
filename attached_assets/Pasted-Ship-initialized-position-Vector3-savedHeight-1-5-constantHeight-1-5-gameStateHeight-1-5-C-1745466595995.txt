@@ -1,0 +1,22 @@
+Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, constantHeight: 1.5, gameStateHeight: 1.5}
+Console.js:61 Ship initialized {position: _Vector3, savedHeight: 1.5, consta
