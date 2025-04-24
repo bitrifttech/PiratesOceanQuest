@@ -32,7 +32,7 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
   // Collision box
   const collisionBoxRef = useRef<THREE.Mesh>(null);
   // Make the collision box visible in dev mode only for debugging
-  const DEBUG_COLLISION = false;
+  const DEBUG_COLLISION = false; // Keep this false in production
   
   // Get the proper model path based on feature type
   const modelPath = type === 'tropical' 
@@ -155,27 +155,27 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
     switch (type) {
       case 'tropical':
         // Larger collider for tropical islands
-        baseSize.width = 16;
-        baseSize.height = 10;
-        baseSize.depth = 16;
+        baseSize.width = 10;
+        baseSize.height = 5;
+        baseSize.depth = 10;
         break;
       case 'mountain':
         // Tallest collider for mountains
-        baseSize.width = 20;
-        baseSize.height = 15;
-        baseSize.depth = 20;
+        baseSize.width = 12;
+        baseSize.height = 7;
+        baseSize.depth = 12;
         break;
       case 'rocks':
         // Smaller collider for rock formations
-        baseSize.width = 10;
-        baseSize.height = 6;
-        baseSize.depth = 10;
+        baseSize.width = 6;
+        baseSize.height = 3;
+        baseSize.depth = 6;
         break;
       default:
         // Default fallback
-        baseSize.width = 12;
-        baseSize.height = 8;
-        baseSize.depth = 12;
+        baseSize.width = 8;
+        baseSize.height = 4;
+        baseSize.depth = 8;
     }
     
     // Apply feature scale

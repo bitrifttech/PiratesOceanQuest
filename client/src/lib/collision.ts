@@ -10,16 +10,16 @@ export function getFeatureRadius(type: EnvironmentFeatureType, scale: number): n
   let baseRadius = 0;
   switch (type) {
     case 'tropical':
-      baseRadius = 8; // Reduced from 20 to more realistic 8
+      baseRadius = 5; // Reduced to more realistic 5
       break;
     case 'mountain':
-      baseRadius = 10; // Reduced from 25 to more realistic 10
+      baseRadius = 6; // Reduced to more realistic 6
       break;
     case 'rocks':
-      baseRadius = 5; // Reduced from 10 to more realistic 5
+      baseRadius = 3; // Reduced to more realistic 3
       break;
     default:
-      baseRadius = 6;
+      baseRadius = 4;
   }
   // Scale the radius based on the feature's scale
   return baseRadius * scale;

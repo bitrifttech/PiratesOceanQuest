@@ -102,7 +102,8 @@ const Cannonball = ({
       // Create a small explosion effect
       // TODO: Add explosion effect
       
-      // Play hit sound
+      // Disabled hit sound for now
+      /*
       try {
         const audio = new Audio('/sounds/cannonball_hit.mp3');
         audio.volume = 0.3;
@@ -110,6 +111,7 @@ const Cannonball = ({
       } catch (e) {
         // Silently fail if audio can't be played
       }
+      */
       
       // Trigger callback to remove cannonball
       if (onHit) onHit();
