@@ -494,7 +494,9 @@ const Ship = () => {
         {/* 3D Ship Model using CustomModel component */}
         <CustomModel 
           path='/models/base_pirate_ship.glb'
-          position={[0, 0, 0]}
+          xPosition={0}
+          yPosition={0}
+          zPosition={0}
           rotation={[0, Math.PI, 0]} // Fixed rotation to point forward
           scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP}
           modelAdjustment={MODEL_ADJUSTMENT.SHIP}
