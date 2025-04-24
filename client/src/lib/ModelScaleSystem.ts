@@ -15,23 +15,23 @@ export const GRID = {
 // Base model scales - these are the raw scale factors needed to make models the correct size
 // Use these when instantiating models directly
 export const BASE_SCALE = {
-  // Ships
+  // Ships - using previous scale values that worked well
   SHIP: {
-    BASE: 0.02,            // Player ship base scale (makes ship length = 1 grid square)
-    ADVANCED: 0.023        // Advanced ship (slightly larger)
+    BASE: 0.05 * 1.5,      // Player ship base scale (0.05) with MODEL_ADJUSTMENT (1.5)
+    ADVANCED: 0.055 * 1.5   // Advanced ship (slightly larger)
   },
   
-  // Islands
+  // Islands - larger than before for better visibility
   ISLAND: {
-    TROPICAL: 0.06,        // Tropical islands (about 3x ship length)
-    MOUNTAIN: 0.08,        // Mountain islands (about 4x ship length)
-    ROCKS: 0.04            // Rock formations (about 2x ship length)
+    TROPICAL: 0.15 * 4.0,   // Tropical islands with MODEL_ADJUSTMENT (4.0)
+    MOUNTAIN: 0.16 * 8.0,   // Mountain islands with MODEL_ADJUSTMENT (8.0)
+    ROCKS: 0.12 * 3.0       // Rock formations with MODEL_ADJUSTMENT (3.0)
   },
   
   // Props and Effects
   PROPS: {
-    CANNON: 0.02,          // Cannons
-    CANNONBALL: 0.01       // Cannonballs
+    CANNON: 0.05 * 20.0,    // Cannons with adjustment
+    CANNONBALL: 0.02 * 15.0 // Cannonballs with adjustment
   }
 };
 
@@ -47,10 +47,10 @@ export const RELATIVE_SIZE = {
   CANNONBALL: 0.1          // Cannonballs are 0.1x ship size
 };
 
-// Height offsets for proper grid alignment
+// Height offsets for proper grid alignment - using previous values
 export const HEIGHT_OFFSET = {
-  SHIP: 0.2,               // Ship floats slightly above water
-  TROPICAL_ISLAND: 0.0,    // Islands sit directly on water level
-  MOUNTAIN_ISLAND: 0.0,    // Mountains sit directly on water level
-  ROCKS: 0.0               // Rocks sit directly on water level
+  SHIP: 1.5,                // Ship floats above water (STATIC.SHIP_OFFSET)
+  TROPICAL_ISLAND: 5.0,     // Islands have proper height (from POSITION.ISLAND values)
+  MOUNTAIN_ISLAND: 8.0,     // Mountains have larger height offset
+  ROCKS: 6.0                // Rocks have medium height offset
 };

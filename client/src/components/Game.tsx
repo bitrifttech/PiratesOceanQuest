@@ -315,17 +315,17 @@ const Game = () => {
       {/* Reference ship removed */}
       <DirectionIndicators />
       
-      {/* Player Ship - Using unified scale system where ship = 1 grid unit */}
+      {/* Player Ship - Using updated scaling with proper size */}
       <WorldObject 
         modelPath="/models/base_pirate_ship.glb"
         position={playerPosition || new THREE.Vector3(0, 0, 0)}
         rotation={playerRotation || new THREE.Euler(0, Math.PI, 0)} 
-        scale={BASE_SCALE.SHIP.BASE * useGameState.getState().shipScale}
+        scale={BASE_SCALE.SHIP.BASE} // Using pre-calculated base scale (includes adjustment)
         offset={HEIGHT_OFFSET.SHIP}
         castShadow
         receiveShadow
         onLoad={() => {
-          console.log("Ship model loaded with unified scale system - 1 grid unit length");
+          console.log("Ship model loaded with adjusted scale for proper proportions");
         }}
       />
       
@@ -348,7 +348,8 @@ const Game = () => {
           feature.type === 'mountain' ? HEIGHT_OFFSET.MOUNTAIN_ISLAND : 
           HEIGHT_OFFSET.ROCKS;
           
-        // Calculate final scale - base scale * feature-specific multiplier
+        // Calculate final scale with a much larger multiplier
+        // We're applying the feature.scale directly without additional division
         const finalScale = baseScale * feature.scale;
           
         // Return WorldObject for each feature
