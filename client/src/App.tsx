@@ -3,6 +3,7 @@ import { Suspense, useEffect, useState } from "react";
 import { KeyboardControls } from "@react-three/drei";
 import { useAudio } from "./lib/stores/useAudio";
 import { useGameState } from "./lib/stores/useGameState";
+import { POSITION, STATIC, MODEL_ADJUSTMENT } from "./lib/constants";
 import Game from "./components/Game";
 import TitleScreen from "./components/TitleScreen";
 import MainMenu from "./components/MainMenu";
@@ -10,9 +11,7 @@ import SettingsMenu from "./components/SettingsMenu";
 import HelpMenu from "./components/HelpMenu";
 import UpgradeMenu from "./components/UpgradeMenu";
 import GameUI from "./components/GameUI";
-
 import ModelTestScene from "./components/ModelTestScene";
-import { MODEL_ADJUSTMENT } from "./lib/constants";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "@fontsource/inter";
 
@@ -48,6 +47,23 @@ function App() {
   useEffect(() => {
     // Load sounds
     loadSounds();
+    
+    // Initialize game parameters with default values
+    // These were previously set by the debug controls
+    const gameStore = useGameState.getState();
+    gameStore.setShipHeight(POSITION.SHIP_HEIGHT);
+    gameStore.setWaveParameters({ 
+      waveHeight: 0.03,
+      waveSpeed: 0.0006
+    });
+    gameStore.setShipScale(3.0);
+    
+    console.log("Game parameters initialized with defaults", {
+      shipHeight: gameStore.shipHeight,
+      waveHeight: gameStore.waveHeight,
+      waveSpeed: gameStore.waveSpeed,
+      shipScale: gameStore.shipScale
+    });
     
     // Initialize game (simulate loading)
     const loadingTimeout = setTimeout(() => {
