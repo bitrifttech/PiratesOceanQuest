@@ -5,13 +5,13 @@ import * as THREE from "three";
 
 import GridPlane from "./GridPlane"; // Using GridPlane instead of Ocean
 import Ship from "./Ship";
-// Enemy component removed
+import EnemyShip from "./EnemyShip"; // Added back enemy ship component
 import SkyWithClouds from "./SkyWithClouds"; // New enhanced sky with cloud system
 import EnvironmentComponent, { EnvironmentFeature, EnvironmentFeatureType } from "./Environment";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC, WORLD } from "../lib/constants";
 
 import { usePlayer } from "../lib/stores/usePlayer";
-// import { useEnemies } from "../lib/stores/useEnemies"; // Removed enemies
+import { useEnemies } from "../lib/stores/useEnemies"; // Re-enabled enemies
 import { useGameState } from "../lib/stores/useGameState";
 import { useAudio } from "../lib/stores/useAudio";
 
@@ -28,7 +28,9 @@ const Game = () => {
   const playerRotation = usePlayer((state) => state.rotation);
   const initializePlayer = usePlayer((state) => state.initialize);
   
-  // Enemy state removed
+  // Enemy state
+  const enemies = useEnemies((state) => state.enemies);
+  const spawnEnemies = useEnemies((state) => state.spawnEnemies);
   
   // Sound effects
   const playBackgroundMusic = useAudio((state) => state.playBackgroundMusic);
@@ -251,6 +253,9 @@ const Game = () => {
     // Initialize player
     initializePlayer();
     
+    // Spawn one enemy ship for testing
+    spawnEnemies(1);
+    
     // Play background music
     playBackgroundMusic();
     
@@ -371,7 +376,15 @@ const Game = () => {
       {/* This component only loads and positions models once */}
       <EnvironmentComponent features={environmentFeatures} />
       
-      {/* Enemy ships - removed */}
+      {/* Enemy ships */}
+      {enemies.map((enemy) => (
+        <EnemyShip
+          key={enemy.id}
+          id={enemy.id}
+          initialPosition={enemy.position}
+          initialRotation={enemy.rotation}
+        />
+      ))}
       
       {/* Interactive orbit controls for click-and-drag camera movement */}
       <OrbitControls 

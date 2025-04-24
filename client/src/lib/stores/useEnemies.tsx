@@ -46,7 +46,6 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
         
         spawnX = playerPosition.x + Math.sin(angle) * distance;
         spawnZ = playerPosition.z + Math.cos(angle) * distance;
-        console.log(`Spawning enemy at (${spawnX.toFixed(1)}, ${spawnZ.toFixed(1)}), ${distance.toFixed(1)} units from player`);
       } else {
         // Fallback if player position not available
         spawnX = (Math.random() * 200) - 100;
