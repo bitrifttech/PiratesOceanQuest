@@ -50,9 +50,16 @@ const Cannonball = ({
     }
   }, [localPosition]);
   
+  // Get enemy damage function
+  const damageEnemy = useEnemies((state) => state.damageEnemy);
+  const enemies = useEnemies((state) => state.enemies);
+  
+  // Hit detection status
+  const hitDetected = useRef<boolean>(false);
+
   // Update cannonball position and apply physics independently of ship
   useFrame((_, delta) => {
-    if (!ballRef.current) return;
+    if (!ballRef.current || hitDetected.current) return;
     
     // Elapsed time since firing (for advanced trajectory calculation)
     const elapsedTime = (Date.now() - startTime.current) / 1000;
@@ -74,7 +81,38 @@ const Cannonball = ({
     ballRef.current.rotation.x += delta * 8;
     ballRef.current.rotation.z += delta * 5;
     
-    // No trajectory logging to reduce console clutter
+    // Get current cannonball position
+    const cannonballPosition = ballRef.current.position.clone();
+    
+    // Check for collisions with enemy ships
+    // Fixed hit radius based on cannonball size
+    const hitRadius = 2.0; // Units
+    
+    // Check each enemy for collisions
+    for (const enemy of enemies) {
+      // Calculate distance to enemy
+      const distance = cannonballPosition.distanceTo(enemy.position);
+      
+      // If distance is less than hit radius, we have a hit
+      if (distance < hitRadius && !hitDetected.current) {
+        // Mark as hit to prevent multiple hits
+        hitDetected.current = true;
+        
+        // Apply damage to enemy
+        damageEnemy(enemy.id, 20); // 20 damage per cannonball
+        
+        // Trigger callback to remove cannonball
+        if (onHit) onHit();
+        
+        // Remove cannonball immediately
+        if (ballRef.current && ballRef.current.parent) {
+          ballRef.current.parent.remove(ballRef.current);
+        }
+        
+        // Exit loop after first hit
+        break;
+      }
+    }
     
     // Auto-remove when lifespan is up
     if (lifeRef.current <= 0) {
@@ -84,8 +122,6 @@ const Cannonball = ({
     
     // Check if cannonball has fallen into the water - raised to -1 for better visibility
     if (ballRef.current.position.y < -1) {
-      // No splash logging to reduce console clutter
-      
       // Immediately set lifespan to zero to remove cannonball
       lifeRef.current = 0;
       if (onHit) onHit();
