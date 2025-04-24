@@ -42,7 +42,7 @@ const Cloud = ({
   lightIntensity: number;
   dynamicLighting: boolean;
 }) => {
-  const meshRef = useRef<THREE.Group>(null);
+  const meshRef = useRef<any>(null);
   const initialPosition = useRef<[number, number, number]>(position);
   
   // Individual cloud drift motion
