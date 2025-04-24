@@ -14,8 +14,7 @@ import { usePlayer } from "../lib/stores/usePlayer";
 import { useGameState } from "../lib/stores/useGameState";
 import { useAudio } from "../lib/stores/useAudio";
 
-// Import direction indicators for debugging
-import DirectionIndicators from "./DirectionIndicators";
+// Direction indicators removed - no longer needed after fixing ship orientation
 
 // Main game component that sets up the 3D scene
 const Game = () => {
@@ -360,9 +359,7 @@ const Game = () => {
         sectionColor="#3333AA"
       />
       
-      {/* Direction indicator elements */}
-      {/* Reference ship removed */}
-      <DirectionIndicators />
+      {/* Direction indicators removed - no longer needed after fixing ship orientation */}
       
       {/* Player ship */}
       <Ship />
