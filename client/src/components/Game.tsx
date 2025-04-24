@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Sky, Environment as ThreeEnvironment, OrbitControls, Text, useGLTF } from "@react-three/drei";
+import { Environment as ThreeEnvironment, OrbitControls, Text, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
 import GridPlane from "./GridPlane"; // Using GridPlane instead of Ocean
 import Ship from "./Ship";
 // Enemy component removed
+import SkyWithClouds from "./SkyWithClouds"; // New enhanced sky with cloud system
 import EnvironmentComponent, { EnvironmentFeature, EnvironmentFeatureType } from "./Environment";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC, WORLD } from "../lib/constants";
 
@@ -338,12 +339,14 @@ const Game = () => {
         shadow-mapSize={[2048, 2048]} 
       />
       
-      {/* Sky and environment */}
-      <Sky 
-        distance={450000} 
-        sunPosition={[0, 1, 0]} 
-        inclination={0.5} 
-        azimuth={0.25} 
+      {/* Enhanced sky with procedural clouds */}
+      <SkyWithClouds
+        cloudCount={25}
+        cloudDensity={6}
+        cloudHeight={70}
+        dayNightCycle={true}
+        cycleSpeed={0.1}
+        initialTimeOfDay={0.3}
       />
       <ThreeEnvironment preset="sunset" />
       
