@@ -83,14 +83,31 @@ const Island = ({
   // Using a ref to track whether we've already positioned this model
   const positionedRef = useRef(false);
   
+  // Create a unique ID for debugging
+  const instanceIdRef = useRef(`island_${Math.random().toString(36).substr(2, 9)}`);
+  
   useEffect(() => {
     if (!islandRef.current) return;
     
+    const instanceId = instanceIdRef.current;
+    
+    console.log(`[ISLAND-DEBUG][${instanceId}] Positioning effect triggered:`, {
+      islandType: type,
+      xPosition,
+      zPosition,
+      isModelLoaded: !!islandModel,
+      alreadyPositioned: positionedRef.current
+    });
+    
     // Only do positioning once per model to prevent flickering
-    if (positionedRef.current) return;
+    if (positionedRef.current) {
+      console.log(`[ISLAND-DEBUG][${instanceId}] SKIPPING positioning - already positioned`);
+      return;
+    }
     
     // For grid alignment, we need to calculate bottom of the model
     if (islandModel) {
+      console.log(`[ISLAND-DEBUG][${instanceId}] POSITIONING new island for the first time`);
       positionedRef.current = true;
       
       // Calculate the bounding box to find the bottom of the model
@@ -100,19 +117,29 @@ const Island = ({
       // Calculate the offset needed to place the bottom exactly at grid level
       const baselineOffset = -modelBottom;
       
+      // Store the current position before changing
+      const oldPosition = islandRef.current.position.clone();
+      
       // Set initial position with bottom aligned precisely to grid level
+      const newY = STATIC.WATER_LEVEL + baselineOffset;
       islandRef.current.position.set(
         xPosition, 
-        STATIC.WATER_LEVEL + baselineOffset, 
+        newY, 
         zPosition
       );
       
       // Log the positioning for debugging
-      console.log(`Island of type ${type} positioned with bottom at grid level, model bottom: ${modelBottom.toFixed(2)}, offset: ${baselineOffset.toFixed(2)}`);
+      console.log(`[ISLAND-DEBUG][${instanceId}] POSITIONED from (${oldPosition.x.toFixed(2)}, ${oldPosition.y.toFixed(2)}, ${oldPosition.z.toFixed(2)}) to (${xPosition.toFixed(2)}, ${newY.toFixed(2)}, ${zPosition.toFixed(2)}):`, {
+        islandType: type,
+        modelBottom: modelBottom.toFixed(2),
+        baselineOffset: baselineOffset.toFixed(2),
+        waterLevel: STATIC.WATER_LEVEL
+      });
     } else {
+      console.log(`[ISLAND-DEBUG][${instanceId}] POSITIONING using FALLBACK`);
       // For fallback shapes, just place them directly on the grid
       islandRef.current.position.set(xPosition, STATIC.WATER_LEVEL, zPosition);
-      console.log(`Island of type ${type} fallback positioned at grid level`);
+      console.log(`[ISLAND-DEBUG][${instanceId}] Fallback positioned at (${xPosition}, ${STATIC.WATER_LEVEL}, ${zPosition})`);
     }
     
     return () => {

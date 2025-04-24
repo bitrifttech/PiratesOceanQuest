@@ -84,11 +84,47 @@ const CustomModel = ({
   // Track whether the model has been positioned already to prevent flickering
   const positionedRef = useRef(false);
   
+  // Use a ref to store a unique ID for this component instance
+  const instanceIdRef = useRef(`model_${Math.random().toString(36).substr(2, 9)}`);
+  
   // Set initial position when component mounts or modelHeightOffset changes
   useEffect(() => {
+    const instanceId = instanceIdRef.current;
+    
+    console.log(`[DEBUG][${instanceId}] Positioning effect triggered with:`, {
+      isModelLoaded: !!customModel,
+      hasModelRef: !!modelRef.current,
+      alreadyPositioned: positionedRef.current,
+      xPosition,
+      zPosition,
+      path
+    });
+    
     if (modelRef.current && customModel) {
+      // Check if parent might be setting position via group
+      if (modelRef.current.parent) {
+        const parentPos = modelRef.current.parent.position;
+        console.log(`[DEBUG][${instanceId}] PARENT POSITION CHECK:`, {
+          parentX: parentPos.x,
+          parentY: parentPos.y,
+          parentZ: parentPos.z
+        });
+      }
+      
+      // Check current position before any changes
+      console.log(`[DEBUG][${instanceId}] CURRENT POSITION:`, {
+        x: modelRef.current.position.x,
+        y: modelRef.current.position.y,
+        z: modelRef.current.position.z
+      });
+      
       // Only position once to avoid flickering
-      if (positionedRef.current) return;
+      if (positionedRef.current) {
+        console.log(`[DEBUG][${instanceId}] SKIPPING position update - already positioned`);
+        return;
+      }
+      
+      console.log(`[DEBUG][${instanceId}] POSITIONING MODEL for the first time`);
       positionedRef.current = true;
       
       // Set X and Z from the position props
@@ -108,21 +144,49 @@ const CustomModel = ({
       const baselineOffset = -modelBottom;
       
       // The y position places the bottom of the model precisely at grid level, then adds the desired offset
-      modelRef.current.position.y = STATIC.WATER_LEVEL + baselineOffset + heightFromWater;
+      const finalYPosition = STATIC.WATER_LEVEL + baselineOffset + heightFromWater;
+      modelRef.current.position.y = finalYPosition;
       
       // Log the positioning for debugging
-      console.log(`Model ${path} - Height: ${modelHeight.toFixed(2)}, Bottom at: ${modelBottom.toFixed(2)}`);
-      console.log(`Positioned with bottom at grid level (${STATIC.WATER_LEVEL}) + baseline (${baselineOffset.toFixed(2)}) + offset (${heightFromWater}) = ${modelRef.current.position.y.toFixed(2)}`);
+      console.log(`[DEBUG][${instanceId}] POSITIONED at Y=${finalYPosition.toFixed(2)}:`, {
+        modelBottom: modelBottom.toFixed(2),
+        baselineOffset: baselineOffset.toFixed(2),
+        waterLevel: STATIC.WATER_LEVEL,
+        heightOffset: heightFromWater,
+        modelPath: path
+      });
       
       // Update initialY reference for future positioning
-      initialY.current = STATIC.WATER_LEVEL + baselineOffset + heightFromWater;
+      initialY.current = finalYPosition;
     }
     
-    return () => {
-      // Reset when component unmounts
-      positionedRef.current = false;
-    };
+    // Do NOT reset the positioned flag on cleanup - breaks persistence
+    
   }, [modelHeightOffset, xPosition, zPosition, path, customModel]);
+  
+  // Add a second effect to monitor position changes from outside
+  useEffect(() => {
+    if (!modelRef.current) return;
+    
+    const instanceId = instanceIdRef.current;
+    const checkPosition = () => {
+      if (modelRef.current) {
+        console.log(`[DEBUG][${instanceId}] POSITION CHECK:`, {
+          x: modelRef.current.position.x.toFixed(2),
+          y: modelRef.current.position.y.toFixed(2),
+          z: modelRef.current.position.z.toFixed(2),
+          positionedFlag: positionedRef.current
+        });
+      }
+    };
+    
+    // Check position every second
+    const interval = setInterval(checkPosition, 1000);
+    
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
   
   // In grid mode, we disable bobbing for consistent positioning
   useFrame((_, delta) => {

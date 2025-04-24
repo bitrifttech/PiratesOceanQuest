@@ -438,9 +438,24 @@ const Ship = () => {
     
     setPosition(newPosition);
     
+    // Track changes before applying
+    const oldPosition = shipRef.current.position.clone();
+    
     // Update the mesh position and rotation
     shipRef.current.position.copy(newPosition);
     shipRef.current.rotation.copy(newRotation);
+    
+    // Debug: Log position changes to track when parent group moves
+    if (Math.random() < 0.01) { // Log occasionally to reduce spam
+      console.log(`[SHIP-GROUP] Position changed from (${oldPosition.x.toFixed(2)}, ${oldPosition.y.toFixed(2)}, ${oldPosition.z.toFixed(2)}) to (${newPosition.x.toFixed(2)}, ${newPosition.y.toFixed(2)}, ${newPosition.z.toFixed(2)})`);
+      
+      // Check for child elements being repositioned
+      shipRef.current.traverse(child => {
+        if (child.type === "Group" && child !== shipRef.current) {
+          console.log(`[SHIP-CHILD] Child group at (${child.position.x.toFixed(2)}, ${child.position.y.toFixed(2)}, ${child.position.z.toFixed(2)})`);
+        }
+      });
+    }
     
     // No manual positioning needed - the CustomModel component 
     // will handle precise grid alignment with the model's bottom at grid level.
@@ -448,7 +463,7 @@ const Ship = () => {
     if (shipRef.current) {
       // Log the ship position for debugging
       if (Math.random() < 0.01) { // Log only occasionally to prevent spam
-        console.log(`Ship position Y: ${shipRef.current.position.y.toFixed(2)}`);
+        console.log(`[SHIP-DEBUG] Ship position Y: ${shipRef.current.position.y.toFixed(2)}`);
       }
       
       // No bobbing rotation on flat grid
