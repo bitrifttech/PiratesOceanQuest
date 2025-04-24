@@ -10,7 +10,7 @@ import SettingsMenu from "./components/SettingsMenu";
 import HelpMenu from "./components/HelpMenu";
 import UpgradeMenu from "./components/UpgradeMenu";
 import GameUI from "./components/GameUI";
-// Debug controls removed
+import DebugControls from "./components/DebugControls";
 import ModelTestScene from "./components/ModelTestScene";
 import { MODEL_ADJUSTMENT } from "./lib/constants";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
@@ -36,7 +36,8 @@ const controlsMap = [
   // boarding key mapping removed
 ];
 
-// Control map configured for gameplay
+// Log the control map configuration
+console.log("Control map configured:", controlsMap);
 
 // Main App component
 function App() {
@@ -136,7 +137,18 @@ function App() {
                   {/* Game UI overlay */}
                   <GameUI />
                   
-                  {/* Debug controls removed */}
+                  {/* Add debug controls directly in App component for stability */}
+                  <div id="debug-controls-container">
+                    <DebugControls
+                      onUpdateShipHeight={useGameState.getState().setShipHeight}
+                      onUpdateWaterParams={useGameState.getState().setWaveParameters}
+                      onUpdateShipScale={useGameState.getState().setShipScale}
+                      initialShipHeight={useGameState.getState().shipHeight}
+                      initialWaveHeight={useGameState.getState().waveHeight}
+                      initialWaveSpeed={useGameState.getState().waveSpeed}
+                      initialShipScale={useGameState.getState().shipScale}
+                    />
+                  </div>
                 </>
               )}
             </KeyboardControls>

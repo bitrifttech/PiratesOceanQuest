@@ -80,7 +80,36 @@ const Ship = () => {
   // Direct access to keyboard controls through subscribe (more reliable)
   const [subscribeKeys, getKeys] = useKeyboardControls<Controls>();
   
-  // Key state subscriptions removed for production
+  // Set up subscriptions to key states for better debugging
+  useEffect(() => {
+    const unsubForward = subscribeKeys(
+      (state) => state.forward,
+      (pressed) => console.log("Forward key:", pressed)
+    );
+    
+    const unsubBackward = subscribeKeys(
+      (state) => state.backward,
+      (pressed) => console.log("Backward key:", pressed)
+    );
+    
+    const unsubLeft = subscribeKeys(
+      (state) => state.leftward,
+      (pressed) => console.log("Left key:", pressed)
+    );
+    
+    const unsubRight = subscribeKeys(
+      (state) => state.rightward,
+      (pressed) => console.log("Right key:", pressed)
+    );
+    
+    // Clean up subscriptions
+    return () => {
+      unsubForward();
+      unsubBackward();
+      unsubLeft();
+      unsubRight();
+    };
+  }, [subscribeKeys]);
   
   // Track cannonballs and effects using our defined interfaces
   const cannonballs = useRef<CannonballInfo[]>([]);
@@ -95,7 +124,13 @@ const Ship = () => {
       setVelocity(new THREE.Vector3(0, 0, 0));
     }
     
-    // Ship initialized with consistent height values
+    // Log initialization with ship height for debugging
+    console.log("Ship initialized", {
+      position,
+      savedHeight: initialShipConfig.current.shipHeight,
+      constantHeight: POSITION.SHIP_HEIGHT,
+      gameStateHeight: useGameState.getState().shipHeight
+    });
   }, [position, setPosition, setRotation, setVelocity]);
   
   // Check fire control input
@@ -136,7 +171,7 @@ const Ship = () => {
         shipPositions.push(position);
       }
       
-      // Ship cannon positions calculated
+      console.log("Ship cannon positions:", shipPositions);
       
       // Add cannons along the length of the ship, all at the same height
       shipPositions.forEach(zOffset => {
@@ -188,7 +223,8 @@ const Ship = () => {
         });
       });
       
-      // Cannon positions distributed along ship length
+      // Log the distribution of positions for debugging
+      console.log("Cannon positions distribution:", selectedPositions.map(pos => pos.zOffset));
       
       // Create cannonballs and effects for selected cannon positions
       selectedPositions.forEach((deck) => {
@@ -242,7 +278,8 @@ const Ship = () => {
           const spreadMatrix = new THREE.Matrix4().makeRotationY(horizontalSpreadAngle);
           const finalDir = baseDir.clone().applyMatrix4(spreadMatrix).normalize();
           
-          // Right side cannon firing
+          // Log the firing details for debugging
+          console.log(`Right ${cannonPosition} cannon: pos=(${rightPosX.toFixed(1)}, ${rightPosY.toFixed(1)}, ${rightPosZ.toFixed(1)}), dir=(${finalDir.x.toFixed(2)}, ${finalDir.y.toFixed(2)}, ${finalDir.z.toFixed(2)})`);
           
           // Add cannonball
           cannonballs.current.push({
@@ -281,7 +318,8 @@ const Ship = () => {
           const spreadMatrix = new THREE.Matrix4().makeRotationY(horizontalSpreadAngle);
           const finalDir = baseDir.clone().applyMatrix4(spreadMatrix).normalize();
           
-          // Left side cannon firing
+          // Log the firing details for debugging
+          console.log(`Left ${cannonPosition} cannon: pos=(${leftPosX.toFixed(1)}, ${leftPosY.toFixed(1)}, ${leftPosZ.toFixed(1)}), dir=(${finalDir.x.toFixed(2)}, ${finalDir.y.toFixed(2)}, ${finalDir.z.toFixed(2)})`);
           
           // Add cannonball
           cannonballs.current.push({
@@ -299,7 +337,7 @@ const Ship = () => {
         }
       });
       
-      // Cannons fired successfully
+      console.log("Enhanced cannons fired!", cannonballs.current.length, "cannonballs and", cannonFireEffects.current.length, "effects");
     }
   }, [cannonReady, position, rotation, fireCannon, getKeys]);
   
@@ -363,7 +401,13 @@ const Ship = () => {
       -Math.cos(newRotation.y)  // Negative because ship faces -Z
     );
     
-    // Debug direction vector removed for production
+    // Debug direction vector
+    console.log("Ship direction vector:", {
+      x: direction.x.toFixed(2), 
+      y: direction.y.toFixed(2), 
+      z: direction.z.toFixed(2),
+      rotation: (newRotation.y * 180 / Math.PI).toFixed(0) + "°"
+    });
     
     // Apply acceleration from controls
     const acceleration = new THREE.Vector3(0, 0, 0);
@@ -374,12 +418,14 @@ const Ship = () => {
       // No need for negative multiplier now that direction is correct
       const forwardForce = direction.clone().multiplyScalar(15 * delta);
       acceleration.add(forwardForce);
+      console.log("Moving forward in direction:", direction);
     }
     
     if (keys.backward) {
       // Apply acceleration in the opposite direction (S key moves backward)
       const backwardForce = direction.clone().multiplyScalar(-7.5 * delta);
       acceleration.add(backwardForce);
+      console.log("Moving backward, opposite of direction:", direction);
     }
     
     // Update velocity with acceleration and apply drag
@@ -414,12 +460,27 @@ const Ship = () => {
     );
     shipRef.current.rotation.copy(newRotation);
     
-    // Debug logging removed for production
+    // Debug: Log position changes to track when parent group moves
+    if (Math.random() < 0.01) { // Log occasionally to reduce spam
+      console.log(`[SHIP-GROUP] Position changed from (${oldPosition.x.toFixed(2)}, ${oldPosition.y.toFixed(2)}, ${oldPosition.z.toFixed(2)}) to (${newPosition.x.toFixed(2)}, ${newPosition.y.toFixed(2)}, ${newPosition.z.toFixed(2)})`);
+      
+      // Check for child elements being repositioned
+      shipRef.current.traverse(child => {
+        if (child.type === "Group" && child !== shipRef.current) {
+          console.log(`[SHIP-CHILD] Child group at (${child.position.x.toFixed(2)}, ${child.position.y.toFixed(2)}, ${child.position.z.toFixed(2)})`);
+        }
+      });
+    }
     
     // No manual positioning needed - the CustomModel component 
     // will handle precise grid alignment with the model's bottom at grid level.
     // This ensures consistency across all game elements.
     if (shipRef.current) {
+      // Log the ship position for debugging
+      if (Math.random() < 0.01) { // Log only occasionally to prevent spam
+        console.log(`[SHIP-DEBUG] Ship position Y: ${shipRef.current.position.y.toFixed(2)}`);
+      }
+      
       // No bobbing rotation on flat grid
       shipRef.current.rotation.x = 0;
       shipRef.current.rotation.z = 0;
@@ -485,6 +546,7 @@ const Ship = () => {
           receiveShadow
           onLoad={() => {
             setModelLoaded(true);
+            console.log(`Ship model loaded, positioned with bottom at water level + ${STATIC.SHIP_OFFSET} offset`);
           }}
         />
         
