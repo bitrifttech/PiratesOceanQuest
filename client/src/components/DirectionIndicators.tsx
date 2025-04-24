@@ -18,10 +18,19 @@ const DirectionIndicators = () => {
   const leftArrowRef = useRef<THREE.Group>(null);
   const rightArrowRef = useRef<THREE.Group>(null);
   
+  // Refs for the text holders that will face the camera
+  const forwardTextRef = useRef<THREE.Group>(null);
+  const backwardTextRef = useRef<THREE.Group>(null);
+  const leftTextRef = useRef<THREE.Group>(null);
+  const rightTextRef = useRef<THREE.Group>(null);
+  
   // Update arrow positions to match ship position and rotation
-  useFrame(() => {
-    if (!position || !rotation || !forwardArrowRef.current || 
-        !backwardArrowRef.current || !leftArrowRef.current || !rightArrowRef.current) {
+  useFrame(({ camera }) => {
+    if (!position || !rotation || 
+        !forwardArrowRef.current || !backwardArrowRef.current || 
+        !leftArrowRef.current || !rightArrowRef.current ||
+        !forwardTextRef.current || !backwardTextRef.current ||
+        !leftTextRef.current || !rightTextRef.current) {
       return;
     }
     
@@ -60,6 +69,22 @@ const DirectionIndicators = () => {
     // Right arrow (yellow)
     rightArrowRef.current.position.copy(position.clone().add(rightDir.clone().multiplyScalar(10)));
     rightArrowRef.current.lookAt(position.clone().add(rightDir.clone().multiplyScalar(20)));
+    
+    // Make all text elements face the camera
+    const makeTextFaceCamera = (textRef: THREE.Group) => {
+      // Calculate direction from text to camera
+      const lookAtPos = new THREE.Vector3();
+      camera.getWorldPosition(lookAtPos);
+      
+      // Make text group face camera
+      textRef.lookAt(lookAtPos);
+    };
+    
+    // Update all text elements to face camera
+    makeTextFaceCamera(forwardTextRef.current);
+    makeTextFaceCamera(backwardTextRef.current);
+    makeTextFaceCamera(leftTextRef.current);
+    makeTextFaceCamera(rightTextRef.current);
   });
   
   // Create an arrow shape
@@ -76,8 +101,24 @@ const DirectionIndicators = () => {
         <coneGeometry args={[1, 2, 8]} />
         <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} />
       </mesh>
-      
-      {/* No arrow label needed - using Text component instead */}
+    </group>
+  );
+  
+  // Text label component
+  const DirectionText = ({ text, color, textRef }: 
+    { text: string, color: string, textRef: React.RefObject<THREE.Group> }) => (
+    <group ref={textRef} position={[0, 3, 0]}>
+      <Text
+        position={[0, 0, 0]}
+        color="#ffffff"
+        fontSize={1.2}
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.05}
+        outlineColor={color}
+      >
+        {text}
+      </Text>
     </group>
   );
   
@@ -86,69 +127,25 @@ const DirectionIndicators = () => {
       {/* Forward Direction (W key) - Blue */}
       <group ref={forwardArrowRef} position={[0, 3, -10]}>
         {createArrow("#0088ff")}
-        <Text
-          position={[0, 2, -4]}
-          color="#ffffff"
-          fontSize={0.8}
-          anchorX="center"
-          anchorY="middle"
-          outlineWidth={0.05}
-          outlineColor="#0088ff"
-          rotation={[0, Math.PI, 0]} // Rotate text to face camera
-        >
-          W - Forward
-        </Text>
+        <DirectionText text="W - Forward" color="#0088ff" textRef={forwardTextRef} />
       </group>
       
       {/* Backward Direction (S key) - Red */}
       <group ref={backwardArrowRef} position={[0, 3, 10]}>
         {createArrow("#ff3333")}
-        <Text
-          position={[0, 2, -4]}
-          color="#ffffff"
-          fontSize={0.8}
-          anchorX="center"
-          anchorY="middle"
-          outlineWidth={0.05}
-          outlineColor="#ff3333"
-          rotation={[0, Math.PI, 0]} // Rotate text to face camera
-        >
-          S - Backward
-        </Text>
+        <DirectionText text="S - Backward" color="#ff3333" textRef={backwardTextRef} />
       </group>
       
       {/* Left Direction (A key) - Green */}
       <group ref={leftArrowRef} position={[-10, 3, 0]}>
         {createArrow("#33cc33")}
-        <Text
-          position={[0, 2, -4]}
-          color="#ffffff"
-          fontSize={0.8}
-          anchorX="center"
-          anchorY="middle"
-          outlineWidth={0.05}
-          outlineColor="#33cc33"
-          rotation={[0, Math.PI, 0]} // Rotate text to face camera
-        >
-          A - Left
-        </Text>
+        <DirectionText text="A - Left" color="#33cc33" textRef={leftTextRef} />
       </group>
       
       {/* Right Direction (D key) - Yellow */}
       <group ref={rightArrowRef} position={[10, 3, 0]}>
         {createArrow("#ffcc00")}
-        <Text
-          position={[0, 2, -4]}
-          color="#ffffff"
-          fontSize={0.8}
-          anchorX="center"
-          anchorY="middle"
-          outlineWidth={0.05}
-          outlineColor="#ffcc00"
-          rotation={[0, Math.PI, 0]} // Rotate text to face camera
-        >
-          D - Right
-        </Text>
+        <DirectionText text="D - Right" color="#ffcc00" textRef={rightTextRef} />
       </group>
     </>
   );

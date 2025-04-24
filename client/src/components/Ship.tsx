@@ -393,17 +393,16 @@ const Ship = () => {
     setRotation(newRotation);
     
     // Calculate direction vector based on rotation
-    // The ship model is rotated by Math.PI (180 degrees) in the CustomModel component
-    // which means it's facing the negative Z direction, so we need to adjust our direction
-    // vector to match that orientation - forward should always be along the ship's bow
+    // The ship model is rotated by Math.PI (180 degrees) in the CustomModel component,
+    // meaning the model is "backwards" compared to its "forward" direction in the game
+    // We should NOT negate the direction vector as that's what's causing the problem
     const direction = new THREE.Vector3(
       Math.sin(newRotation.y),
       0,
       Math.cos(newRotation.y)
     );
     
-    // Negate the vector since our ship points in -Z direction with 0 rotation
-    direction.multiplyScalar(-1);
+    // No longer negating the vector - this fixes the reversed direction issue
     
     // Log direction vector for debugging
     console.log("Ship direction vector:", direction);
