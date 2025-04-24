@@ -401,13 +401,7 @@ const Ship = () => {
       -Math.cos(newRotation.y)  // Negative because ship faces -Z
     );
     
-    // Debug direction vector
-    console.log("Ship direction vector:", {
-      x: direction.x.toFixed(2), 
-      y: direction.y.toFixed(2), 
-      z: direction.z.toFixed(2),
-      rotation: (newRotation.y * 180 / Math.PI).toFixed(0) + "°"
-    });
+    // Debug direction vector removed for production
     
     // Apply acceleration from controls
     const acceleration = new THREE.Vector3(0, 0, 0);
@@ -418,14 +412,12 @@ const Ship = () => {
       // No need for negative multiplier now that direction is correct
       const forwardForce = direction.clone().multiplyScalar(15 * delta);
       acceleration.add(forwardForce);
-      console.log("Moving forward in direction:", direction);
     }
     
     if (keys.backward) {
       // Apply acceleration in the opposite direction (S key moves backward)
       const backwardForce = direction.clone().multiplyScalar(-7.5 * delta);
       acceleration.add(backwardForce);
-      console.log("Moving backward, opposite of direction:", direction);
     }
     
     // Update velocity with acceleration and apply drag
@@ -460,27 +452,12 @@ const Ship = () => {
     );
     shipRef.current.rotation.copy(newRotation);
     
-    // Debug: Log position changes to track when parent group moves
-    if (Math.random() < 0.01) { // Log occasionally to reduce spam
-      console.log(`[SHIP-GROUP] Position changed from (${oldPosition.x.toFixed(2)}, ${oldPosition.y.toFixed(2)}, ${oldPosition.z.toFixed(2)}) to (${newPosition.x.toFixed(2)}, ${newPosition.y.toFixed(2)}, ${newPosition.z.toFixed(2)})`);
-      
-      // Check for child elements being repositioned
-      shipRef.current.traverse(child => {
-        if (child.type === "Group" && child !== shipRef.current) {
-          console.log(`[SHIP-CHILD] Child group at (${child.position.x.toFixed(2)}, ${child.position.y.toFixed(2)}, ${child.position.z.toFixed(2)})`);
-        }
-      });
-    }
+    // Debug logging removed for production
     
     // No manual positioning needed - the CustomModel component 
     // will handle precise grid alignment with the model's bottom at grid level.
     // This ensures consistency across all game elements.
     if (shipRef.current) {
-      // Log the ship position for debugging
-      if (Math.random() < 0.01) { // Log only occasionally to prevent spam
-        console.log(`[SHIP-DEBUG] Ship position Y: ${shipRef.current.position.y.toFixed(2)}`);
-      }
-      
       // No bobbing rotation on flat grid
       shipRef.current.rotation.x = 0;
       shipRef.current.rotation.z = 0;
@@ -546,7 +523,6 @@ const Ship = () => {
           receiveShadow
           onLoad={() => {
             setModelLoaded(true);
-            console.log(`Ship model loaded, positioned with bottom at water level + ${STATIC.SHIP_OFFSET} offset`);
           }}
         />
         
