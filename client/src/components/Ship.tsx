@@ -434,9 +434,10 @@ const Ship = () => {
     
     setVelocity(newVelocity);
     
-    // SIMPLIFIED COLLISION APPROACH: Prevent the ship from entering island collision areas
-    const shipRadius = 6; // Ship collision radius
-    const safetyMargin = 1.5; // Extra buffer to keep from islands
+    // SIMPLIFIED BOX COLLISION APPROACH: Uses box collisions instead of radius-based
+    const shipWidth = 6;  // Ship collision width
+    const shipDepth = 12; // Ship is longer than it is wide
+    const safetyMargin = 1.0; // Extra buffer to keep from colliding
     
     // Calculate proposed new position with velocity
     const futurePosition = position.clone().add(
@@ -444,18 +445,45 @@ const Ship = () => {
     );
     
     // Check if the proposed position would collide with an environment feature
-    const futureCollision = environmentCollisions.checkPointCollision(futurePosition, shipRadius + safetyMargin);
+    const futureCollision = environmentCollisions.checkPointCollision(futurePosition, Math.max(shipWidth, shipDepth) / 2 + safetyMargin);
     
     let newPosition;
     if (futureCollision) {
       // We would collide at the future position - stop the ship
       console.log(`[COLLISION] Stopping ship to prevent collision with ${futureCollision.type}`);
       
-      // Zero out velocity to prevent movement into the obstacle
-      setVelocity(new THREE.Vector3(0, 0, 0));
+      // Calculate the direction to the colliding object
+      const toObstacle = new THREE.Vector3(
+        futureCollision.x - position.x,
+        0,
+        futureCollision.z - position.z
+      ).normalize();
       
-      // Stay at the current position
-      newPosition = position.clone();
+      // Calculate the dot product between our velocity and the direction to obstacle
+      // This tells us how much we're heading toward the obstacle
+      const movingTowardObstacle = toObstacle.dot(newVelocity.clone().normalize());
+      
+      if (movingTowardObstacle > 0) {
+        // We're moving toward the obstacle, so stop that component of velocity
+        const cancelVelocity = toObstacle.clone().multiplyScalar(newVelocity.dot(toObstacle));
+        newVelocity.sub(cancelVelocity);
+        
+        // Add a small push-back effect
+        newVelocity.addScaledVector(toObstacle, -0.5);
+        
+        // Set updated velocity
+        setVelocity(newVelocity);
+      }
+      
+      // Recalculate position with adjusted velocity
+      newPosition = position.clone().add(
+        newVelocity.clone().multiplyScalar(delta)
+      );
+      
+      // Final safety check - if still in collision, stay put
+      if (environmentCollisions.checkPointCollision(newPosition, Math.max(shipWidth, shipDepth) / 2 + safetyMargin)) {
+        newPosition = position.clone();
+      }
     } else {
       // No collision at the future position - allow the ship to move
       // Limit boundaries of the game area
@@ -465,8 +493,8 @@ const Ship = () => {
       newPosition = futurePosition;
     }
     
-    // One last safety check - if we're already inside an obstacle, push out
-    const currentCollision = environmentCollisions.checkPointCollision(position, shipRadius + safetyMargin);
+    // Emergency correction if already inside an obstacle
+    const currentCollision = environmentCollisions.checkPointCollision(position, Math.max(shipWidth, shipDepth) / 2);
     if (currentCollision) {
       console.log(`[COLLISION] Emergency correction - ship inside ${currentCollision.type}`);
       
@@ -478,7 +506,7 @@ const Ship = () => {
       ).normalize();
       
       // Push away with enough force to escape
-      const pushDistance = shipRadius + safetyMargin + 
+      const pushDistance = Math.max(shipWidth, shipDepth) + safetyMargin * 2 + 
         environmentCollisions.getFeatureRadius(currentCollision.type, currentCollision.scale);
       
       // Set new position directly outside the collision radius

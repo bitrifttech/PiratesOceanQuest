@@ -89,8 +89,9 @@ const Cannonball = ({
     // Fixed hit radius based on cannonball size
     const hitRadius = 2.0; // Units
     
-    // Check for environment collisions
-    const environmentCollision = environmentCollisions.checkPointCollision(cannonballPosition, hitRadius);
+    // Check for environment collisions with increased radius to match bounding boxes better
+    const environmentCollisionRadius = 3.0; // Larger radius for better detection with box colliders
+    const environmentCollision = environmentCollisions.checkPointCollision(cannonballPosition, environmentCollisionRadius);
     if (environmentCollision && !hitDetected.current) {
       // Mark as hit to prevent multiple hits
       hitDetected.current = true;
@@ -100,6 +101,15 @@ const Cannonball = ({
       
       // Create a small explosion effect
       // TODO: Add explosion effect
+      
+      // Play hit sound
+      try {
+        const audio = new Audio('/sounds/cannonball_hit.mp3');
+        audio.volume = 0.3;
+        audio.play().catch(e => console.error('Error playing hit sound:', e));
+      } catch (e) {
+        // Silently fail if audio can't be played
+      }
       
       // Trigger callback to remove cannonball
       if (onHit) onHit();
