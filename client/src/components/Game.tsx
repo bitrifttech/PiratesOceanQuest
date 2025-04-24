@@ -3,7 +3,6 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { Sky, Environment, OrbitControls, Text, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import ReactDOM from "react-dom";
-import WorldObject from "./WorldObject";
 
 import GridPlane from "./GridPlane"; // Using GridPlane instead of Ocean
 import Ship from "./Ship";
@@ -12,7 +11,6 @@ import Island from "./Island";
 import DebugControls from "./DebugControls";
 import DebugControlsOverlay from "./DebugControlsOverlay";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC, WORLD } from "../lib/constants";
-import { BASE_SCALE, HEIGHT_OFFSET, GRID, RELATIVE_SIZE } from "../lib/ModelScaleSystem";
 
 import { usePlayer } from "../lib/stores/usePlayer";
 // import { useEnemies } from "../lib/stores/useEnemies"; // Removed enemies
@@ -104,85 +102,31 @@ const Game = () => {
     rotation: [number, number, number];
   }
   
-  // Environment features with new, structured positioning system
-  const environmentFeatures = useRef<{ 
-    type: EnvironmentFeatureType;
-    position: THREE.Vector3;
-    rotation: THREE.Euler;
-    scale: number;
-  }[]>([]);
-  
-  // Generate environment features with structured positioning
-  useEffect(() => {
-    // Clear any existing features
-    environmentFeatures.current = [];
+  // Island positions and other environment features (pre-calculated for consistency)
+  // Each feature has type, position, scale, and rotation
+  const environmentFeatures = useRef<EnvironmentFeature[]>([
+    // Tropical islands - positioned closer to the starting point
+    { type: 'tropical', x: 40, z: 40, scale: 1.5, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'tropical', x: -60, z: -30, scale: 1.2, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'tropical', x: 80, z: -50, scale: 0.8, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'tropical', x: -90, z: 70, scale: 1.0, rotation: [0, Math.random() * Math.PI * 2, 0] },
     
-    // Define feature areas to ensure organized, intentional placement
-    // Each area has its own feature types, density, etc.
-    const areas = [
-      // Tropical island cluster (northeast quadrant)
-      {
-        name: "Tropical Isles",
-        center: new THREE.Vector3(40, 0, -40),
-        radius: 30,
-        featureCount: 3,
-        type: 'tropical' as const,
-        scaleRange: [0.8, 1.5]
-      },
-      
-      // Mountain range (northwest quadrant)
-      {
-        name: "Mountain Range",
-        center: new THREE.Vector3(-60, 0, -40), 
-        radius: 40,
-        featureCount: 3,
-        type: 'mountain' as const,
-        scaleRange: [1.0, 2.0]
-      },
-      
-      // Scattered rocks (near player start)
-      {
-        name: "Rock Formations",
-        center: new THREE.Vector3(0, 0, 20),
-        radius: 20,
-        featureCount: 4,
-        type: 'rocks' as const,
-        scaleRange: [0.5, 1.2]
-      }
-    ];
+    // Mountain islands - medium distance
+    { type: 'mountain', x: 70, z: -60, scale: 1.8, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'mountain', x: -40, z: 80, scale: 2.0, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'mountain', x: 100, z: 90, scale: 2.2, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'mountain', x: -100, z: -80, scale: 1.7, rotation: [0, Math.random() * Math.PI * 2, 0] },
     
-    // Generate features for each area
-    areas.forEach(area => {
-      console.log(`Generating ${area.featureCount} ${area.type} features in ${area.name}`);
-      
-      for (let i = 0; i < area.featureCount; i++) {
-        // Calculate position with a random offset from area center
-        const angle = Math.random() * Math.PI * 2;
-        const distance = Math.random() * area.radius;
-        
-        const x = area.center.x + Math.cos(angle) * distance;
-        const z = area.center.z + Math.sin(angle) * distance;
-        
-        // Random rotation around Y axis
-        const rotation = new THREE.Euler(0, Math.random() * Math.PI * 2, 0);
-        
-        // Random scale within range
-        const scale = area.scaleRange[0] + Math.random() * (area.scaleRange[1] - area.scaleRange[0]);
-        
-        // Add the feature to our environment
-        environmentFeatures.current.push({
-          type: area.type,
-          position: new THREE.Vector3(x, 0, z),
-          rotation,
-          scale
-        });
-        
-        console.log(`Added ${area.type} at (${x.toFixed(1)}, 0, ${z.toFixed(1)}) with scale ${scale.toFixed(2)}`);
-      }
-    });
-    
-    console.log(`Generated ${environmentFeatures.current.length} environmental features in organized areas`);
-  }, []);
+    // Rock formations - much closer to create immediate obstacles (increased scale)
+    { type: 'rocks', x: 20, z: 25, scale: 2.0, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'rocks', x: -15, z: 30, scale: 1.8, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'rocks', x: 25, z: -20, scale: 1.7, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'rocks', x: -25, z: -25, scale: 2.2, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'rocks', x: 40, z: 15, scale: 1.5, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'rocks', x: -20, z: -40, scale: 2.1, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'rocks', x: 5, z: 45, scale: 1.6, rotation: [0, Math.random() * Math.PI * 2, 0] },
+    { type: 'rocks', x: 50, z: 30, scale: 1.9, rotation: [0, Math.random() * Math.PI * 2, 0] },
+  ]);
 
   // Initialize game on first load
   useEffect(() => {
@@ -315,60 +259,20 @@ const Game = () => {
       {/* Reference ship removed */}
       <DirectionIndicators />
       
-      {/* Player Ship - Using updated scaling with proper size */}
-      <WorldObject 
-        modelPath="/models/base_pirate_ship.glb"
-        position={playerPosition || new THREE.Vector3(0, 0, 0)}
-        rotation={playerRotation || new THREE.Euler(0, Math.PI, 0)} 
-        scale={BASE_SCALE.SHIP.BASE} // Using pre-calculated base scale (includes adjustment)
-        offset={HEIGHT_OFFSET.SHIP}
-        castShadow
-        receiveShadow
-        onLoad={() => {
-          console.log("Ship model loaded with adjusted scale for proper proportions");
-        }}
-      />
+      {/* Player ship */}
+      <Ship />
       
-      {/* Environment Features - Using unified scale system relative to ship size */}
-      {environmentFeatures.current.map((feature, index) => {
-        // Determine the appropriate model path based on feature type
-        const modelPath = 
-          feature.type === 'tropical' ? '/models/tropical_island.glb' :
-          feature.type === 'mountain' ? '/models/mountain_island.glb' : 
-          '/models/rock_formation.glb';
-          
-        // Get appropriate base scale and height offset based on feature type
-        const baseScale = 
-          feature.type === 'tropical' ? BASE_SCALE.ISLAND.TROPICAL :
-          feature.type === 'mountain' ? BASE_SCALE.ISLAND.MOUNTAIN : 
-          BASE_SCALE.ISLAND.ROCKS;
-        
-        const heightOffset =
-          feature.type === 'tropical' ? HEIGHT_OFFSET.TROPICAL_ISLAND :
-          feature.type === 'mountain' ? HEIGHT_OFFSET.MOUNTAIN_ISLAND : 
-          HEIGHT_OFFSET.ROCKS;
-          
-        // Calculate final scale with a much larger multiplier
-        // We're applying the feature.scale directly without additional division
-        const finalScale = baseScale * feature.scale;
-          
-        // Return WorldObject for each feature
-        return (
-          <WorldObject
-            key={`env-${feature.type}-${index}`}
-            modelPath={modelPath}
-            position={feature.position}
-            rotation={feature.rotation}
-            scale={finalScale}
-            offset={heightOffset}
-            castShadow
-            receiveShadow
-            onLoad={() => {
-              console.log(`Loaded ${feature.type} model at (${feature.position.x}, ${feature.position.z}) with scale ${finalScale.toFixed(3)}`);
-            }}
-          />
-        );
-      })}
+      {/* Environmental features: Islands and rock formations */}
+      {environmentFeatures.current.map((feature, index) => (
+        <Island 
+          key={`env-${feature.type}-${index}`} 
+          xPosition={feature.x}
+            zPosition={feature.z} 
+          scale={feature.scale} 
+          rotation={feature.rotation}
+          type={feature.type}
+        />
+      ))}
       
       {/* Enemy ships - removed */}
       
