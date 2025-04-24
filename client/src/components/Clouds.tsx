@@ -45,22 +45,31 @@ const Cloud = ({
   const meshRef = useRef<any>(null);
   const initialPosition = useRef<[number, number, number]>(position);
   
-  // Individual cloud drift motion
+  // Individual cloud drift motion - optimize by using time scale
+  // Only update every few frames for better performance
+  const timeScale = useRef(Math.random() * Math.PI); // Randomize starting phase
+  const frameSkip = useRef(Math.floor(Math.random() * 4) + 2); // Skip 2-5 frames
+  const frameCounter = useRef(0);
+  
   useFrame((state) => {
     if (!meshRef.current) return;
     
-    // Slow gentle drift based on time
-    const time = state.clock.getElapsedTime();
+    // Only update on certain frames to improve performance
+    frameCounter.current = (frameCounter.current + 1) % frameSkip.current;
+    if (frameCounter.current !== 0) return;
     
-    // Apply gentle bobbing motion
-    meshRef.current.position.y = initialPosition.current[1] + Math.sin(time * 0.2) * 0.5;
+    // Use a simplified time calculation with the ref
+    timeScale.current += 0.001 * speed;
     
-    // Apply slow rotation
-    meshRef.current.rotation.y += 0.0003 * speed;
+    // Apply gentle bobbing motion - simplified math
+    meshRef.current.position.y = initialPosition.current[1] + Math.sin(timeScale.current * 0.2) * 0.5;
     
-    // Apply drift motion
-    const xOffset = Math.sin(time * 0.1) * 0.2 * speed;
-    const zOffset = Math.cos(time * 0.15) * 0.2 * speed;
+    // Apply slow rotation - only when we update
+    meshRef.current.rotation.y += 0.001 * speed;
+    
+    // Apply drift motion - simplified calculations
+    const xOffset = Math.sin(timeScale.current) * 0.2 * speed;
+    const zOffset = Math.cos(timeScale.current * 1.5) * 0.2 * speed;
     
     meshRef.current.position.x = initialPosition.current[0] + xOffset;
     meshRef.current.position.z = initialPosition.current[2] + zOffset;
@@ -98,8 +107,11 @@ const Cloud = ({
     return result;
   }, [position, size]);
   
-  // Calculate ambient light influence based on time
-  const light = dynamicLighting ? (
+  // Optimize lighting - only add lights to a subset of clouds
+  // This saves performance while still creating the lighting effect
+  const hasLight = dynamicLighting && Math.random() < 0.3; // Only 30% of clouds get lights
+  
+  const light = hasLight ? (
     <pointLight
       position={[0, 0, 0]}
       color={lightColor}
@@ -119,14 +131,15 @@ const Cloud = ({
     >
       {spheres.map((sphere, index) => (
         <mesh key={index} position={sphere.position as [number, number, number]}>
-          <sphereGeometry args={[sphere.size, 8, 8]} />
-          <meshStandardMaterial 
+          {/* Reduce geometry complexity from 8,8 to 6,6 segments */}
+          <sphereGeometry args={[sphere.size, 6, 6]} />
+          {/* Use basic material instead of standard for better performance */}
+          <meshBasicMaterial 
             color={color}
             transparent
             opacity={opacity}
             depthWrite={false}
-            roughness={1}
-            metalness={0}
+            fog={true}
           />
         </mesh>
       ))}

@@ -114,6 +114,15 @@ const SkyWithClouds: React.FC<SkyWithCloudsProps> = ({
       ? 0.5 // Sunrise/sunset (medium)
       : 0.8; // Day (bright)
 
+  // Calculate performance-optimized cloud settings
+  // Reduce cloud count at night and dawn/dusk to improve performance
+  const optimizedCloudCount = 
+    timeOfDay > 0.9 || timeOfDay < 0.1 ? // Night time
+      Math.floor(cloudCount * 0.6) : // 60% clouds at night
+    timeOfDay < 0.2 || timeOfDay > 0.8 ? // Dawn/dusk
+      Math.floor(cloudCount * 0.8) : // 80% clouds at dawn/dusk
+      cloudCount; // Full clouds during day
+  
   return (
     <>
       {/* Sky backdrop */}
@@ -132,9 +141,9 @@ const SkyWithClouds: React.FC<SkyWithCloudsProps> = ({
         mieDirectionalG={mieDirectionalG}
       />
       
-      {/* Procedural cloud layer */}
+      {/* Procedural cloud layer with optimized count based on time of day */}
       <Clouds 
-        count={cloudCount}
+        count={optimizedCloudCount}
         minHeight={cloudHeight - 10}
         maxHeight={cloudHeight + 20}
         size={cloudDensity}
