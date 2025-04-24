@@ -3,6 +3,7 @@ import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTF } from "three-stdlib";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC } from "../lib/constants";
+import { useIslandPositions, getModelPositionId } from "../lib/stores/useIslandPositions";
 
 // Define island types
 type IslandType = 'tropical' | 'mountain' | 'rocks';
@@ -79,150 +80,81 @@ const Island = ({
     }
   }, [rotation]);
   
-  // Set the appropriate height for each island type based on flat grid
-  // Using a ref to track whether we've already positioned this model
-  const positionedRef = useRef(false);
+  // Get the global island position store
+  const getIslandPosition = useIslandPositions((state) => state.getPosition);
+  const setIslandPosition = useIslandPositions((state) => state.setPosition);
+  const hasIslandPosition = useIslandPositions((state) => state.hasPosition);
   
-  // Create a unique ID for debugging
-  const instanceIdRef = useRef(`island_${Math.random().toString(36).substr(2, 9)}`);
+  // Create a stable model ID that doesn't change when component remounts
+  // This is crucial for fixing the flickering issue
+  const modelId = getModelPositionId(type, xPosition, zPosition);
   
-  // Keep track of position history for debugging
-  const positionHistory = useRef<{x: number, y: number, z: number}[]>([]);
+  // Create a debugging instance ID
+  const instanceId = useRef(`island_${Math.random().toString(36).substr(2, 9)}`);
   
-  // Store fixed Y position once calculated
-  const fixedYPosition = useRef<number | null>(null);
-  
-  // Track if model is being updated
-  const updateInProgress = useRef(false);
-  
-  // Track stack trace on each position update
-  const positionStackTrace = useRef<string[]>([]);
-  
-  // Set up monitor to track external position changes
+  // Simple positioning logic that uses the persistent store
   useEffect(() => {
-    if (!islandRef.current) return;
+    if (!islandRef.current || !islandModel) return;
     
-    const instanceId = instanceIdRef.current;
-    console.log(`[ISLAND-MONITOR][${instanceId}] Starting position monitor`);
+    const id = instanceId.current;
+    console.log(`[ISLAND][${id}] Positioning island ${modelId}`);
     
-    // Current position for tracking
-    let lastY = islandRef.current.position.y;
+    // Check if we already have a stored position
+    if (hasIslandPosition(modelId)) {
+      // Use the stored position
+      const storedY = getIslandPosition(modelId);
+      console.log(`[ISLAND][${id}] Using stored position Y=${storedY} for ${modelId}`);
+      
+      // Apply position directly
+      islandRef.current.position.set(xPosition, storedY!, zPosition);
+    } else {
+      console.log(`[ISLAND][${id}] Calculating new position for ${modelId}`);
+      
+      try {
+        // First time - calculate the position
+        const boundingBox = new THREE.Box3().setFromObject(islandModel);
+        const modelBottom = boundingBox.min.y;
+        const baselineOffset = -modelBottom;
+        const yPosition = STATIC.WATER_LEVEL + baselineOffset;
+        
+        console.log(`[ISLAND][${id}] Calculated position Y=${yPosition.toFixed(2)} for ${modelId}`, {
+          modelBottom: modelBottom.toFixed(2),
+          baselineOffset: baselineOffset.toFixed(2),
+          waterLevel: STATIC.WATER_LEVEL
+        });
+        
+        // Store the position in the global store
+        setIslandPosition(modelId, yPosition);
+        
+        // Apply the position
+        islandRef.current.position.set(xPosition, yPosition, zPosition);
+      } catch (error) {
+        console.error(`[ISLAND][${id}] Error calculating position:`, error);
+        // Fallback to grid level
+        islandRef.current.position.set(xPosition, STATIC.WATER_LEVEL, zPosition);
+      }
+    }
     
-    // Setup position watcher
-    const checkInterval = setInterval(() => {
-      if (islandRef.current) {
+    // Set up a position enforcement timer to make sure nothing changes the Y
+    const enforcementInterval = setInterval(() => {
+      if (!islandRef.current) return;
+      
+      const storedY = getIslandPosition(modelId);
+      if (storedY !== null) {
+        // Check if position has been modified
         const currentY = islandRef.current.position.y;
-        if (Math.abs(currentY - lastY) > 0.01) {
-          console.error(`[ISLAND-MONITOR][${instanceId}] ⚠️ EXTERNAL Y POSITION CHANGE DETECTED: ${lastY.toFixed(2)} -> ${currentY.toFixed(2)}`);
-          
-          // Print stack trace from previous position sets
-          console.error(`[ISLAND-MONITOR][${instanceId}] Position was previously set from these locations:`);
-          positionStackTrace.current.forEach((trace, i) => {
-            console.error(`[ISLAND-MONITOR][${instanceId}] Position set #${i+1}:\n${trace}`);
-          });
-          
-          // Store new position
-          lastY = currentY;
+        if (Math.abs(currentY - storedY) > 0.01) {
+          console.log(`[ISLAND][${id}] ⚠️ Enforcing Y position ${storedY.toFixed(2)} (was ${currentY.toFixed(2)})`);
+          islandRef.current.position.y = storedY;
         }
       }
     }, 100);
     
     return () => {
-      clearInterval(checkInterval);
-      console.log(`[ISLAND-MONITOR][${instanceId}] Position monitor stopped`);
+      clearInterval(enforcementInterval);
+      console.log(`[ISLAND][${id}] Cleanup for ${modelId}`);
     };
-  }, []);
-  
-  // Enhanced effect for position setting
-  useEffect(() => {
-    if (!islandRef.current || !islandModel) return;
-    
-    const instanceId = instanceIdRef.current;
-    const stack = new Error().stack || "No stack trace available";
-    console.log(`[ISLAND-POSITION][${instanceId}] Position effect running from: ${stack.split('\n')[2]}`);
-    
-    // Store this stack trace
-    positionStackTrace.current.push(stack);
-    if (positionStackTrace.current.length > 5) {
-      positionStackTrace.current.shift();
-    }
-    
-    // Only calculate position if we haven't done it before
-    if (fixedYPosition.current === null) {
-      // Lock to prevent concurrent updates
-      if (updateInProgress.current) {
-        console.log(`[ISLAND-POSITION][${instanceId}] Skipping update - another update in progress`);
-        return;
-      }
-      
-      updateInProgress.current = true;
-      console.log(`[ISLAND-POSITION][${instanceId}] ⚠️ INITIAL Y CALCULATION`);
-      
-      try {
-        // Calculate the bounding box to find the bottom of the model
-        const boundingBox = new THREE.Box3().setFromObject(islandModel);
-        console.log(`[ISLAND-POSITION][${instanceId}] Bounding box calculated:`, {
-          min: boundingBox.min,
-          max: boundingBox.max
-        });
-        
-        const modelBottom = boundingBox.min.y;
-        
-        // Calculate the offset needed to place the bottom exactly at grid level
-        const baselineOffset = -modelBottom;
-        
-        // Calculate the fixed Y position once
-        const newY = STATIC.WATER_LEVEL + baselineOffset;
-        
-        console.log(`[ISLAND-POSITION][${instanceId}] ⚠️ SETTING NEW Y=${newY.toFixed(2)} (Prev: ${fixedYPosition.current?.toFixed(2) || 'NULL'})`);
-        fixedYPosition.current = newY;
-        
-        // Apply the fixed position
-        const oldPosition = islandRef.current.position.clone();
-        islandRef.current.position.set(xPosition, newY, zPosition);
-        
-        console.log(`[ISLAND-POSITION][${instanceId}] Position changed from (${oldPosition.x.toFixed(2)}, ${oldPosition.y.toFixed(2)}, ${oldPosition.z.toFixed(2)}) to (${xPosition.toFixed(2)}, ${newY.toFixed(2)}, ${zPosition.toFixed(2)})`);
-      } catch (error) {
-        console.error(`[ISLAND-POSITION][${instanceId}] Error calculating position:`, error);
-      } finally {
-        // Mark as positioned and release lock
-        positionedRef.current = true;
-        updateInProgress.current = false;
-      }
-    } else {
-      // If position has already been calculated, just update X and Z coordinates
-      const oldPosition = islandRef.current.position.clone();
-      
-      console.log(`[ISLAND-POSITION][${instanceId}] Using stored Y=${fixedYPosition.current.toFixed(2)}`);
-      
-      islandRef.current.position.set(
-        xPosition, 
-        fixedYPosition.current, 
-        zPosition
-      );
-      
-      console.log(`[ISLAND-POSITION][${instanceId}] Updated X/Z from (${oldPosition.x.toFixed(2)}, ${oldPosition.y.toFixed(2)}, ${oldPosition.z.toFixed(2)}) to (${xPosition.toFixed(2)}, ${fixedYPosition.current.toFixed(2)}, ${zPosition.toFixed(2)})`);
-    }
-    
-    // Override direct manipulations by freezing the Y position
-    const lockInterval = setInterval(() => {
-      if (islandRef.current && fixedYPosition.current !== null) {
-        const currentY = islandRef.current.position.y;
-        if (Math.abs(currentY - fixedYPosition.current) > 0.01) {
-          console.error(`[ISLAND-POSITION][${instanceId}] ⚠️ FORCING Y POSITION BACK TO ${fixedYPosition.current.toFixed(2)} from ${currentY.toFixed(2)}`);
-          islandRef.current.position.y = fixedYPosition.current;
-        }
-      }
-    }, 200);
-    
-    return () => {
-      // Reset the position calculations when component unmounts
-      positionedRef.current = false;
-      fixedYPosition.current = null;
-      clearInterval(lockInterval);
-      console.log(`[ISLAND-POSITION][${instanceId}] Island effect cleanup`);
-    };
-  }, [xPosition, zPosition, type, islandModel]);
+  }, [modelId, xPosition, zPosition, islandModel, getIslandPosition, hasIslandPosition, setIslandPosition]);
   
   // Calculate scale based on island type using our standardized scale system
   const getScaleFactor = () => {
