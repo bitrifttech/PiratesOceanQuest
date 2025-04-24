@@ -182,7 +182,7 @@ const Ship = () => {
         shipPositions.push(position);
       }
       
-      console.log("Ship cannon positions:", shipPositions);
+      // No logging of cannon positions to reduce console spam
       
       // Add cannons along the length of the ship, all at the same height
       shipPositions.forEach(zOffset => {
@@ -234,8 +234,7 @@ const Ship = () => {
         });
       });
       
-      // Log the distribution of positions for debugging
-      console.log("Cannon positions distribution:", selectedPositions.map(pos => pos.zOffset));
+      // No logging of cannon position distribution to reduce console spam
       
       // Create cannonballs and effects for selected cannon positions
       selectedPositions.forEach((deck) => {
@@ -289,8 +288,7 @@ const Ship = () => {
           const spreadMatrix = new THREE.Matrix4().makeRotationY(horizontalSpreadAngle);
           const finalDir = baseDir.clone().applyMatrix4(spreadMatrix).normalize();
           
-          // Log the firing details for debugging
-          console.log(`Right ${cannonPosition} cannon: pos=(${rightPosX.toFixed(1)}, ${rightPosY.toFixed(1)}, ${rightPosZ.toFixed(1)}), dir=(${finalDir.x.toFixed(2)}, ${finalDir.y.toFixed(2)}, ${finalDir.z.toFixed(2)})`);
+          // No logging of right cannon details to reduce console spam
           
           // Add cannonball
           cannonballs.current.push({
@@ -329,8 +327,7 @@ const Ship = () => {
           const spreadMatrix = new THREE.Matrix4().makeRotationY(horizontalSpreadAngle);
           const finalDir = baseDir.clone().applyMatrix4(spreadMatrix).normalize();
           
-          // Log the firing details for debugging
-          console.log(`Left ${cannonPosition} cannon: pos=(${leftPosX.toFixed(1)}, ${leftPosY.toFixed(1)}, ${leftPosZ.toFixed(1)}), dir=(${finalDir.x.toFixed(2)}, ${finalDir.y.toFixed(2)}, ${finalDir.z.toFixed(2)})`);
+          // No logging of left cannon details to reduce console spam
           
           // Add cannonball
           cannonballs.current.push({
@@ -348,7 +345,7 @@ const Ship = () => {
         }
       });
       
-      console.log("Enhanced cannons fired!", cannonballs.current.length, "cannonballs and", cannonFireEffects.current.length, "effects");
+      // No logging of cannon firing info to reduce console spam
     }
   }, [cannonReady, position, rotation, fireCannon, getKeys]);
   
@@ -487,7 +484,7 @@ const Ship = () => {
       
       // Check if cannonball is below grid level (y < 0)
       if (ball.position.y < 0) {
-        console.log(`Ship component: Removing cannonball below grid level at y=${ball.position.y.toFixed(2)}`);
+        // No logging of cannonball removal to reduce console spam
         return false; // Remove from array
       }
       
