@@ -262,19 +262,16 @@ const Game = () => {
       {/* Player ship */}
       <Ship />
       
-      {/* Environmental features: Islands and rock formations - Temporarily removed to debug positioning issues */}
-      {/* 
-      {environmentFeatures.current.map((feature, index) => (
-        <Island 
-          key={`env-${feature.type}-${index}`} 
-          xPosition={feature.x}
-          zPosition={feature.z} 
-          scale={feature.scale} 
-          rotation={feature.rotation}
-          type={feature.type}
-        />
-      ))}
-      */}
+      {/* Environmental features: Islands and rock formations - Just adding one for testing */}
+      {/* Add a single island far from the player ship */}
+      <Island 
+        key="test-island"
+        xPosition={100} 
+        zPosition={100}
+        scale={1.5}
+        rotation={[0, 0, 0]}
+        type="tropical"
+      />
       
       {/* Enemy ships - removed */}
       
