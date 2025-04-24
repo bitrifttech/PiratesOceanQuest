@@ -266,11 +266,8 @@ const Game = () => {
       {environmentFeatures.current.map((feature, index) => (
         <Island 
           key={`env-${feature.type}-${index}`} 
-          position={[
-            feature.x, 
-            STATIC.WATER_LEVEL, // All islands placed directly on the grid 
-            feature.z
-          ]} 
+          xPosition={feature.x}
+            zPosition={feature.z} 
           scale={feature.scale} 
           rotation={feature.rotation}
           type={feature.type}

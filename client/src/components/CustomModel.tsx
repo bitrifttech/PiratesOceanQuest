@@ -7,7 +7,9 @@ import { SCALE, MODEL_ADJUSTMENT, STATIC, POSITION } from "../lib/constants";
 
 interface CustomModelProps {
   path: string;                           // Path to the GLB model file
-  position?: [number, number, number];    // Model position
+  xPosition?: number;                     // X coordinate
+  yPosition?: number;                     // Y coordinate (usually derived from model bottom)
+  zPosition?: number;                     // Z coordinate
   rotation?: [number, number, number];    // Model rotation
   scale?: number;                         // Base scale multiplier
   modelAdjustment?: number;               // Model-specific adjustment factor
@@ -25,7 +27,9 @@ interface CustomModelProps {
  */
 const CustomModel = ({
   path,
-  position = [0, 0, 0],
+  xPosition = 0,
+  yPosition = 0,
+  zPosition = 0,
   rotation = [0, 0, 0],
   scale = 1.0,
   modelAdjustment,
@@ -40,15 +44,8 @@ const CustomModel = ({
   // Model reference
   const modelRef = useRef<THREE.Group>(null);
   
-  // Base position without height offset
-  const basePosition: [number, number, number] = [
-    position[0], 
-    position[1], 
-    position[2]
-  ];
-  
   // Track initial position and bob state
-  const initialY = useRef<number>(position[1]);
+  const initialY = useRef<number>(yPosition);
   const time = useRef<number>(Math.random() * 100); // Random start time for varied bobbing
   
   // Track loading state
@@ -94,9 +91,9 @@ const CustomModel = ({
       if (positionedRef.current) return;
       positionedRef.current = true;
       
-      // Set X and Z from the base position
-      modelRef.current.position.x = basePosition[0];
-      modelRef.current.position.z = basePosition[2];
+      // Set X and Z from the position props
+      modelRef.current.position.x = xPosition;
+      modelRef.current.position.z = zPosition;
       
       // Always use static water level as base reference
       const heightFromWater = modelHeightOffset === undefined ? 0 : modelHeightOffset;
@@ -125,7 +122,7 @@ const CustomModel = ({
       // Reset when component unmounts
       positionedRef.current = false;
     };
-  }, [modelHeightOffset, basePosition, path, customModel]);
+  }, [modelHeightOffset, xPosition, zPosition, path, customModel]);
   
   // In grid mode, we disable bobbing for consistent positioning
   useFrame((_, delta) => {

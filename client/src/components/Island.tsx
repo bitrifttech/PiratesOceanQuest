@@ -8,7 +8,8 @@ import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC } from "../lib/constants";
 type IslandType = 'tropical' | 'mountain' | 'rocks';
 
 interface IslandProps {
-  position: [number, number, number];
+  xPosition: number;
+  zPosition: number;
   scale?: number;
   rotation?: [number, number, number];
   type?: IslandType;
@@ -20,7 +21,8 @@ useGLTF.preload('/models/mountain_island.glb');
 useGLTF.preload('/models/rock_formation.glb');
 
 const Island = ({ 
-  position, 
+  xPosition, 
+  zPosition,
   scale = 1, 
   rotation = [0, 0, 0],
   type = 'tropical' 
@@ -100,16 +102,16 @@ const Island = ({
       
       // Set initial position with bottom aligned precisely to grid level
       islandRef.current.position.set(
-        position[0], 
+        xPosition, 
         STATIC.WATER_LEVEL + baselineOffset, 
-        position[2]
+        zPosition
       );
       
       // Log the positioning for debugging
       console.log(`Island of type ${type} positioned with bottom at grid level, model bottom: ${modelBottom.toFixed(2)}, offset: ${baselineOffset.toFixed(2)}`);
     } else {
       // For fallback shapes, just place them directly on the grid
-      islandRef.current.position.set(position[0], STATIC.WATER_LEVEL, position[2]);
+      islandRef.current.position.set(xPosition, STATIC.WATER_LEVEL, zPosition);
       console.log(`Island of type ${type} fallback positioned at grid level`);
     }
     
@@ -117,7 +119,7 @@ const Island = ({
       // Reset the position flag when component unmounts
       positionedRef.current = false;
     };
-  }, [position, type, islandModel]);
+  }, [xPosition, zPosition, type, islandModel]);
   
   // Calculate scale based on island type using our standardized scale system
   const getScaleFactor = () => {
