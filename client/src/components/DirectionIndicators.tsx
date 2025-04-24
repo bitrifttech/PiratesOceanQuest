@@ -84,7 +84,6 @@ const DirectionIndicators = () => {
           position={[0, 2, -4]}
           color="#ffffff"
           fontSize={0.8}
-          font="/fonts/Inter-Bold.woff"
           anchorX="center"
           anchorY="middle"
           outlineWidth={0.05}
@@ -101,7 +100,6 @@ const DirectionIndicators = () => {
           position={[0, 2, -4]}
           color="#ffffff"
           fontSize={0.8}
-          font="/fonts/Inter-Bold.woff"
           anchorX="center"
           anchorY="middle"
           outlineWidth={0.05}
@@ -118,7 +116,6 @@ const DirectionIndicators = () => {
           position={[0, 2, -4]}
           color="#ffffff"
           fontSize={0.8}
-          font="/fonts/Inter-Bold.woff"
           anchorX="center"
           anchorY="middle"
           outlineWidth={0.05}
@@ -135,7 +132,6 @@ const DirectionIndicators = () => {
           position={[0, 2, -4]}
           color="#ffffff"
           fontSize={0.8}
-          font="/fonts/Inter-Bold.woff"
           anchorX="center"
           anchorY="middle"
           outlineWidth={0.05}

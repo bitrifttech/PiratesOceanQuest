@@ -14,54 +14,8 @@ import { usePlayer } from "../lib/stores/usePlayer";
 import { useGameState } from "../lib/stores/useGameState";
 import { useAudio } from "../lib/stores/useAudio";
 
-// Reference ship component removed
-/* 
-const ReferenceShip = () => {
-  // This component has been removed to eliminate the reference ship
-  return null;
-};
-*/
-
-// Direction indicators for debugging
-const DirectionIndicators = () => {
-  return (
-    <group>
-      {/* North marker */}
-      <group position={[0, 0, -50]}>
-        <mesh>
-          <boxGeometry args={[5, 5, 5]} />
-          <meshStandardMaterial color="red" />
-        </mesh>
-        <Text
-          position={[0, 10, 0]}
-          fontSize={5}
-          color="red"
-          anchorX="center"
-          anchorY="middle"
-        >
-          NORTH
-        </Text>
-      </group>
-      
-      {/* East marker */}
-      <group position={[50, 0, 0]}>
-        <mesh>
-          <boxGeometry args={[5, 5, 5]} />
-          <meshStandardMaterial color="blue" />
-        </mesh>
-        <Text
-          position={[0, 10, 0]}
-          fontSize={5}
-          color="blue"
-          anchorX="center"
-          anchorY="middle"
-        >
-          EAST
-        </Text>
-      </group>
-    </group>
-  );
-};
+// Import direction indicators for debugging
+import DirectionIndicators from "./DirectionIndicators";
 
 // Main game component that sets up the 3D scene
 const Game = () => {
