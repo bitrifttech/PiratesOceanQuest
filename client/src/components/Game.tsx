@@ -88,7 +88,7 @@ const Game = () => {
   const setShipHeight = useGameState((state) => state.setShipHeight);
   const setWaveParameters = useGameState((state) => state.setWaveParameters);
   
-  // Type definitions imported at the top of the file
+  // Environmental features are already defined in the imported type
   
   // Island positions and other environment features (pre-calculated for consistency)
   // Only create this data once and never update it
