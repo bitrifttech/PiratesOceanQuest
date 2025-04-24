@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { Trail } from "@react-three/drei";
 import { SCALE, MODEL_ADJUSTMENT } from "../lib/constants";
 import { useEnemies } from "../lib/stores/useEnemies";
+import { environmentCollisions } from "../lib/collision";
 
 interface CannonballProps {
   position: THREE.Vector3;
@@ -84,10 +85,35 @@ const Cannonball = ({
     // Get current cannonball position
     const cannonballPosition = ballRef.current.position.clone();
     
-    // Check for collisions with enemy ships
+    // Check for collisions with environmental features first
     // Fixed hit radius based on cannonball size
     const hitRadius = 2.0; // Units
     
+    // Check for environment collisions
+    const environmentCollision = environmentCollisions.checkPointCollision(cannonballPosition, hitRadius);
+    if (environmentCollision && !hitDetected.current) {
+      // Mark as hit to prevent multiple hits
+      hitDetected.current = true;
+      
+      // Log collision with environment
+      console.log(`[CANNONBALL] Hit ${environmentCollision.type} at (${environmentCollision.x}, ${environmentCollision.z})`);
+      
+      // Create a small explosion effect
+      // TODO: Add explosion effect
+      
+      // Trigger callback to remove cannonball
+      if (onHit) onHit();
+      
+      // Remove cannonball immediately
+      if (ballRef.current && ballRef.current.parent) {
+        ballRef.current.parent.remove(ballRef.current);
+      }
+      
+      // Skip enemy collision checks if we already hit the environment
+      return;
+    }
+    
+    // If we didn't hit the environment, check for collisions with enemy ships
     // Check each enemy for collisions
     for (const enemy of enemies) {
       // Calculate distance to enemy
