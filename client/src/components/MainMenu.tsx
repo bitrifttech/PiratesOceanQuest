@@ -164,9 +164,9 @@ const MainMenu = () => {
         {/* Sound toggle */}
         <button 
           className="absolute top-4 right-4 text-white hover:text-[#FFD700]"
-          onClick={audioControls.toggleMute}
+          onClick={toggleMute}
         >
-          {audioControls.isMuted ? (
+          {isMuted ? (
             <i className="fas fa-volume-mute text-xl"></i>
           ) : (
             <i className="fas fa-volume-up text-xl"></i>
