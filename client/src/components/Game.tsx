@@ -90,36 +90,191 @@ const Game = () => {
   
   // Environmental features are already defined in the imported type
   
-  // Island positions and other environment features (pre-calculated for consistency)
+  // Functions to generate non-overlapping environment features
+  const isOverlapping = (
+    feature1: { x: number; z: number; type: EnvironmentFeatureType; scale: number },
+    feature2: { x: number; z: number; type: EnvironmentFeatureType; scale: number }
+  ): boolean => {
+    // Calculate radius based on feature type and scale
+    const getRadius = (type: EnvironmentFeatureType, scale: number): number => {
+      // Base radius depends on feature type (these are approximate values)
+      let baseRadius = 0;
+      switch (type) {
+        case 'tropical':
+          baseRadius = 20;
+          break;
+        case 'mountain':
+          baseRadius = 25;
+          break;
+        case 'rocks':
+          baseRadius = 10;
+          break;
+        default:
+          baseRadius = 15;
+      }
+      // Scale the radius based on the feature's scale
+      return baseRadius * scale;
+    };
+    
+    // Get radius for each feature
+    const radius1 = getRadius(feature1.type, feature1.scale);
+    const radius2 = getRadius(feature2.type, feature2.scale);
+    
+    // Calculate distance between features
+    const dx = feature1.x - feature2.x;
+    const dz = feature1.z - feature2.z;
+    const distance = Math.sqrt(dx * dx + dz * dz);
+    
+    // Buffer space between features (additional margin)
+    const buffer = 5;
+    
+    // Check if features are overlapping with buffer space
+    return distance < (radius1 + radius2 + buffer);
+  };
+  
+  // Function to create a feature at a position that doesn't overlap
+  const createFeatureAtNonOverlappingPosition = (
+    id: string,
+    type: EnvironmentFeatureType,
+    baseScale: number,
+    existingFeatures: EnvironmentFeature[],
+    minX: number,
+    maxX: number,
+    minZ: number,
+    maxZ: number,
+    rotationFactor: number = 0.5, // Factor to multiply with PI for rotation
+    maxAttempts: number = 50 // Maximum attempts to find non-overlapping position
+  ): EnvironmentFeature | null => {
+    // Avoid spawning islands too close to the player start position
+    const playerProtectionRadius = 40;
+    const playerStartX = 0;
+    const playerStartZ = 0;
+    
+    // Jitter scale to add variety (±10%)
+    const scale = baseScale * (0.9 + Math.random() * 0.2);
+    
+    // Try to find a non-overlapping position
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      // Generate random position within bounds
+      const x = minX + Math.random() * (maxX - minX);
+      const z = minZ + Math.random() * (maxZ - minZ);
+      
+      // Check distance from player start
+      const dxPlayer = x - playerStartX;
+      const dzPlayer = z - playerStartZ;
+      const distanceFromPlayer = Math.sqrt(dxPlayer * dxPlayer + dzPlayer * dzPlayer);
+      
+      // If too close to player start, try again
+      if (distanceFromPlayer < playerProtectionRadius) {
+        continue;
+      }
+      
+      // Create candidate feature
+      const candidate = { id, type, x, z, scale, rotation: [0, Math.PI * rotationFactor, 0] as [number, number, number] };
+      
+      // Check if it overlaps with any existing feature
+      let overlapping = false;
+      for (const existingFeature of existingFeatures) {
+        if (isOverlapping(candidate, existingFeature)) {
+          overlapping = true;
+          break;
+        }
+      }
+      
+      // If not overlapping, return the feature
+      if (!overlapping) {
+        console.log(`[ENV GEN] Successfully placed ${id} at (${x.toFixed(1)}, ${z.toFixed(1)}) with scale ${scale.toFixed(2)}`);
+        return candidate;
+      }
+    }
+    
+    console.warn(`[ENV GEN] Failed to place ${id} after ${maxAttempts} attempts`);
+    return null;
+  };
+  
+  // Island positions and other environment features (generated to avoid overlaps)
   // Only create this data once and never update it
   const environmentFeatures = useMemo(() => {
-    console.log("[GAME] Creating environment features once");
-    return [
-      // Tropical islands - positioned closer to the starting point
-      { id: 'tropical_1', type: 'tropical', x: 40, z: 40, scale: 1.5, rotation: [0, Math.PI * 0.5, 0] },
-      { id: 'tropical_2', type: 'tropical', x: -60, z: -30, scale: 1.2, rotation: [0, Math.PI * 1.2, 0] },
-      { id: 'tropical_3', type: 'tropical', x: 80, z: -50, scale: 0.8, rotation: [0, Math.PI * 0.8, 0] },
-      { id: 'tropical_4', type: 'tropical', x: -90, z: 70, scale: 1.0, rotation: [0, Math.PI * 1.7, 0] },
-      
+    console.log("[GAME] Generating non-overlapping environment features");
+    
+    const features: EnvironmentFeature[] = [];
+    
+    // Define the areas and parameters for each feature type
+    const featureTypes: {
+      type: EnvironmentFeatureType;
+      count: number;
+      scale: number;
+      minX: number;
+      maxX: number;
+      minZ: number;
+      maxZ: number;
+      prefix: string;
+    }[] = [
+      // Tropical islands - positioned farther from the starting point
+      {
+        type: 'tropical',
+        count: 4,
+        scale: 1.3,
+        minX: -100,
+        maxX: 100,
+        minZ: -100,
+        maxZ: 100,
+        prefix: 'tropical'
+      },
       // Mountain islands - medium distance
-      { id: 'mountain_1', type: 'mountain', x: 70, z: -60, scale: 1.8, rotation: [0, Math.PI * 0.3, 0] },
-      { id: 'mountain_2', type: 'mountain', x: -40, z: 80, scale: 2.0, rotation: [0, Math.PI * 1.1, 0] },
-      { id: 'mountain_3', type: 'mountain', x: 100, z: 90, scale: 2.2, rotation: [0, Math.PI * 0.7, 0] },
-      { id: 'mountain_4', type: 'mountain', x: -100, z: -80, scale: 1.7, rotation: [0, Math.PI * 1.5, 0] },
+      {
+        type: 'mountain',
+        count: 4,
+        scale: 1.8,
+        minX: -110,
+        maxX: 110,
+        minZ: -110,
+        maxZ: 110,
+        prefix: 'mountain'
+      },
+      // Rock formations - much closer to create immediate obstacles
+      {
+        type: 'rocks',
+        count: 8,
+        scale: 1.9,
+        minX: -60,
+        maxX: 60,
+        minZ: -60,
+        maxZ: 60,
+        prefix: 'rocks'
+      }
+    ];
+    
+    // Generate features for each type
+    featureTypes.forEach(({ type, count, scale, minX, maxX, minZ, maxZ, prefix }) => {
+      console.log(`[ENV GEN] Generating ${count} features of type ${type}`);
       
-      // Rock formations - much closer to create immediate obstacles (increased scale)
-      { id: 'rocks_1', type: 'rocks', x: 20, z: 25, scale: 2.0, rotation: [0, Math.PI * 0.2, 0] },
-      { id: 'rocks_2', type: 'rocks', x: -15, z: 30, scale: 1.8, rotation: [0, Math.PI * 1.4, 0] },
-      { id: 'rocks_3', type: 'rocks', x: 25, z: -20, scale: 1.7, rotation: [0, Math.PI * 0.9, 0] },
-      { id: 'rocks_4', type: 'rocks', x: -25, z: -25, scale: 2.2, rotation: [0, Math.PI * 1.3, 0] },
-      { id: 'rocks_5', type: 'rocks', x: 40, z: 15, scale: 1.5, rotation: [0, Math.PI * 0.4, 0] },
-      { id: 'rocks_6', type: 'rocks', x: -20, z: -40, scale: 2.1, rotation: [0, Math.PI * 1.6, 0] },
-      { id: 'rocks_7', type: 'rocks', x: 5, z: 45, scale: 1.6, rotation: [0, Math.PI * 0.6, 0] },
-      { id: 'rocks_8', type: 'rocks', x: 50, z: 30, scale: 1.9, rotation: [0, Math.PI * 1.8, 0] },
-      
-      // Single test island
-      { id: 'test_island', type: 'tropical', x: 100, z: 100, scale: 1.5, rotation: [0, 0, 0] },
-    ] as EnvironmentFeature[];
+      for (let i = 0; i < count; i++) {
+        // Create rotation value that's consistent but varied
+        const rotationFactor = (i % 8) * 0.25;
+        
+        // Create feature with non-overlapping position
+        const feature = createFeatureAtNonOverlappingPosition(
+          `${prefix}_${i + 1}`,
+          type,
+          scale,
+          features,
+          minX,
+          maxX,
+          minZ,
+          maxZ,
+          rotationFactor
+        );
+        
+        // Add to features array if successfully created
+        if (feature) {
+          features.push(feature);
+        }
+      }
+    });
+    
+    console.log(`[ENV GEN] Generated ${features.length} total features`);
+    return features as EnvironmentFeature[];
   }, []);
 
   // Initialize game on first load
