@@ -15,6 +15,11 @@ import { useEnemies } from "../lib/stores/useEnemies"; // Re-enabled enemies
 import { useGameState } from "../lib/stores/useGameState";
 import { useAudio } from "../lib/stores/useAudio";
 
+// Import services
+import { EnemyManager } from "../lib/services/EnemyManager";
+import { EnvironmentGenerator } from "../lib/services/EnvironmentGenerator";
+import { CollisionService } from "../lib/services/CollisionService";
+
 // Direction indicators removed - no longer needed after fixing ship orientation
 
 // Main game component that sets up the 3D scene
@@ -44,193 +49,15 @@ const Game = () => {
   const setShipHeight = useGameState((state) => state.setShipHeight);
   const setWaveParameters = useGameState((state) => state.setWaveParameters);
   
-  // Environmental features are already defined in the imported type
-  
-  // Functions to generate non-overlapping environment features
-  const isOverlapping = (
-    feature1: { x: number; z: number; type: EnvironmentFeatureType; scale: number },
-    feature2: { x: number; z: number; type: EnvironmentFeatureType; scale: number }
-  ): boolean => {
-    // Calculate radius based on feature type and scale
-    const getRadius = (type: EnvironmentFeatureType, scale: number): number => {
-      // Base radius depends on feature type (these are approximate values)
-      let baseRadius = 0;
-      switch (type) {
-        case 'tropical':
-          baseRadius = 20;
-          break;
-        case 'mountain':
-          baseRadius = 25;
-          break;
-        case 'rocks':
-          baseRadius = 10;
-          break;
-        default:
-          baseRadius = 15;
-      }
-      // Scale the radius based on the feature's scale
-      return baseRadius * scale;
-    };
-    
-    // Get radius for each feature
-    const radius1 = getRadius(feature1.type, feature1.scale);
-    const radius2 = getRadius(feature2.type, feature2.scale);
-    
-    // Calculate distance between features
-    const dx = feature1.x - feature2.x;
-    const dz = feature1.z - feature2.z;
-    const distance = Math.sqrt(dx * dx + dz * dz);
-    
-    // Buffer space between features (additional margin)
-    const buffer = 5;
-    
-    // Check if features are overlapping with buffer space
-    return distance < (radius1 + radius2 + buffer);
-  };
-  
-  // Function to create a feature at a position that doesn't overlap
-  const createFeatureAtNonOverlappingPosition = (
-    id: string,
-    type: EnvironmentFeatureType,
-    baseScale: number,
-    existingFeatures: EnvironmentFeature[],
-    minX: number,
-    maxX: number,
-    minZ: number,
-    maxZ: number,
-    rotationFactor: number = 0.5, // Factor to multiply with PI for rotation
-    maxAttempts: number = 50 // Maximum attempts to find non-overlapping position
-  ): EnvironmentFeature | null => {
-    // Avoid spawning islands too close to the player start position
-    const playerProtectionRadius = 40;
-    const playerStartX = 0;
-    const playerStartZ = 0;
-    
-    // Jitter scale to add variety (±10%)
-    const scale = baseScale * (0.9 + Math.random() * 0.2);
-    
-    // Try to find a non-overlapping position
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      // Generate random position within bounds
-      const x = minX + Math.random() * (maxX - minX);
-      const z = minZ + Math.random() * (maxZ - minZ);
-      
-      // Check distance from player start
-      const dxPlayer = x - playerStartX;
-      const dzPlayer = z - playerStartZ;
-      const distanceFromPlayer = Math.sqrt(dxPlayer * dxPlayer + dzPlayer * dzPlayer);
-      
-      // If too close to player start, try again
-      if (distanceFromPlayer < playerProtectionRadius) {
-        continue;
-      }
-      
-      // Create candidate feature
-      const candidate = { id, type, x, z, scale, rotation: [0, Math.PI * rotationFactor, 0] as [number, number, number] };
-      
-      // Check if it overlaps with any existing feature
-      let overlapping = false;
-      for (const existingFeature of existingFeatures) {
-        if (isOverlapping(candidate, existingFeature)) {
-          overlapping = true;
-          break;
-        }
-      }
-      
-      // If not overlapping, return the feature
-      if (!overlapping) {
-        console.log(`[ENV GEN] Successfully placed ${id} at (${x.toFixed(1)}, ${z.toFixed(1)}) with scale ${scale.toFixed(2)}`);
-        return candidate;
-      }
-    }
-    
-    console.warn(`[ENV GEN] Failed to place ${id} after ${maxAttempts} attempts`);
-    return null;
-  };
+  // Environmental features are defined and managed by the EnvironmentGenerator service
   
   // Island positions and other environment features (generated to avoid overlaps)
   // Only create this data once and never update it
   const environmentFeatures = useMemo(() => {
-    console.log("[GAME] Generating non-overlapping environment features");
+    console.log("[GAME] Generating non-overlapping environment features using EnvironmentGenerator service");
     
-    const features: EnvironmentFeature[] = [];
-    
-    // Define the areas and parameters for each feature type
-    const featureTypes: {
-      type: EnvironmentFeatureType;
-      count: number;
-      scale: number;
-      minX: number;
-      maxX: number;
-      minZ: number;
-      maxZ: number;
-      prefix: string;
-    }[] = [
-      // Tropical islands - positioned farther from the starting point
-      {
-        type: 'tropical',
-        count: 4,
-        scale: 1.3,
-        minX: -100,
-        maxX: 100,
-        minZ: -100,
-        maxZ: 100,
-        prefix: 'tropical'
-      },
-      // Mountain islands - medium distance
-      {
-        type: 'mountain',
-        count: 4,
-        scale: 1.8,
-        minX: -110,
-        maxX: 110,
-        minZ: -110,
-        maxZ: 110,
-        prefix: 'mountain'
-      },
-      // Rock formations - much closer to create immediate obstacles
-      {
-        type: 'rocks',
-        count: 8,
-        scale: 1.9,
-        minX: -60,
-        maxX: 60,
-        minZ: -60,
-        maxZ: 60,
-        prefix: 'rocks'
-      }
-    ];
-    
-    // Generate features for each type
-    featureTypes.forEach(({ type, count, scale, minX, maxX, minZ, maxZ, prefix }) => {
-      console.log(`[ENV GEN] Generating ${count} features of type ${type}`);
-      
-      for (let i = 0; i < count; i++) {
-        // Create rotation value that's consistent but varied
-        const rotationFactor = (i % 8) * 0.25;
-        
-        // Create feature with non-overlapping position
-        const feature = createFeatureAtNonOverlappingPosition(
-          `${prefix}_${i + 1}`,
-          type,
-          scale,
-          features,
-          minX,
-          maxX,
-          minZ,
-          maxZ,
-          rotationFactor
-        );
-        
-        // Add to features array if successfully created
-        if (feature) {
-          features.push(feature);
-        }
-      }
-    });
-    
-    console.log(`[ENV GEN] Generated ${features.length} total features`);
-    return features as EnvironmentFeature[];
+    // Use our refactored service to generate environment features
+    return EnvironmentGenerator.generateEnvironment();
   }, []);
 
   // Track if game was already initialized to prevent multiple initializations
@@ -253,24 +80,8 @@ const Game = () => {
     // Initialize player
     initializePlayer();
     
-    // Clear existing enemies to ensure we only have one
-    useEnemies.getState().resetEnemies();
-    
-    // Create a single enemy ship at a fixed position
-    const fixedEnemyPosition = new THREE.Vector3(30, POSITION.SHIP_HEIGHT, 30);
-    const fixedEnemyRotation = new THREE.Euler(0, 0, 0);
-    
-    // Add the enemy directly to the store
-    useEnemies.setState({
-      enemies: [{
-        id: 'fixed-enemy-ship',
-        position: fixedEnemyPosition,
-        rotation: fixedEnemyRotation,
-        velocity: new THREE.Vector3(0, 0, 0),
-        health: 100,
-        maxHealth: 100
-      }]
-    });
+    // Spawn a single enemy ship for testing using the EnemyManager service
+    EnemyManager.spawnSingleEnemy(30, 30);
     
     // Play background music
     playBackgroundMusic();
