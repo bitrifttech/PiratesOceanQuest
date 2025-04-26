@@ -4,8 +4,9 @@ import * as THREE from "three";
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
 import CustomModel from "./CustomModel";
-import { POSITION, SCALE, MODEL_ADJUSTMENT } from "../lib/constants";
+import { POSITION, SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
 import { ModelService } from "../lib/services/ModelService";
+import { useGameState } from "../lib/stores/useGameState";
 
 interface EnemyShipProps {
   id: string;
@@ -108,9 +109,9 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         xPosition={0}
         yPosition={0}
         zPosition={0}
-        scale={0.8} // Slightly smaller than player ship (PLAYER_SHIP is 1.0)
+        scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP} // Use same scale as player ship
         modelAdjustment={MODEL_ADJUSTMENT.SHIP}
-        modelHeightOffset={0.1}
+        modelHeightOffset={STATIC.SHIP_OFFSET} // Use same offset as player ship
         rotation={[0, -Math.PI / 3 + Math.PI / 12 + Math.PI / 45, 0]} // Same rotation as player ship
         bob={true}
         bobHeight={0.3}
