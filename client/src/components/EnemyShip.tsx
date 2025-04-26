@@ -103,14 +103,14 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   return (
     <group ref={shipRef} position={positionRef.current.toArray()} rotation={rotationRef.current.toArray()}>
       <CustomModel
-        path="/models/pirate_ship.glb" 
-        scale={0.8} // Slightly smaller than player ship (PLAYER_SHIP is 1.0)
+        path="/models/base_pirate_ship.glb" 
+        scale={SCALE.PLAYER_SHIP} // Exact same scale as player ship
         modelAdjustment={MODEL_ADJUSTMENT.SHIP}
-        modelHeightOffset={0.1}
+        modelHeightOffset={STATIC.SHIP_OFFSET}
         rotation={[0, -Math.PI / 3 + Math.PI / 12 + Math.PI / 45, 0]} // Same rotation as player ship
-        bob={true}
-        bobHeight={0.3}
-        bobSpeed={1.2}
+        bob={false} // Match player settings
+        bobHeight={0}
+        bobSpeed={0}
         castShadow={true}
         receiveShadow={true}
       />
