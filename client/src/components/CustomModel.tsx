@@ -60,7 +60,8 @@ const CustomModel = ({
   const [fallbackVisible, setFallbackVisible] = useState(true);
   
   // Load the model
-  const result = useGLTF(path) as GLTF & { scene: THREE.Group };
+  // Set second parameter to true to disable automatic dispose (prevents model disappearing)
+  const result = useGLTF(path, true) as GLTF & { scene: THREE.Group };
   const { scene: originalModel } = result;
   
   // Clone model once to avoid sharing materials
