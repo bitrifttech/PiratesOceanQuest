@@ -4,11 +4,6 @@ import { KeyboardControls } from "@react-three/drei";
 import { useAudio } from "./lib/stores/useAudio";
 import { useGameState } from "./lib/stores/useGameState";
 import Game from "./components/Game";
-import TitleScreen from "./components/TitleScreen";
-import MainMenu from "./components/MainMenu";
-import SettingsMenu from "./components/SettingsMenu";
-import HelpMenu from "./components/HelpMenu";
-import UpgradeMenu from "./components/UpgradeMenu";
 import GameUI from "./components/GameUI";
 import DebugControls from "./components/DebugControls";
 import ModelTestScene from "./components/ModelTestScene";
@@ -95,23 +90,8 @@ function App() {
         <Route path="*" element={
           <div className="h-screen w-screen overflow-hidden relative">
             <KeyboardControls map={controlsMap}>
-              {/* Title Screen */}
-              {gameState === 'title' && <TitleScreen />}
-              
-              {/* Main Menu */}
-              {gameState === 'menu' && <MainMenu />}
-              
-              {/* Settings Menu */}
-              {gameState === 'settings' && <SettingsMenu />}
-              
-              {/* Help Menu */}
-              {gameState === 'help' && <HelpMenu />}
-              
-              {/* Upgrade Menu */}
-              {gameState === 'upgrade' && <UpgradeMenu />}
-              
-              {/* Game Canvas - Only render when playing */}
-              {gameState === 'playing' && (
+              {/* Game Canvas - Always render as we skip the intro screens */}
+              {(
                 <>
                   <Canvas
                     shadows

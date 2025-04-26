@@ -21,7 +21,7 @@ interface GameStateStore {
 }
 
 export const useGameState = create<GameStateStore>((set) => ({
-  gameState: 'title',
+  gameState: 'playing', // Start directly in playing state to skip intro screens
   
   setGameState: (state) => {
     set({ gameState: state });
