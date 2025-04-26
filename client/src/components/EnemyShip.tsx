@@ -82,11 +82,11 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       currentRot.set(0, newRotY, 0);
       
       // Move forward in the direction the ship is facing at a constant speed
-      // Apply the same corrected orientation math as the player ship
+      // Reverse the direction because the model is actually facing the opposite way
       const velocity = new THREE.Vector3(
-        Math.sin(newRotY) * speed * delta * 60,
+        -Math.sin(newRotY) * speed * delta * 60, // Reverse X direction
         0,
-        Math.cos(newRotY) * speed * delta * 60
+        -Math.cos(newRotY) * speed * delta * 60  // Reverse Z direction
       );
       
       // Apply velocity to position
@@ -99,7 +99,8 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         - Model rotation offset: ${(modelRotationOffset * 180 / Math.PI).toFixed(1)}°
         - Corrected angle: ${(correctedAngle * 180 / Math.PI).toFixed(1)}°
         - Current rotation: ${(currentAngle * 180 / Math.PI).toFixed(1)}°
-        - New rotation: ${(newRotY * 180 / Math.PI).toFixed(1)}°`);
+        - New rotation: ${(newRotY * 180 / Math.PI).toFixed(1)}°
+        - Direction: Reversed (moving in opposite direction of model orientation)`);
       }
     }
     
