@@ -253,8 +253,8 @@ const Game = () => {
     // Initialize player
     initializePlayer();
     
-    // Spawn one enemy ship for testing
-    spawnEnemies(1);
+    // Spawn multiple enemy ships for testing
+    spawnEnemies(3);
     
     // Play background music
     playBackgroundMusic();

@@ -39,18 +39,20 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
       let spawnX, spawnZ;
       
       if (playerPosition) {
-        // Ensure enemies spawn in view of the player, but at a safe distance
-        // Spawn between 70-90 units away from player in a random direction
+        // Spawn enemies closer to the player for easier visibility
+        // Spawn between 30-50 units away from player in a random direction
         const angle = Math.random() * Math.PI * 2;
-        const distance = 70 + Math.random() * 20;
+        const distance = 30 + Math.random() * 20;
         
         spawnX = playerPosition.x + Math.sin(angle) * distance;
         spawnZ = playerPosition.z + Math.cos(angle) * distance;
       } else {
         // Fallback if player position not available
-        spawnX = (Math.random() * 200) - 100;
-        spawnZ = (Math.random() * 200) - 100;
+        spawnX = (Math.random() * 100) - 50;
+        spawnZ = (Math.random() * 100) - 50;
       }
+      
+      console.log(`[ENEMY] Spawning enemy ship at (${spawnX}, ${spawnZ})`);
       
       const enemy: Enemy = {
         id: `enemy-${Date.now()}-${i}`,
