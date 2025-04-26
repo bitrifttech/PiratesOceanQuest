@@ -21,9 +21,7 @@ export class ModelService {
    */
   static preloadAllModels(): void {
     this.PRELOAD_MODELS.forEach(model => {
-      // The second parameter (true) prevents models from being automatically disposed
-      // This fixes the issue with models disappearing after they're loaded
-      useGLTF.preload(model, true);
+      useGLTF.preload(model);
     });
     console.log(`[MODEL] Preloaded ${this.PRELOAD_MODELS.length} models`);
   }

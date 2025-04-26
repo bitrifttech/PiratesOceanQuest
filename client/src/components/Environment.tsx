@@ -31,8 +31,7 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
   const modelPath = ModelService.getEnvironmentModelPath(type);
   
   // Load the model - this will use the preloaded version
-  // Disable automatic dispose to prevent model disappearing when component unmounts/remounts
-  const { scene: originalModel } = useGLTF(modelPath, true) as GLTF & {
+  const { scene: originalModel } = useGLTF(modelPath) as GLTF & {
     scene: THREE.Group
   };
   
@@ -196,16 +195,4 @@ const Environment = ({ features }: { features: EnvironmentFeature[] }) => {
   );
 };
 
-// Using memo with a custom comparison function to prevent unnecessary re-renders
-// The component should only re-render if the features array reference changes
-export default memo(Environment, (prevProps, nextProps) => {
-  // If the array references are the same, don't re-render
-  if (prevProps.features === nextProps.features) return true;
-  
-  // If the arrays have different lengths, they're different
-  if (prevProps.features.length !== nextProps.features.length) return false;
-  
-  // Compare feature IDs - only re-render if the feature IDs have changed
-  return prevProps.features.every((feature, index) => 
-    feature.id === nextProps.features[index].id);
-});
+export default memo(Environment);

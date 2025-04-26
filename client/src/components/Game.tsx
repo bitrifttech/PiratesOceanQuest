@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Text, useGLTF } from "@react-three/drei";
-import { Environment as ThreeEnvironment } from "@react-three/drei";
+import { Environment as ThreeEnvironment, OrbitControls, Text, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
 import GridPlane from "./GridPlane"; // Using GridPlane instead of Ocean
