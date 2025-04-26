@@ -253,8 +253,24 @@ const Game = () => {
     // Initialize player
     initializePlayer();
     
-    // Spawn one enemy ship for testing
-    spawnEnemies(1);
+    // Clear existing enemies to ensure we only have one
+    useEnemies.getState().resetEnemies();
+    
+    // Create a single enemy ship at a fixed position
+    const fixedEnemyPosition = new THREE.Vector3(30, POSITION.SHIP_HEIGHT, 30);
+    const fixedEnemyRotation = new THREE.Euler(0, 0, 0);
+    
+    // Add the enemy directly to the store
+    useEnemies.setState({
+      enemies: [{
+        id: 'fixed-enemy-ship',
+        position: fixedEnemyPosition,
+        rotation: fixedEnemyRotation,
+        velocity: new THREE.Vector3(0, 0, 0),
+        health: 100,
+        maxHealth: 100
+      }]
+    });
     
     // Play background music
     playBackgroundMusic();
