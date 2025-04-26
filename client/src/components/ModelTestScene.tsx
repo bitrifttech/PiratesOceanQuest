@@ -5,7 +5,6 @@ import * as THREE from "three";
 import CustomModel from "./CustomModel";
 import ModelTestNavigation from "./ModelTestNavigation";
 import { SCALE, MODEL_ADJUSTMENT, POSITION } from "../lib/constants";
-import { ModelService } from "../lib/services/ModelService";
 
 interface ModelTestSceneProps {
   modelPath?: string;
@@ -21,7 +20,7 @@ interface ModelTestSceneProps {
  * A test scene for previewing and testing 3D models
  */
 export const ModelTestScene = ({
-  modelPath = ModelService.getShipModelPath('base'),
+  modelPath = "/models/base_pirate_ship.glb",
   modelScale = 1.0,
   modelAdjustment,
   modelHeightOffset = 2.0, // Default height offset to position models at water level
@@ -63,9 +62,6 @@ export const ModelTestScene = ({
     // Create a code snippet for CustomModel component
     const componentString = `<CustomModel
   path="${modelPath}"
-  xPosition={0}
-  yPosition={0}
-  zPosition={0}
   scale={${scale}}
   modelAdjustment={${adjustmentFactor}}
   modelHeightOffset={${heightOffset}}
@@ -141,9 +137,7 @@ export const ModelTestScene = ({
           {/* Custom model */}
           <CustomModel
             path={modelPath}
-            xPosition={0}
-            yPosition={0}
-            zPosition={0}
+            position={[0, 0, 0]}
             scale={scale}
             modelAdjustment={adjustmentFactor}
             modelHeightOffset={heightOffset}

@@ -3,7 +3,7 @@ import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTF } from "three-stdlib";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC } from "../lib/constants";
-import { ModelService } from "../lib/services/ModelService";
+import { useIslandPositions, getModelPositionId } from "../lib/stores/useIslandPositions";
 
 // Define island types
 type IslandType = 'tropical' | 'mountain' | 'rocks';
@@ -16,7 +16,10 @@ interface IslandProps {
   type?: IslandType;
 }
 
-// Models are preloaded in ModelService
+// Preload all island models with correct paths
+useGLTF.preload('/models/tropical_island.glb');
+useGLTF.preload('/models/mountain_island.glb');
+useGLTF.preload('/models/rock_formation.glb');
 
 const Island = ({ 
   xPosition, 
@@ -28,8 +31,12 @@ const Island = ({
   const islandRef = useRef<THREE.Group>(null);
   const [modelLoaded, setModelLoaded] = useState(false);
   
-  // Get the proper model path based on island type using ModelService
-  const modelPath = ModelService.getEnvironmentModelPath(type);
+  // Get the proper model path based on island type - standardized to match other components
+  const modelPath = type === 'tropical' 
+    ? '/models/tropical_island.glb' 
+    : type === 'mountain' 
+      ? '/models/mountain_island.glb' 
+      : '/models/rock_formation.glb';
   
   // Load the specified model with error handling
   let model: THREE.Group | null = null;
@@ -73,58 +80,81 @@ const Island = ({
     }
   }, [rotation]);
   
-  // Create a unique instance ID for logging
+  // Get the global island position store
+  const getIslandPosition = useIslandPositions((state) => state.getPosition);
+  const setIslandPosition = useIslandPositions((state) => state.setPosition);
+  const hasIslandPosition = useIslandPositions((state) => state.hasPosition);
+  
+  // Create a stable model ID that doesn't change when component remounts
+  // This is crucial for fixing the flickering issue
+  const modelId = getModelPositionId(type, xPosition, zPosition);
+  
+  // Create a debugging instance ID
   const instanceId = useRef(`island_${Math.random().toString(36).substr(2, 9)}`);
   
-  // Create a stable model ID for tracking
-  const modelId = `${type}_${xPosition.toFixed(2)}_${zPosition.toFixed(2)}`;
-  
-  // Improved positioning logic that aligns with Environment component
+  // Simple positioning logic that uses the persistent store
   useEffect(() => {
     if (!islandRef.current || !islandModel) return;
     
     const id = instanceId.current;
     console.log(`[ISLAND][${id}] Positioning island ${modelId}`);
     
-    // Create a separate group for vertical adjustment to match Environment component approach
-    try {
-      // Calculate the position - for consistent positioning across components
-      const boundingBox = new THREE.Box3().setFromObject(islandModel);
-      const modelBottom = boundingBox.min.y;
-      const baselineOffset = -modelBottom;
+    // Check if we already have a stored position
+    if (hasIslandPosition(modelId)) {
+      // Use the stored position
+      const storedY = getIslandPosition(modelId);
+      console.log(`[ISLAND][${id}] Using stored position Y=${storedY} for ${modelId}`);
+      
+      // Apply position directly
+      islandRef.current.position.set(xPosition, storedY!, zPosition);
+    } else {
+      console.log(`[ISLAND][${id}] Calculating new position for ${modelId}`);
+      
+      try {
+        // First time - calculate the position
+        const boundingBox = new THREE.Box3().setFromObject(islandModel);
+        const modelBottom = boundingBox.min.y;
+        const baselineOffset = -modelBottom;
+        const yPosition = STATIC.WATER_LEVEL + baselineOffset;
         
-      console.log(`[ISLAND][${id}] Island model data for ${modelId}:`, {
-        modelBottom: modelBottom.toFixed(2),
-        baselineOffset: baselineOffset.toFixed(2),
-        waterLevel: STATIC.WATER_LEVEL
-      });
-      
-      // Main group should be at the grid position (WATER_LEVEL)
-      islandRef.current.position.set(xPosition, STATIC.WATER_LEVEL, zPosition);
-      
-      // Apply the vertical offset to the model within the group, just like Environment does
-      if (islandModel) {
-        islandModel.position.y = baselineOffset;
-        console.log(`[ISLAND][${id}] Applied vertical adjustment of ${baselineOffset.toFixed(2)} to model ${modelId}`);
+        console.log(`[ISLAND][${id}] Calculated position Y=${yPosition.toFixed(2)} for ${modelId}`, {
+          modelBottom: modelBottom.toFixed(2),
+          baselineOffset: baselineOffset.toFixed(2),
+          waterLevel: STATIC.WATER_LEVEL
+        });
+        
+        // Store the position in the global store
+        setIslandPosition(modelId, yPosition);
+        
+        // Apply the position
+        islandRef.current.position.set(xPosition, yPosition, zPosition);
+      } catch (error) {
+        console.error(`[ISLAND][${id}] Error calculating position:`, error);
+        // Fallback to grid level
+        islandRef.current.position.set(xPosition, STATIC.WATER_LEVEL, zPosition);
       }
-      
-      // Set rotation
-      islandRef.current.rotation.set(rotation[0], rotation[1], rotation[2]);
-      
-      // Log success
-      console.log(`[ISLAND][${id}] Successfully positioned ${modelId} at (${xPosition}, ${STATIC.WATER_LEVEL}, ${zPosition}) with model offset ${baselineOffset.toFixed(2)}`);
-      
-      // No need to use the enforcement interval - this matches Environment component behavior
-    } catch (error) {
-      console.error(`[ISLAND][${id}] Error positioning ${modelId}:`, error);
-      // Fallback
-      islandRef.current.position.set(xPosition, STATIC.WATER_LEVEL, zPosition);
     }
     
+    // Set up a position enforcement timer to make sure nothing changes the Y
+    const enforcementInterval = setInterval(() => {
+      if (!islandRef.current) return;
+      
+      const storedY = getIslandPosition(modelId);
+      if (storedY !== null) {
+        // Check if position has been modified
+        const currentY = islandRef.current.position.y;
+        if (Math.abs(currentY - storedY) > 0.01) {
+          console.log(`[ISLAND][${id}] ⚠️ Enforcing Y position ${storedY.toFixed(2)} (was ${currentY.toFixed(2)})`);
+          islandRef.current.position.y = storedY;
+        }
+      }
+    }, 100);
+    
     return () => {
+      clearInterval(enforcementInterval);
       console.log(`[ISLAND][${id}] Cleanup for ${modelId}`);
     };
-  }, [modelId, xPosition, zPosition, rotation, islandModel]);
+  }, [modelId, xPosition, zPosition, islandModel, getIslandPosition, hasIslandPosition, setIslandPosition]);
   
   // Calculate scale based on island type using our standardized scale system
   const getScaleFactor = () => {
@@ -158,9 +188,9 @@ const Island = ({
   return (
     <group 
       ref={islandRef} 
-      // We now use the same positioning approach as the Environment component,
-      // where the main group is at water level (0) and the model has a Y offset
-      // to properly position its bottom at the water
+      // Don't set position prop, we'll handle it completely in the useEffect
+      // to avoid double-positioning and flickering
+      rotation={rotation}
     >
       {modelLoaded && islandModel ? (
         // Render loaded 3D model with standardized scaling
@@ -169,6 +199,8 @@ const Island = ({
             object={islandModel} 
             castShadow 
             receiveShadow 
+            // Remove the onUpdate handler to prevent bounding box calculations during rendering
+            // This was a likely cause of flickering
           />
         </group>
       ) : (

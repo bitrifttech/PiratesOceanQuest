@@ -17,11 +17,10 @@ const SettingsMenu = () => {
     setVolume: state.setVolume
   }));
   
-  // Initialize volume slider from store on component mount only once
+  // Initialize volume slider from store on component mount
   useEffect(() => {
     setVolumeLevel(Math.round(audioState.volume * 100));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [audioState.volume]);
   
   // Handle volume change
   const handleVolumeChange = (newVolume: number) => {

@@ -4,9 +4,11 @@ import * as THREE from "three";
 import { GLTF } from "three-stdlib";
 import { SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
 import { environmentCollisions } from "../lib/collision";
-import { ModelService } from "../lib/services/ModelService";
 
-// Models are preloaded in ModelService
+// Preload all models once at module level
+useGLTF.preload('/models/tropical_island.glb');
+useGLTF.preload('/models/mountain_island.glb');
+useGLTF.preload('/models/rock_formation.glb');
 
 // Define feature types
 export type EnvironmentFeatureType = 'tropical' | 'mountain' | 'rocks';
@@ -27,8 +29,12 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
   const [loaded, setLoaded] = useState(false);
   const [positioned, setPositioned] = useState(false);
   
-  // Get the proper model path based on feature type using ModelService
-  const modelPath = ModelService.getEnvironmentModelPath(type);
+  // Get the proper model path based on feature type
+  const modelPath = type === 'tropical' 
+    ? '/models/tropical_island.glb' 
+    : type === 'mountain' 
+      ? '/models/mountain_island.glb' 
+      : '/models/rock_formation.glb';
   
   // Load the model - this will use the preloaded version
   const { scene: originalModel } = useGLTF(modelPath) as GLTF & {
