@@ -72,8 +72,8 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
     }
   };
   
-  // Final scaling factor - reduce scale by a factor of 100 to fix visibility
-  const finalScale = (scale * getBaseScale() * getModelAdjustment()) / 100.0;
+  // Final scaling factor
+  const finalScale = scale * getBaseScale() * getModelAdjustment();
   
   // Position the model ONCE only when first loaded
   useEffect(() => {

@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
 import CustomModel from "./CustomModel";
-import { POSITION, SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
+import { POSITION, SCALE, MODEL_ADJUSTMENT } from "../lib/constants";
 
 interface EnemyShipProps {
   id: string;
@@ -103,14 +103,14 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   return (
     <group ref={shipRef} position={positionRef.current.toArray()} rotation={rotationRef.current.toArray()}>
       <CustomModel
-        path="/models/base_pirate_ship.glb" // Same model as player
-        scale={SCALE.PLAYER_SHIP} // Identical scaling to player ship
+        path="/models/pirate_ship.glb" 
+        scale={0.8} // Slightly smaller than player ship (PLAYER_SHIP is 1.0)
         modelAdjustment={MODEL_ADJUSTMENT.SHIP}
-        modelHeightOffset={STATIC.SHIP_OFFSET} // Same offset as player
+        modelHeightOffset={0.1}
         rotation={[0, -Math.PI / 3 + Math.PI / 12 + Math.PI / 45, 0]} // Same rotation as player ship
-        bob={false} // No bob, same as player
-        bobHeight={0}
-        bobSpeed={0}
+        bob={true}
+        bobHeight={0.3}
+        bobSpeed={1.2}
         castShadow={true}
         receiveShadow={true}
       />
