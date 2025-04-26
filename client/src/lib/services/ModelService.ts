@@ -8,9 +8,6 @@ export class ModelService {
   private static readonly PRELOAD_MODELS = [
     '/models/base_pirate_ship.glb',
     '/models/advanced_pirate_ship.glb',
-    '/models/cartoon_pirate_ship.glb',
-    '/models/pirate_ship.glb',
-    '/models/tall_pirate_ship.glb',
     '/models/tropical_island.glb',
     '/models/mountain_island.glb',
     '/models/rock_formation.glb'
@@ -50,12 +47,6 @@ export class ModelService {
     switch (type) {
       case 'advanced':
         return '/models/advanced_pirate_ship.glb';
-      case 'cartoon':
-        return '/models/cartoon_pirate_ship.glb';
-      case 'tall':
-        return '/models/tall_pirate_ship.glb';
-      case 'pirate':
-        return '/models/pirate_ship.glb';
       case 'base':
       default:
         return '/models/base_pirate_ship.glb';

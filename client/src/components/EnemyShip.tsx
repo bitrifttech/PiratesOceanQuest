@@ -104,7 +104,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   return (
     <group ref={shipRef} position={positionRef.current.toArray()} rotation={rotationRef.current.toArray()}>
       <CustomModel
-        path={ModelService.getShipModelPath('pirate')}
+        path={ModelService.getShipModelPath('base')}
         xPosition={0}
         yPosition={0}
         zPosition={0}
