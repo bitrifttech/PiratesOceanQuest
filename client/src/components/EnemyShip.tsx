@@ -1,15 +1,10 @@
 import { useRef, useEffect, memo } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
-import { useGameState } from "../lib/stores/useGameState";
 import CustomModel from "./CustomModel";
-import { POSITION, SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
-
-// Pre-load the ship model
-useGLTF.preload('/models/pirate_ship.glb');
+import { POSITION, SCALE, MODEL_ADJUSTMENT } from "../lib/constants";
 
 interface EnemyShipProps {
   id: string;
@@ -105,20 +100,17 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
     shipRef.current.rotation.copy(currentRot);
   });
   
-  // Access game state for ship configuration
-  const { shipScale } = useGameState.getState();
-  
   return (
     <group ref={shipRef} position={positionRef.current.toArray()} rotation={rotationRef.current.toArray()}>
       <CustomModel
-        path="/models/pirate_ship.glb" // Use the same model as player ship
-        scale={shipScale * SCALE.PLAYER_SHIP} // Exact same scale as player
+        path="/models/pirate_ship.glb" 
+        scale={0.8} // Slightly smaller than player ship (PLAYER_SHIP is 1.0)
         modelAdjustment={MODEL_ADJUSTMENT.SHIP}
-        modelHeightOffset={STATIC.SHIP_OFFSET} // Use same offset as player
+        modelHeightOffset={0.1}
         rotation={[0, -Math.PI / 3 + Math.PI / 12 + Math.PI / 45, 0]} // Same rotation as player ship
-        bob={false} // No bobbing for now
-        bobHeight={0}
-        bobSpeed={0}
+        bob={true}
+        bobHeight={0.3}
+        bobSpeed={1.2}
         castShadow={true}
         receiveShadow={true}
       />
