@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { GLTF } from "three-stdlib";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC } from "../lib/constants";
 import { useIslandPositions, getModelPositionId } from "../lib/stores/useIslandPositions";
+import { ModelService } from "../lib/services/ModelService";
 
 // Define island types
 type IslandType = 'tropical' | 'mountain' | 'rocks';
@@ -16,10 +17,7 @@ interface IslandProps {
   type?: IslandType;
 }
 
-// Preload all island models with correct paths
-useGLTF.preload('/models/tropical_island.glb');
-useGLTF.preload('/models/mountain_island.glb');
-useGLTF.preload('/models/rock_formation.glb');
+// Models are preloaded in ModelService
 
 const Island = ({ 
   xPosition, 
@@ -31,12 +29,8 @@ const Island = ({
   const islandRef = useRef<THREE.Group>(null);
   const [modelLoaded, setModelLoaded] = useState(false);
   
-  // Get the proper model path based on island type - standardized to match other components
-  const modelPath = type === 'tropical' 
-    ? '/models/tropical_island.glb' 
-    : type === 'mountain' 
-      ? '/models/mountain_island.glb' 
-      : '/models/rock_formation.glb';
+  // Get the proper model path based on island type using ModelService
+  const modelPath = ModelService.getEnvironmentModelPath(type);
   
   // Load the specified model with error handling
   let model: THREE.Group | null = null;
