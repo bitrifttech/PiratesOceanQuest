@@ -19,6 +19,7 @@ import { useAudio } from "../lib/stores/useAudio";
 import { EnemyManager } from "../lib/services/EnemyManager";
 import { EnvironmentGenerator } from "../lib/services/EnvironmentGenerator";
 import { CollisionService } from "../lib/services/CollisionService";
+import { collisionHandler } from "../lib/services/CollisionHandler";
 
 // Direction indicators removed - no longer needed after fixing ship orientation
 
@@ -76,6 +77,9 @@ const Game = () => {
       sampleFeature: environmentFeatures[0],
       playerPosition
     });
+    
+    // Register environment features with collision handler
+    collisionHandler.setFeatures(environmentFeatures);
     
     // Initialize player
     initializePlayer();

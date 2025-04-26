@@ -9,7 +9,7 @@ import { usePlayer } from "../lib/stores/usePlayer";
 import { useGameState } from "../lib/stores/useGameState";
 import { checkCollision } from "../lib/helpers/collisionDetection";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC } from "../lib/constants";
-import { environmentCollisions, calculateCollisionResponse } from "../lib/collision";
+import { collisionHandler } from "../lib/services/CollisionHandler";
 import Cannon from "./Cannon";
 import Cannonball from "./Cannonball";
 import CannonFireEffect from "./CannonFireEffect";
@@ -444,7 +444,8 @@ const Ship = () => {
     );
     
     // Check if the proposed position would collide with an environment feature
-    const futureCollision = environmentCollisions.checkPointCollision(futurePosition, shipRadius + safetyMargin);
+    // Using our new CollisionHandler service
+    const futureCollision = collisionHandler.checkPointCollision(futurePosition, shipRadius + safetyMargin);
     
     let newPosition;
     if (futureCollision) {
@@ -466,27 +467,17 @@ const Ship = () => {
     }
     
     // One last safety check - if we're already inside an obstacle, push out
-    const currentCollision = environmentCollisions.checkPointCollision(position, shipRadius + safetyMargin);
+    const currentCollision = collisionHandler.checkPointCollision(position, shipRadius + safetyMargin);
     if (currentCollision) {
       console.log(`[COLLISION] Emergency correction - ship inside ${currentCollision.type}`);
       
-      // Calculate escape direction (away from the feature center)
-      const escapeDirection = new THREE.Vector3(
-        position.x - currentCollision.x,
-        0,
-        position.z - currentCollision.z
-      ).normalize();
-      
-      // Push away with enough force to escape
-      const pushDistance = shipRadius + safetyMargin + 
-        environmentCollisions.getFeatureRadius(currentCollision.type, currentCollision.scale);
-      
-      // Set new position directly outside the collision radius
-      newPosition = new THREE.Vector3(
-        currentCollision.x, 
-        position.y,
-        currentCollision.z
-      ).add(escapeDirection.multiplyScalar(pushDistance));
+      // Use the collision handler to calculate a safe position
+      newPosition = collisionHandler.calculateSafePosition(
+        position,
+        currentCollision,
+        shipRadius,
+        safetyMargin
+      );
       
       // Stop all movement to prevent bouncing
       setVelocity(new THREE.Vector3(0, 0, 0));
