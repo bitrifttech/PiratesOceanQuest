@@ -5,7 +5,6 @@ import { useAudio } from "./lib/stores/useAudio";
 import { useGameState } from "./lib/stores/useGameState";
 import Game from "./components/Game";
 import GameUI from "./components/GameUI";
-import DebugControls from "./components/DebugControls";
 import ModelTestScene from "./components/ModelTestScene";
 import { MODEL_ADJUSTMENT } from "./lib/constants";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
@@ -117,18 +116,7 @@ function App() {
                   {/* Game UI overlay */}
                   <GameUI />
                   
-                  {/* Add debug controls directly in App component for stability */}
-                  <div id="debug-controls-container">
-                    <DebugControls
-                      onUpdateShipHeight={useGameState.getState().setShipHeight}
-                      onUpdateWaterParams={useGameState.getState().setWaveParameters}
-                      onUpdateShipScale={useGameState.getState().setShipScale}
-                      initialShipHeight={useGameState.getState().shipHeight}
-                      initialWaveHeight={useGameState.getState().waveHeight}
-                      initialWaveSpeed={useGameState.getState().waveSpeed}
-                      initialShipScale={useGameState.getState().shipScale}
-                    />
-                  </div>
+                  {/* Debug controls removed from visible UI */}
                 </>
               )}
             </KeyboardControls>
