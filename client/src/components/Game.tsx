@@ -7,7 +7,7 @@ import GridPlane from "./GridPlane"; // Using GridPlane instead of Ocean
 import Ship from "./Ship";
 import EnemyShip from "./EnemyShip"; // Added back enemy ship component
 import SkyWithClouds from "./SkyWithClouds"; // New enhanced sky with cloud system
-import EnvironmentComponent, { EnvironmentFeature, EnvironmentFeatureType } from "./Environment";
+import Environment, { EnvironmentFeature, EnvironmentFeatureType } from "./Environment";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC, WORLD } from "../lib/constants";
 
 import { usePlayer } from "../lib/stores/usePlayer";
@@ -374,7 +374,7 @@ const Game = () => {
       
       {/* Environmental features: Islands and rock formations using the new stable Environment component */}
       {/* This component only loads and positions models once */}
-      <EnvironmentComponent features={environmentFeatures} />
+      <Environment features={environmentFeatures} />
       
       {/* Enemy ships */}
       {enemies.map((enemy) => (
