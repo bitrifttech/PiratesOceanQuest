@@ -84,11 +84,8 @@ const Game = () => {
     // Initialize player
     initializePlayer();
     
-    // Spawn a test enemy ship near the player for orientation debugging
-    // Delay it a bit to make sure player is initialized
-    setTimeout(() => {
-      EnemyManager.spawnTestEnemyNearPlayer();
-    }, 500);
+    // Spawn a single enemy ship for testing using the EnemyManager service
+    EnemyManager.spawnSingleEnemy(30, 30);
     
     // Play background music
     playBackgroundMusic();
