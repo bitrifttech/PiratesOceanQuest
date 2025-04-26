@@ -3,8 +3,9 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
+import { useGameState } from "../lib/stores/useGameState";
 import CustomModel from "./CustomModel";
-import { POSITION, SCALE, MODEL_ADJUSTMENT } from "../lib/constants";
+import { POSITION, SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
 
 interface EnemyShipProps {
   id: string;
@@ -104,13 +105,13 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
     <group ref={shipRef} position={positionRef.current.toArray()} rotation={rotationRef.current.toArray()}>
       <CustomModel
         path="/models/pirate_ship.glb" 
-        scale={0.8} // Slightly smaller than player ship (PLAYER_SHIP is 1.0)
+        scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP} // Use same scale as player ship
         modelAdjustment={MODEL_ADJUSTMENT.SHIP}
-        modelHeightOffset={0.1}
+        modelHeightOffset={STATIC.SHIP_OFFSET} // Use same offset as player ship
         rotation={[0, -Math.PI / 3 + Math.PI / 12 + Math.PI / 45, 0]} // Same rotation as player ship
         bob={true}
-        bobHeight={0.3}
-        bobSpeed={1.2}
+        bobHeight={0.2}
+        bobSpeed={1.0}
         castShadow={true}
         receiveShadow={true}
       />
