@@ -18,16 +18,16 @@ export class EnvironmentGenerator {
       let baseRadius = 0;
       switch (type) {
         case 'tropical':
-          baseRadius = 20;
+          baseRadius = 15; // Reduced from 20
           break;
         case 'mountain':
-          baseRadius = 25;
+          baseRadius = 20; // Reduced from 25
           break;
         case 'rocks':
-          baseRadius = 10;
+          baseRadius = 8; // Reduced from 10
           break;
         default:
-          baseRadius = 15;
+          baseRadius = 12; // Reduced from 15
       }
       // Scale the radius based on the feature's scale
       return baseRadius * scale;
@@ -63,7 +63,7 @@ export class EnvironmentGenerator {
     maxAttempts: number = 50 // Maximum attempts to find non-overlapping position
   ): EnvironmentFeature | null {
     // Avoid spawning islands too close to the player start position
-    const playerProtectionRadius = 40;
+    const playerProtectionRadius = 30; // Reduced from 40 to allow more placement options
     const playerStartX = 0;
     const playerStartZ = 0;
     
@@ -139,7 +139,7 @@ export class EnvironmentGenerator {
       {
         type: 'tropical',
         count: 4,
-        scale: 1.3,
+        scale: 1.1, // Reduced from 1.3
         minX: -100,
         maxX: 100,
         minZ: -100,
@@ -149,8 +149,8 @@ export class EnvironmentGenerator {
       // Mountain islands - medium distance
       {
         type: 'mountain',
-        count: 4,
-        scale: 1.8,
+        count: 3, // Reduced from 4
+        scale: 1.5, // Reduced from 1.8
         minX: -110,
         maxX: 110,
         minZ: -110,
@@ -160,12 +160,12 @@ export class EnvironmentGenerator {
       // Rock formations - much closer to create immediate obstacles
       {
         type: 'rocks',
-        count: 8,
-        scale: 1.9,
-        minX: -60,
-        maxX: 60,
-        minZ: -60,
-        maxZ: 60,
+        count: 3, // Reduced from 4
+        scale: 1.3, // Reduced from 1.5
+        minX: -100, // Increased search area further
+        maxX: 100,
+        minZ: -100,
+        maxZ: 100,
         prefix: 'rocks'
       }
     ];
