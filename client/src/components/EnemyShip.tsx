@@ -105,7 +105,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
     <group ref={shipRef} position={positionRef.current.toArray()} rotation={rotationRef.current.toArray()}>
       <CustomModel
         path="/models/pirate_ship.glb" 
-        scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP} // Use same scale as player ship
+        scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP * 1.25} // 25% larger than player ship
         modelAdjustment={MODEL_ADJUSTMENT.SHIP}
         modelHeightOffset={STATIC.SHIP_OFFSET} // Use same offset as player ship
         rotation={[0, -Math.PI / 3 + Math.PI / 12 + Math.PI / 45, 0]} // Same rotation as player ship
@@ -118,9 +118,10 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
           // Log detailed enemy ship model properties
           console.log('[ENEMY SHIP] Model properties:');
           console.log(`- Path: /models/pirate_ship.glb`);
-          console.log(`- Scale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP}`);
+          console.log(`- Base Scale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP}`);
+          console.log(`- Scale with 25% increase: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP * 1.25}`);
           console.log(`- ModelAdjustment: ${MODEL_ADJUSTMENT.SHIP}`);
-          console.log(`- TotalScale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP * MODEL_ADJUSTMENT.SHIP}`);
+          console.log(`- TotalScale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP * 1.25 * MODEL_ADJUSTMENT.SHIP}`);
           console.log(`- ModelHeightOffset: ${STATIC.SHIP_OFFSET}`);
           console.log(`- Position: ${JSON.stringify(positionRef.current)}`);
         }}
