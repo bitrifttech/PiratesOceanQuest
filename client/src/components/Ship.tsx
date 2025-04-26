@@ -10,6 +10,7 @@ import { useGameState } from "../lib/stores/useGameState";
 import { checkCollision } from "../lib/helpers/collisionDetection";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC } from "../lib/constants";
 import { collisionHandler } from "../lib/services/CollisionHandler";
+import { ModelService } from "../lib/services/ModelService";
 import Cannon from "./Cannon";
 import Cannonball from "./Cannonball";
 import CannonFireEffect from "./CannonFireEffect";
@@ -38,9 +39,7 @@ interface CannonPosition {
   side?: 'right' | 'left'; // Optional property for cannon side
 }
 
-// Pre-load the ship models
-useGLTF.preload('/models/base_pirate_ship.glb');
-useGLTF.preload('/models/advanced_pirate_ship.glb');
+// Ship models are preloaded in ModelService
 
 const Ship = () => {
   // Get player state and controls
@@ -561,7 +560,7 @@ const Ship = () => {
           * CustomModel handles vertical alignment to grid
         */}
         <CustomModel 
-          path='/models/base_pirate_ship.glb'
+          path={ModelService.getShipModelPath('base')}
           xPosition={0}
           yPosition={0}
           zPosition={0}

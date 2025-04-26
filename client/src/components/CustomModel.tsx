@@ -220,10 +220,3 @@ const CustomModel = ({
 };
 
 export default CustomModel;
-
-// Preload models
-useGLTF.preload('/models/base_pirate_ship.glb');
-useGLTF.preload('/models/advanced_pirate_ship.glb');
-useGLTF.preload('/models/tropical_island.glb');
-useGLTF.preload('/models/mountain_island.glb');
-useGLTF.preload('/models/rock_formation.glb');
