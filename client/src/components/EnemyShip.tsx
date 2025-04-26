@@ -114,6 +114,16 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         bobSpeed={1.0}
         castShadow={true}
         receiveShadow={true}
+        onLoad={() => {
+          // Log detailed enemy ship model properties
+          console.log('[ENEMY SHIP] Model properties:');
+          console.log(`- Path: /models/pirate_ship.glb`);
+          console.log(`- Scale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP}`);
+          console.log(`- ModelAdjustment: ${MODEL_ADJUSTMENT.SHIP}`);
+          console.log(`- TotalScale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP * MODEL_ADJUSTMENT.SHIP}`);
+          console.log(`- ModelHeightOffset: ${STATIC.SHIP_OFFSET}`);
+          console.log(`- Position: ${JSON.stringify(positionRef.current)}`);
+        }}
       />
     </group>
   );

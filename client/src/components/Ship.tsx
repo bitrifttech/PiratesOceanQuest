@@ -574,7 +574,15 @@ const Ship = () => {
           castShadow
           receiveShadow
           onLoad={() => {
-            // Silent loading to reduce console spam
+            // Log detailed ship model properties
+            console.log('[PLAYER SHIP] Model properties:');
+            console.log(`- Path: ${ModelService.getShipModelPath('base')}`);
+            console.log(`- Scale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP}`);
+            console.log(`- ModelAdjustment: ${MODEL_ADJUSTMENT.SHIP}`);
+            console.log(`- TotalScale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP * MODEL_ADJUSTMENT.SHIP}`);
+            console.log(`- ModelHeightOffset: ${STATIC.SHIP_OFFSET}`);
+            console.log(`- Rotation: [0, -Math.PI / 3 + Math.PI / 12 + Math.PI / 45, 0]`);
+            
             shipModelLoadedRef.current = true;
           }}
         />

@@ -184,6 +184,18 @@ const CustomModel = ({
   // Calculate final scale
   const finalScale = scale * (modelAdjustment || 1.0);
   
+  // Log scale parameters for debugging
+  useEffect(() => {
+    if (path.includes('pirate_ship')) {
+      console.log(`[MODEL DEBUG] ${path} scale calculation:`);
+      console.log(`- Input scale: ${scale}`);
+      console.log(`- Model adjustment: ${modelAdjustment || 1.0}`);
+      console.log(`- Final scale: ${finalScale}`);
+      console.log(`- Model offset: ${modelHeightOffset}`);
+      console.log(`- Component ID: ${instanceId.current}`);
+    }
+  }, [path, scale, modelAdjustment, finalScale, modelHeightOffset]);
+  
   // Skip bobbing for now - uncomment if needed later
   /*
   useFrame((_, delta) => {
