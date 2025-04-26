@@ -5,6 +5,7 @@ import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
 import CustomModel from "./CustomModel";
 import { POSITION, SCALE, MODEL_ADJUSTMENT } from "../lib/constants";
+import { ModelService } from "../lib/services/ModelService";
 
 interface EnemyShipProps {
   id: string;
@@ -103,7 +104,10 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   return (
     <group ref={shipRef} position={positionRef.current.toArray()} rotation={rotationRef.current.toArray()}>
       <CustomModel
-        path="/models/pirate_ship.glb" 
+        path={ModelService.getShipModelPath('base')}
+        xPosition={0}
+        yPosition={0}
+        zPosition={0}
         scale={0.8} // Slightly smaller than player ship (PLAYER_SHIP is 1.0)
         modelAdjustment={MODEL_ADJUSTMENT.SHIP}
         modelHeightOffset={0.1}
