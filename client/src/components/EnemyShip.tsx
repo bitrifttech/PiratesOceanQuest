@@ -83,12 +83,12 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       // Update rotation
       currentRot.set(0, newRotY, 0);
       
-      // Move forward in the direction the ship is facing at a constant speed
-      // Reverse the direction because the model is actually facing the opposite way
+      // Move forward in the direction the ship is facing
+      // Since we've rotated the model by Math.PI (180 degrees), we don't need to negate anymore
       const velocity = new THREE.Vector3(
-        -Math.sin(newRotY) * speed * delta * 60, // Reverse X direction
+        Math.sin(newRotY) * speed * delta * 60, // Forward X direction
         0,
-        -Math.cos(newRotY) * speed * delta * 60  // Reverse Z direction
+        Math.cos(newRotY) * speed * delta * 60  // Forward Z direction
       );
       
       // Apply velocity to position
@@ -98,11 +98,11 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       if (Math.random() < 0.002) { // Log only ~0.2% of the time to avoid spam
         console.log(`[ENEMY SHIP] Movement details: 
         - Raw angle to player: ${(angleToPlayer * 180 / Math.PI).toFixed(1)}°
-        - Model rotation: 180.0° (Model faces back)
+        - Model rotation: 180.0° (Model is rotated to face forward)
         - Corrected angle: ${(correctedAngle * 180 / Math.PI).toFixed(1)}°
         - Current rotation: ${(currentAngle * 180 / Math.PI).toFixed(1)}°
         - New rotation: ${(newRotY * 180 / Math.PI).toFixed(1)}°
-        - Direction: Reversed (moving in opposite direction of rotation)`);
+        - Direction: Normal (moving in same direction as model faces)`);
       }
     }
     

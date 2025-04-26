@@ -37,11 +37,11 @@ const EnemyDirectionMarkers: React.FC<EnemyDirectionMarkersProps> = ({ position,
     
     // Calculate the ship's direction vectors based on its rotation
     // For enemy ship, we're using 180 degree (Math.PI) rotation to face forward,
-    // so we need to negate the normal direction vectors
+    // and now the movement uses normal vectors (not negated)
     const forwardDir = new THREE.Vector3(
-      -Math.sin(rotation.y),
+      Math.sin(rotation.y),
       0,
-      -Math.cos(rotation.y)
+      Math.cos(rotation.y)
     );
     
     // Backward vector (opposite of forward)
