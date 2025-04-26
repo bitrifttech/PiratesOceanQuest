@@ -127,7 +127,7 @@ function App() {
                     }}
                   >
                     <color attach="background" args={["#89CFF0"]} />
-                    <fog attach="fog" args={["#89CFF0", 50, 200]} />
+                    <fog attach="fog" args={["#89CFF0", 100, 400]} />
                     
                     <Suspense fallback={null}>
                       <Game />
