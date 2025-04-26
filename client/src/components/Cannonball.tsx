@@ -86,17 +86,34 @@ const Cannonball = ({
     const cannonballPosition = ballRef.current.position.clone();
     
     // Check for collisions with environmental features first
-    // Fixed hit radius based on cannonball size
-    const hitRadius = 2.0; // Units
+    // Use a smaller hit radius for more precise collision detection
+    const hitRadius = 1.5; // Units - reduced for precision
     
-    // Check for environment collisions
-    const environmentCollision = environmentCollisions.checkPointCollision(cannonballPosition, hitRadius);
+    // Adjust hit detection based on cannonball velocity and height
+    // This prevents unrealistic collisions when cannonballs are high above features
+    let effectiveHitRadius = hitRadius;
+    
+    // Height-based collision adjustment - cannonballs flying high should not collide with low features
+    const heightThreshold = 15; // Minimum height to start reducing collision probability
+    if (cannonballPosition.y > heightThreshold) {
+      // Reduce effective hit radius based on height (cannonballs in arc are less likely to hit)
+      effectiveHitRadius *= Math.max(0.1, 1 - (cannonballPosition.y - heightThreshold) / 30);
+    }
+    
+    // Check for environment collisions with the adjusted hit radius
+    const environmentCollision = environmentCollisions.checkPointCollision(cannonballPosition, effectiveHitRadius);
     if (environmentCollision && !hitDetected.current) {
       // Mark as hit to prevent multiple hits
       hitDetected.current = true;
       
-      // Log collision with environment
-      console.log(`[CANNONBALL] Hit ${environmentCollision.type} at (${environmentCollision.x}, ${environmentCollision.z})`);
+      // Log collision with environment including cannonball position and adjusted hit radius
+      console.log(`[CANNONBALL] Hit ${environmentCollision.type} at (${cannonballPosition.x.toFixed(2)}, ${cannonballPosition.y.toFixed(2)}, ${cannonballPosition.z.toFixed(2)}) with radius ${effectiveHitRadius.toFixed(2)}`);
+      
+      // Store hit velocity for impact effects (faster cannonballs have more dramatic effects)
+      const hitVelocity = velocity.length();
+      
+      // Notify about impact velocity 
+      console.log(`[CANNONBALL] Impact velocity: ${hitVelocity.toFixed(2)}`);
       
       // Create a small explosion effect
       // TODO: Add explosion effect
@@ -114,18 +131,36 @@ const Cannonball = ({
     }
     
     // If we didn't hit the environment, check for collisions with enemy ships
+    // Use a more precise hit radius for ships based on velocity and distance
+    const enemyHitRadius = 8.0; // Larger radius for enemy ships since they're bigger than cannonballs
+    
     // Check each enemy for collisions
     for (const enemy of enemies) {
       // Calculate distance to enemy
       const distance = cannonballPosition.distanceTo(enemy.position);
       
-      // If distance is less than hit radius, we have a hit
-      if (distance < hitRadius && !hitDetected.current) {
+      // Height-adjusted hit detection - consider vertical position relative to ship
+      const heightDifference = Math.abs(cannonballPosition.y - enemy.position.y);
+      const heightAdjustedHitRadius = 
+        heightDifference < 5 ? enemyHitRadius : // Full hit radius when close to ship height
+        enemyHitRadius * Math.max(0.2, 1 - (heightDifference - 5) / 15); // Reduce with height difference
+      
+      // If distance is less than adjusted hit radius, we have a hit
+      if (distance < heightAdjustedHitRadius && !hitDetected.current) {
         // Mark as hit to prevent multiple hits
         hitDetected.current = true;
         
+        // Calculate damage based on velocity (faster cannonballs do more damage)
+        const impactVelocity = velocity.length();
+        const baseDamage = 20; // Base damage value
+        const velocityMultiplier = Math.min(1.5, Math.max(0.7, impactVelocity / 30)); // 0.7-1.5x multiplier
+        const finalDamage = Math.round(baseDamage * velocityMultiplier);
+        
         // Apply damage to enemy
-        damageEnemy(enemy.id, 20); // 20 damage per cannonball
+        damageEnemy(enemy.id, finalDamage);
+        
+        // Log hit details
+        console.log(`[CANNONBALL] Hit enemy ship ${enemy.id} for ${finalDamage} damage (velocity: ${impactVelocity.toFixed(2)})`);
         
         // Trigger callback to remove cannonball
         if (onHit) onHit();
