@@ -63,9 +63,10 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         playerPosition.z - currentPos.z
       );
       
-      // Apply rotation correction - Model rotation is [0, -Math.PI / 3 + Math.PI / 12 + Math.PI / 45, 0]
-      const modelRotationOffset = -Math.PI / 3 + Math.PI / 12 + Math.PI / 45; // -60 + 15 + 4 degrees in radians
-      const correctedAngle = angleToPlayer + modelRotationOffset;
+      // Apply rotation correction
+      // Instead of adding the offset, we'll use the raw angle to player
+      // Because we're inverting the movement direction below, we don't need this offset anymore
+      const correctedAngle = angleToPlayer;
       
       // Gradually rotate toward player
       const currentAngle = currentRot.y;
@@ -96,11 +97,11 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       if (Math.random() < 0.002) { // Log only ~0.2% of the time to avoid spam
         console.log(`[ENEMY SHIP] Movement details: 
         - Raw angle to player: ${(angleToPlayer * 180 / Math.PI).toFixed(1)}°
-        - Model rotation offset: ${(modelRotationOffset * 180 / Math.PI).toFixed(1)}°
+        - Model rotation: 180.0° (Model faces back)
         - Corrected angle: ${(correctedAngle * 180 / Math.PI).toFixed(1)}°
         - Current rotation: ${(currentAngle * 180 / Math.PI).toFixed(1)}°
         - New rotation: ${(newRotY * 180 / Math.PI).toFixed(1)}°
-        - Direction: Reversed (moving in opposite direction of model orientation)`);
+        - Direction: Reversed (moving in opposite direction of rotation)`);
       }
     }
     
@@ -126,7 +127,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP * 1.25} // 25% larger than player ship
         modelAdjustment={MODEL_ADJUSTMENT.SHIP}
         modelHeightOffset={STATIC.SHIP_OFFSET} // Use same offset as player ship
-        rotation={[0, -Math.PI / 3 + Math.PI / 12 + Math.PI / 45, 0]} // Same rotation as player ship
+        rotation={[0, Math.PI, 0]} // Rotate 180 degrees to face forward
         bob={true}
         bobHeight={0.2}
         bobSpeed={1.0}
