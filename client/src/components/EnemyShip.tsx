@@ -56,14 +56,20 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       // Chase player when in range
       
       // Calculate angle to player
+      // The ship model is rotated 49 degrees clockwise, so we need to account for this
+      // when calculating the angle to the player
       const angleToPlayer = Math.atan2(
         playerPosition.x - currentPos.x,
         playerPosition.z - currentPos.z
       );
       
+      // Apply rotation correction - Model rotation is [0, -Math.PI / 3 + Math.PI / 12 + Math.PI / 45, 0]
+      const modelRotationOffset = -Math.PI / 3 + Math.PI / 12 + Math.PI / 45; // -60 + 15 + 4 degrees in radians
+      const correctedAngle = angleToPlayer + modelRotationOffset;
+      
       // Gradually rotate toward player
       const currentAngle = currentRot.y;
-      let angleDiff = angleToPlayer - currentAngle;
+      let angleDiff = correctedAngle - currentAngle; // Use the corrected angle
       
       // Normalize angle difference to [-PI, PI]
       while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
@@ -76,6 +82,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       currentRot.set(0, newRotY, 0);
       
       // Move forward in the direction the ship is facing at a constant speed
+      // Apply the same corrected orientation math as the player ship
       const velocity = new THREE.Vector3(
         Math.sin(newRotY) * speed * delta * 60,
         0,
@@ -84,6 +91,16 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       
       // Apply velocity to position
       currentPos.add(velocity);
+      
+      // Log the angles occasionally for debugging
+      if (Math.random() < 0.002) { // Log only ~0.2% of the time to avoid spam
+        console.log(`[ENEMY SHIP] Movement details: 
+        - Raw angle to player: ${(angleToPlayer * 180 / Math.PI).toFixed(1)}°
+        - Model rotation offset: ${(modelRotationOffset * 180 / Math.PI).toFixed(1)}°
+        - Corrected angle: ${(correctedAngle * 180 / Math.PI).toFixed(1)}°
+        - Current rotation: ${(currentAngle * 180 / Math.PI).toFixed(1)}°
+        - New rotation: ${(newRotY * 180 / Math.PI).toFixed(1)}°`);
+      }
     }
     
     // Keep ship at constant height above water
