@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { Trail } from "@react-three/drei";
 import { SCALE, MODEL_ADJUSTMENT } from "../lib/constants";
 import { useEnemies } from "../lib/stores/useEnemies";
+import { usePlayer } from "../lib/stores/usePlayer";
 import { environmentCollisions } from "../lib/collision";
 
 interface CannonballProps {
@@ -127,6 +128,8 @@ const Cannonball = ({
         // Apply damage to enemy
         damageEnemy(enemy.id, 20); // 20 damage per cannonball
         
+        console.log(`[CANNONBALL] Hit enemy ship ${enemy.id}! Applied 20 damage.`);
+        
         // Trigger callback to remove cannonball
         if (onHit) onHit();
         
@@ -137,6 +140,45 @@ const Cannonball = ({
         
         // Exit loop after first hit
         break;
+      }
+    }
+    
+    // Check if the cannonball hits the player ship (enemy cannonballs only hit player)
+    // First determine if this is an enemy cannonball by checking its origin
+    // If the cannonball was fired more than 15 units away from the player's position,
+    // we assume it's an enemy cannonball and check for collision with the player
+    const playerPosition = usePlayer.getState().position;
+    
+    if (playerPosition) {
+      // Check if cannonball origin is far from player (enemy cannonball)
+      const isEnemyCannonball = localPosition.distanceTo(playerPosition) > 15;
+      
+      if (isEnemyCannonball) {
+        // Calculate distance to player
+        const distanceToPlayer = cannonballPosition.distanceTo(playerPosition);
+        
+        // Set slightly larger hit radius for player to make it easier to hit
+        const playerHitRadius = 8;
+        
+        // If distance is less than hit radius, we have a hit
+        if (distanceToPlayer < playerHitRadius && !hitDetected.current) {
+          // Mark as hit to prevent multiple hits
+          hitDetected.current = true;
+          
+          // Apply damage to player
+          const takeDamage = usePlayer.getState().takeDamage;
+          takeDamage(15); // 15 damage per enemy cannonball (slightly less than player's cannons)
+          
+          console.log(`[CANNONBALL] Enemy cannonball hit player! Applied 15 damage.`);
+          
+          // Trigger callback to remove cannonball
+          if (onHit) onHit();
+          
+          // Remove cannonball immediately
+          if (ballRef.current && ballRef.current.parent) {
+            ballRef.current.parent.remove(ballRef.current);
+          }
+        }
       }
     }
     

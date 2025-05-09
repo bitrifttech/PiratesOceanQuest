@@ -1,10 +1,11 @@
-import { useRef, useEffect, memo } from "react";
+import { useRef, useEffect, memo, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
 import { useGameState } from "../lib/stores/useGameState";
 import CustomModel from "./CustomModel";
+import Cannonball from "./Cannonball";
 import { POSITION, SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
 
 interface EnemyShipProps {
@@ -25,6 +26,11 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   const healthRef = useRef<number>(100);
   const initialized = useRef<boolean>(false);
   
+  // Collision and combat references
+  const collisionCooldown = useRef<number>(0);
+  const cannonballsRef = useRef<JSX.Element[]>([]);
+  const cannonCooldownRef = useRef<number>(0);
+  
   // Get player position for AI behavior
   const playerPosition = usePlayer((state) => state.position);
   
@@ -32,9 +38,13 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   const speed = 0.05;
   const rotationSpeed = 0.01;
   const detectionRange = 80; // Units at which the enemy ship detects the player
+  const canFireRange = 30; // Range at which enemy will fire cannons
   
   // Update the enemy in the game state
   const moveEnemy = useEnemies((state) => state.moveEnemy);
+  
+  // State to manage cannonballs
+  const [cannonballs, setCannonballs] = useState<JSX.Element[]>([]);
   
   // Initialize on first render
   useEffect(() => {
@@ -54,6 +64,36 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
     
     // Calculate distance to player
     const distanceToPlayer = currentPos.distanceTo(playerPosition);
+    
+    // Ship collision parameters
+    const enemyShipRadius = 5; // Units radius for collision detection
+    const playerShipRadius = 5; // Units radius for player ship
+    const collisionDamage = 10; // Damage on collision
+    
+    // Create a local collision handler for this frame
+    const localCollisionCooldown = 0; // Just use a local variable instead of ref
+    
+    // Check for collision with player ship - apply damage to both ships
+    if (distanceToPlayer < (enemyShipRadius + playerShipRadius)) {
+      // Damage both ships - no cooldown for now
+      const takeDamage = usePlayer.getState().takeDamage;
+      takeDamage(collisionDamage);
+      
+      // Damage this enemy ship too
+      const damageEnemy = useEnemies(state => state.damageEnemy);
+      damageEnemy(id, collisionDamage);
+      
+      console.log(`[COLLISION] Ship-to-ship collision! Both ships take ${collisionDamage} damage`);
+      
+      // Apply bounce effect - push ships away from each other
+      const bounceDirection = new THREE.Vector3()
+        .subVectors(currentPos, playerPosition)
+        .normalize()
+        .multiplyScalar(1.0); // Bounce force
+      
+      // Apply bounce to enemy position
+      currentPos.add(bounceDirection);
+    }
     
     // Basic AI behavior
     if (distanceToPlayer < detectionRange) {
@@ -103,6 +143,57 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         - Direction: (${direction.x.toFixed(2)}, ${direction.z.toFixed(2)})
         - Distance to player: ${distanceToPlayer.toFixed(1)} units`);
       }
+    }
+    
+    // Fire cannons if in range and cooldown is ready
+    if (distanceToPlayer < canFireRange && cannonCooldownRef.current <= 0) {
+      // Get direction vector toward player for aiming cannons
+      const toPlayerDirection = new THREE.Vector3()
+        .subVectors(playerPosition, currentPos)
+        .normalize();
+      
+      // Add slight randomness to aim (makes it possible for player to dodge)
+      const spread = 0.2; // Amount of random spread
+      toPlayerDirection.x += (Math.random() - 0.5) * spread;
+      toPlayerDirection.z += (Math.random() - 0.5) * spread;
+      toPlayerDirection.normalize(); // Re-normalize after adding randomness
+      
+      // Set cannon firing position slightly above water at the ship's position
+      const cannonPosition = new THREE.Vector3(
+        currentPos.x,
+        1.0, // Fixed height for cannon position
+        currentPos.z
+      );
+      
+      // Create a unique ID for this cannonball
+      const cannonballId = `${id}-cannonball-${Date.now()}`;
+      
+      // Add the cannonball to state
+      const newCannonball = (
+        <Cannonball
+          key={cannonballId}
+          position={cannonPosition}
+          direction={toPlayerDirection}
+          speed={25} // Slightly slower than player cannons
+          lifespan={3.0}
+          onHit={() => {
+            // Remove this cannonball from the array when it hits something
+            setCannonballs(prev => prev.filter(ball => ball.key !== cannonballId));
+          }}
+        />
+      );
+      
+      setCannonballs(prev => [...prev, newCannonball]);
+      
+      // Set cooldown for next cannon fire (5-8 seconds, random to make it less predictable)
+      cannonCooldownRef.current = 5 + Math.random() * 3;
+      
+      console.log(`[ENEMY SHIP ${id}] Fired cannon at player!`);
+    }
+    
+    // Update cannon cooldown
+    if (cannonCooldownRef.current > 0) {
+      cannonCooldownRef.current -= delta;
     }
     
     // Use a Y position of 0 - CustomModel will adjust height based on modelHeightOffset
