@@ -34,6 +34,36 @@ export class EnemyManager {
   }
   
   /**
+   * Spawns a test enemy ship directly in front of the player
+   * Used for debugging ship orientation and movement
+   */
+  static spawnTestEnemyShip(): void {
+    // Clear existing enemies
+    useEnemies.getState().resetEnemies();
+    
+    // Position directly in front of where player starts (at origin)
+    // This puts the enemy ship 15 units in front of the player
+    const testPosition = new THREE.Vector3(0, POSITION.SHIP_HEIGHT, -15);
+    
+    // Set rotation to face the player (at origin)
+    const testRotation = new THREE.Euler(0, Math.PI, 0); // Face the player
+    
+    // Add the test enemy to the store
+    useEnemies.setState({
+      enemies: [{
+        id: 'test-enemy-ship',
+        position: testPosition,
+        rotation: testRotation,
+        velocity: new THREE.Vector3(0, 0, 0),
+        health: 100,
+        maxHealth: 100
+      }]
+    });
+    
+    console.log(`[ENEMY] Spawned test enemy ship at (0.0, ${POSITION.SHIP_HEIGHT}, -15.0), facing player`);
+  }
+  
+  /**
    * Spawns multiple enemies at random positions around the player
    */
   static spawnEnemies(count: number, playerPosition?: THREE.Vector3): void {

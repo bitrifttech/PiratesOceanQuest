@@ -14,6 +14,9 @@ interface EnemyShipProps {
   initialRotation: THREE.Euler;
 }
 
+/**
+ * Completely rebuilt enemy ship component that correctly handles orientation and movement
+ */
 const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps) => {
   // References
   const shipRef = useRef<THREE.Group>(null);
@@ -37,6 +40,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   // Initialize on first render
   useEffect(() => {
     if (!initialized.current) {
+      console.log(`[ENEMY SHIP ${id}] Initializing at position ${JSON.stringify(positionRef.current)}`);
       initialized.current = true;
     }
   }, [id]);
@@ -54,59 +58,53 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
     
     // Basic AI behavior
     if (distanceToPlayer < detectionRange) {
-      // Chase player when in range
-      
-      // Calculate angle to player
-      // The ship model is rotated 49 degrees clockwise, so we need to account for this
-      // when calculating the angle to the player
+      // Calculate angle to player - this is the direction we need to face
       const angleToPlayer = Math.atan2(
         playerPosition.x - currentPos.x,
         playerPosition.z - currentPos.z
       );
       
-      // Apply rotation correction
-      // Instead of adding the offset, we'll use the raw angle to player
-      // Because we're inverting the movement direction below, we don't need this offset anymore
-      const correctedAngle = angleToPlayer;
-      
-      // Gradually rotate toward player
+      // Gradually rotate toward player with smooth turning
       const currentAngle = currentRot.y;
-      let angleDiff = correctedAngle - currentAngle; // Use the corrected angle
+      let angleDiff = angleToPlayer - currentAngle;
       
       // Normalize angle difference to [-PI, PI]
       while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
       while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
       
-      // Rotate toward player
-      const newRotY = currentRot.y + Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), rotationSpeed * delta * 60);
+      // Apply smooth rotation toward player
+      const newRotY = currentAngle + Math.sign(angleDiff) * 
+                      Math.min(Math.abs(angleDiff), rotationSpeed * delta * 60);
       
       // Update rotation
       currentRot.set(0, newRotY, 0);
       
-      // Move forward in the direction the ship is facing at a constant speed
-      // Reverse the direction because the model is actually facing the opposite way
-      const velocity = new THREE.Vector3(
-        -Math.sin(newRotY) * speed * delta * 60, // Reverse X direction
+      // Movement direction is based on rotation
+      // Calculate direction vector based on ship's orientation
+      const direction = new THREE.Vector3(
+        Math.sin(newRotY),
         0,
-        -Math.cos(newRotY) * speed * delta * 60  // Reverse Z direction
+        Math.cos(newRotY)
       );
+      
+      // Create velocity vector (moving in the direction the ship is facing)
+      const velocity = direction.clone().multiplyScalar(speed * delta * 60);
       
       // Apply velocity to position
       currentPos.add(velocity);
       
-      // Log the angles occasionally for debugging
-      if (Math.random() < 0.002) { // Log only ~0.2% of the time to avoid spam
-        console.log(`[ENEMY SHIP] Movement details: 
-        - Raw angle to player: ${(angleToPlayer * 180 / Math.PI).toFixed(1)}°
-        - Model rotation: 180.0° (Model faces back)
-        - Corrected angle: ${(correctedAngle * 180 / Math.PI).toFixed(1)}°
+      // Log for debugging, but only occasionally
+      if (Math.random() < 0.002) {
+        console.log(`[ENEMY SHIP ${id}] Movement details: 
+        - Angle to player: ${(angleToPlayer * 180 / Math.PI).toFixed(1)}°
         - Current rotation: ${(currentAngle * 180 / Math.PI).toFixed(1)}°
         - New rotation: ${(newRotY * 180 / Math.PI).toFixed(1)}°
-        - Direction: Reversed (moving in opposite direction of rotation)`);
+        - Direction: (${direction.x.toFixed(2)}, ${direction.z.toFixed(2)})
+        - Distance to player: ${distanceToPlayer.toFixed(1)} units`);
       }
     }
     
-    // Keep ship at constant height above water
+    // Maintain constant height above water/grid
     currentPos.y = POSITION.SHIP_HEIGHT;
     
     // Update refs
@@ -122,33 +120,36 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   });
   
   return (
-    <group ref={shipRef} position={positionRef.current.toArray()} rotation={rotationRef.current.toArray()}>
+    <group 
+      ref={shipRef} 
+      position={positionRef.current.toArray()} 
+      rotation={rotationRef.current.toArray()}
+    >
+      {/* Ship model - Positioned to match player ship positioning standards */}
       <CustomModel
         path="/models/pirate_ship.glb" 
         scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP * 1.25} // 25% larger than player ship
         modelAdjustment={MODEL_ADJUSTMENT.SHIP}
         modelHeightOffset={STATIC.SHIP_OFFSET} // Use same offset as player ship
-        rotation={[0, Math.PI, 0]} // Rotate 180 degrees to face forward
+        rotation={[0, Math.PI, 0]} // Rotate 180 degrees so the bow points forward
         bob={true}
         bobHeight={0.2}
         bobSpeed={1.0}
         castShadow={true}
         receiveShadow={true}
         onLoad={() => {
-          // Log detailed enemy ship model properties
-          console.log('[ENEMY SHIP] Model properties:');
-          console.log(`- Path: /models/pirate_ship.glb`);
-          console.log(`- Base Scale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP}`);
-          console.log(`- Scale with 25% increase: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP * 1.25}`);
-          console.log(`- ModelAdjustment: ${MODEL_ADJUSTMENT.SHIP}`);
-          console.log(`- TotalScale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP * 1.25 * MODEL_ADJUSTMENT.SHIP}`);
-          console.log(`- ModelHeightOffset: ${STATIC.SHIP_OFFSET}`);
+          console.log(`[ENEMY SHIP ${id}] Model loaded successfully`);
           console.log(`- Position: ${JSON.stringify(positionRef.current)}`);
+          console.log(`- Rotation: ${JSON.stringify(rotationRef.current)}`);
+          console.log(`- Scale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP * 1.25}`);
         }}
       />
       
-      {/* Add direction markers for debugging orientation */}
-      <EnemyDirectionMarkers position={positionRef.current} rotation={rotationRef.current} />
+      {/* Direction markers for debugging orientation */}
+      <EnemyDirectionMarkers 
+        position={positionRef.current} 
+        rotation={rotationRef.current} 
+      />
     </group>
   );
 });
