@@ -5,7 +5,6 @@ import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
 import { useGameState } from "../lib/stores/useGameState";
 import CustomModel from "./CustomModel";
-import EnemyDirectionMarkers from "./EnemyDirectionMarkers";
 import { POSITION, SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
 
 interface EnemyShipProps {
@@ -145,12 +144,6 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
           console.log(`- Rotation: ${JSON.stringify(rotationRef.current)}`);
           console.log(`- Scale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP * 1.25}`);
         }}
-      />
-      
-      {/* Direction markers for debugging orientation */}
-      <EnemyDirectionMarkers 
-        position={positionRef.current} 
-        rotation={rotationRef.current} 
       />
     </group>
   );
