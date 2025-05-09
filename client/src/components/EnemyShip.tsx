@@ -105,8 +105,8 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       }
     }
     
-    // Maintain constant height above water/grid
-    currentPos.y = POSITION.SHIP_HEIGHT;
+    // Use a Y position of 0 - CustomModel will adjust height based on modelHeightOffset
+    currentPos.y = 0;
     
     // Update refs
     positionRef.current = currentPos;

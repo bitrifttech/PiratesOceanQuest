@@ -15,7 +15,8 @@ export class EnemyManager {
     useEnemies.getState().resetEnemies();
     
     // Create a position and rotation
-    const fixedEnemyPosition = new THREE.Vector3(x, POSITION.SHIP_HEIGHT, z);
+    // Use a Y position of 0 - the CustomModel component will handle the proper height offset
+    const fixedEnemyPosition = new THREE.Vector3(x, 0, z);
     const fixedEnemyRotation = new THREE.Euler(0, 0, 0);
     
     // Add the enemy directly to the store
@@ -30,7 +31,7 @@ export class EnemyManager {
       }]
     });
     
-    console.log(`[ENEMY] Spawned single enemy ship at (${x}, ${POSITION.SHIP_HEIGHT}, ${z})`);
+    console.log(`[ENEMY] Spawned single enemy ship at (${x}, 0, ${z})`);
   }
   
   /**
@@ -43,7 +44,9 @@ export class EnemyManager {
     
     // Position directly in front of where player starts (at origin)
     // This puts the enemy ship 15 units in front of the player
-    const testPosition = new THREE.Vector3(0, POSITION.SHIP_HEIGHT, -15);
+    // Use a constant height of 0 instead of POSITION.SHIP_HEIGHT because
+    // the CustomModel in EnemyShip will add the proper height offset
+    const testPosition = new THREE.Vector3(0, 0, -15);
     
     // Set rotation to face the player (at origin)
     const testRotation = new THREE.Euler(0, Math.PI, 0); // Face the player
@@ -60,7 +63,7 @@ export class EnemyManager {
       }]
     });
     
-    console.log(`[ENEMY] Spawned test enemy ship at (0.0, ${POSITION.SHIP_HEIGHT}, -15.0), facing player`);
+    console.log(`[ENEMY] Spawned test enemy ship at (0.0, 0.0, -15.0), facing player`);
   }
   
   /**

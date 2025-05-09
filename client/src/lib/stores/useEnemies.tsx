@@ -54,8 +54,8 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
       
       const enemy: Enemy = {
         id: `enemy-${Date.now()}-${i}`,
-        // Use standard height from constants instead of gameState to avoid inconsistencies
-        position: new THREE.Vector3(spawnX, POSITION.SHIP_HEIGHT, spawnZ),
+        // Use Y position of 0 - the CustomModel component will handle the proper height offset
+        position: new THREE.Vector3(spawnX, 0, spawnZ),
         // Make enemy ships face the player initially
         rotation: playerPosition ? 
           new THREE.Euler(0, Math.atan2(playerPosition.x - spawnX, playerPosition.z - spawnZ), 0) :
