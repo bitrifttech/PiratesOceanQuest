@@ -135,12 +135,12 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   takeDamage: (amount) => {
     const { health } = get();
     
-    // Damage logging disabled to reduce console spam
-    // Disabled for now to debug health drain issue
-    // const newHealth = Math.max(0, health - amount);
-    // set({ health: newHealth });
+    // Re-enabled damage system to support ship collisions
+    const newHealth = Math.max(0, health - amount);
+    set({ health: newHealth });
     
-    return health; // Return current health without modifying it
+    console.log(`[PLAYER] Took ${amount} damage. Health: ${newHealth}/${get().maxHealth}`);
+    return newHealth;
   },
   
   // Heal
