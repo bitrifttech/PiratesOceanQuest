@@ -84,8 +84,8 @@ const Game = () => {
     // Initialize player
     initializePlayer();
     
-    // Spawn a single enemy ship for testing using the EnemyManager service
-    EnemyManager.spawnSingleEnemy(30, 30);
+    // Spawn a test enemy ship directly in front of the player for debugging orientation
+    EnemyManager.spawnTestEnemyShip();
     
     // Play background music
     playBackgroundMusic();

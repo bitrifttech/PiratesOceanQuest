@@ -80,14 +80,16 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       currentRot.set(0, newRotY, 0);
       
       // Movement direction is based on rotation
-      // Calculate direction vector based on ship's orientation
+      // Since we rotate the model 180° (Math.PI) in the return JSX below,
+      // we need to adjust our direction calculation to match the visual "forward" of the ship
       const direction = new THREE.Vector3(
         Math.sin(newRotY),
         0,
         Math.cos(newRotY)
       );
       
-      // Create velocity vector (moving in the direction the ship is facing)
+      // The velocity is applied directly from this direction vector
+      // The bow of the ship points in this direction because of the model's PI rotation
       const velocity = direction.clone().multiplyScalar(speed * delta * 60);
       
       // Apply velocity to position

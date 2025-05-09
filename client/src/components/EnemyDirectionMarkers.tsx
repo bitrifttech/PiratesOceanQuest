@@ -11,6 +11,12 @@ interface EnemyDirectionMarkersProps {
 /**
  * Component to show direction markers on enemy ships
  * Used for debugging orientation vs movement direction
+ * 
+ * This displays color-coded markers:
+ * - Blue: Forward direction (model's front) - should point in actual movement direction
+ * - Red: Backward direction (model's back)
+ * - Green: Left side of ship
+ * - Yellow: Right side of ship
  */
 const EnemyDirectionMarkers: React.FC<EnemyDirectionMarkersProps> = ({ position, rotation }) => {
   // Refs for the arrow meshes
@@ -36,12 +42,13 @@ const EnemyDirectionMarkers: React.FC<EnemyDirectionMarkersProps> = ({ position,
     }
     
     // Calculate the ship's direction vectors based on its rotation
-    // For enemy ship, we're using 180 degree (Math.PI) rotation to face forward,
-    // so we need to negate the normal direction vectors
+    // The ship's forward direction vector matches the direction it moves
+    // Because the model is rotated by Math.PI in the CustomModel component,
+    // the visual front of the ship will point in this direction
     const forwardDir = new THREE.Vector3(
-      -Math.sin(rotation.y),
+      Math.sin(rotation.y),
       0,
-      -Math.cos(rotation.y)
+      Math.cos(rotation.y)
     );
     
     // Backward vector (opposite of forward)
