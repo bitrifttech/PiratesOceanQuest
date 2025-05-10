@@ -200,8 +200,43 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       // Calculate velocity with dynamic speed adjustment
       const velocity = direction.clone().multiplyScalar(movementSpeed * delta * 60);
       
-      // Apply velocity to position
-      currentPos.add(velocity);
+      // Calculate the future position to check for collisions
+      const futurePosition = currentPos.clone().add(velocity);
+      
+      // Ship collision radius - should match the visual size
+      const shipRadius = 12;
+      
+      // Check for collisions with environmental features
+      // First check the potential new position
+      const collision = collisionHandler.handleCollision(
+        futurePosition, 
+        shipRadius, 
+        false, // Not player ship
+        id // Enemy ID for crew reactions
+      );
+      
+      if (collision) {
+        // We have a collision, use the safe position provided by collision handler
+        console.log(`[ENEMY SHIP ${id}] Collided with environment. Adjusting position.`);
+        
+        // Trigger crew reaction for near collision
+        const { enemyNearCollision } = useShipEvents.getState();
+        enemyNearCollision(id);
+        
+        // Update position to safe position
+        currentPos.copy(collision);
+        
+        // Reverse direction slightly to move away from obstacle
+        const bounceDirection = new THREE.Vector3().subVectors(currentPos, futurePosition).normalize();
+        const bounceFactor = 0.5; // How much to bounce
+        
+        // Apply bounce velocity
+        const bounceVelocity = bounceDirection.multiplyScalar(movementSpeed * delta * 60 * bounceFactor);
+        currentPos.add(bounceVelocity);
+      } else {
+        // No collision, apply normal velocity
+        currentPos.add(velocity);
+      }
       
       // Log for debugging, but only occasionally
       if (Math.random() < 0.002) {
