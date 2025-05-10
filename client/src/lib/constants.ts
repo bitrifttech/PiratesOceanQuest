@@ -29,6 +29,21 @@ export const SCALE = {
       MIN: 8.0,   // Smaller rock formations - largest environmental features
       MAX: 12.0,  // Larger rock formations
       BASE: 10.0, // Default size - significantly larger than before
+    },
+    SHIPWRECK: {
+      MIN: 3.0,   // Smaller shipwrecks
+      MAX: 5.0,   // Larger shipwrecks
+      BASE: 4.0,  // Default size
+    },
+    PORT: {
+      MIN: 4.0,   // Smaller ports
+      MAX: 6.0,   // Larger ports
+      BASE: 5.0,  // Default size
+    },
+    LIGHTHOUSE: {
+      MIN: 6.0,   // Smaller lighthouses
+      MAX: 8.0,   // Larger lighthouses
+      BASE: 7.0,  // Default size
     }
   },
   
@@ -49,12 +64,15 @@ export const SCALE = {
 
 // Model scaling adjustments (to correct for model-specific scaling issues)
 export const MODEL_ADJUSTMENT = {
-  SHIP: 1.5,      // Standardized multiplier for all ship models
-  TROPICAL: 4.0,  // Multiplier for tropical island models
-  MOUNTAIN: 8.0,  // Multiplier for mountain island models
-  ROCKS: 3.0,     // Multiplier for rock formation models
-  CANNON: 20.0,   // Multiplier for cannon models
-  CANNONBALL: 15.0 // Multiplier for cannonball models
+  SHIP: 1.5,        // Standardized multiplier for all ship models
+  TROPICAL: 4.0,    // Multiplier for tropical island models
+  MOUNTAIN: 8.0,    // Multiplier for mountain island models
+  ROCKS: 3.0,       // Multiplier for rock formation models
+  SHIPWRECK: 2.5,   // Multiplier for shipwreck models
+  PORT: 3.0,        // Multiplier for port models
+  LIGHTHOUSE: 4.0,  // Multiplier for lighthouse models
+  CANNON: 20.0,     // Multiplier for cannon models
+  CANNONBALL: 15.0  // Multiplier for cannonball models
 };
 
 // UNIVERSAL STATIC VALUES - These should never change during gameplay
@@ -70,7 +88,10 @@ export const POSITION = {
   ISLAND: {
     TROPICAL: STATIC.WATER_LEVEL + 5.0,  // Height adjustment for tropical islands
     MOUNTAIN: STATIC.WATER_LEVEL + 8.0,  // Height adjustment for mountain islands
-    ROCKS: STATIC.WATER_LEVEL + 6.0      // Height adjustment for rock formations
+    ROCKS: STATIC.WATER_LEVEL + 6.0,     // Height adjustment for rock formations
+    SHIPWRECK: STATIC.WATER_LEVEL + 0.5, // Height adjustment for shipwrecks (mostly submerged)
+    PORT: STATIC.WATER_LEVEL + 1.0,      // Height adjustment for ports (just above water)
+    LIGHTHOUSE: STATIC.WATER_LEVEL + 4.0 // Height adjustment for lighthouses (on elevated rocks)
   }
 };
 

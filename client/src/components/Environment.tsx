@@ -72,6 +72,9 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
       case 'tropical': return SCALE.ISLAND.TROPICAL.BASE;
       case 'mountain': return SCALE.ISLAND.MOUNTAIN.BASE;
       case 'rocks': return SCALE.ISLAND.ROCKS.BASE;
+      case 'shipwreck': return SCALE.ISLAND.SHIPWRECK.BASE;
+      case 'port': return SCALE.ISLAND.PORT.BASE;
+      case 'lighthouse': return SCALE.ISLAND.LIGHTHOUSE.BASE;
       default: return 1;
     }
   };
@@ -82,6 +85,9 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
       case 'tropical': return MODEL_ADJUSTMENT.TROPICAL;
       case 'mountain': return MODEL_ADJUSTMENT.MOUNTAIN;
       case 'rocks': return MODEL_ADJUSTMENT.ROCKS;
+      case 'shipwreck': return MODEL_ADJUSTMENT.SHIPWRECK;
+      case 'port': return MODEL_ADJUSTMENT.PORT;
+      case 'lighthouse': return MODEL_ADJUSTMENT.LIGHTHOUSE;
       default: return 1;
     }
   };

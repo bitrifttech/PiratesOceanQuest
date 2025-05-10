@@ -26,6 +26,15 @@ export class EnvironmentGenerator {
         case 'rocks':
           baseRadius = 10;
           break;
+        case 'shipwreck':
+          baseRadius = 15;
+          break;
+        case 'port':
+          baseRadius = 18;
+          break;
+        case 'lighthouse':
+          baseRadius = 12;
+          break;
         default:
           baseRadius = 15;
       }
@@ -167,6 +176,39 @@ export class EnvironmentGenerator {
         minZ: -60,
         maxZ: 60,
         prefix: 'rocks'
+      },
+      // Shipwrecks - scattered around, mostly near the center
+      {
+        type: 'shipwreck',
+        count: 3,
+        scale: 1.5,
+        minX: -80,
+        maxX: 80,
+        minZ: -80,
+        maxZ: 80,
+        prefix: 'shipwreck'
+      },
+      // Ports - a few scattered at moderate distance
+      {
+        type: 'port',
+        count: 2,
+        scale: 1.6,
+        minX: -90,
+        maxX: 90,
+        minZ: -90,
+        maxZ: 90,
+        prefix: 'port'
+      },
+      // Lighthouses - few but visible from a distance
+      {
+        type: 'lighthouse',
+        count: 3,
+        scale: 2.0,
+        minX: -100,
+        maxX: 100,
+        minZ: -100,
+        maxZ: 100,
+        prefix: 'lighthouse'
       }
     ];
     
