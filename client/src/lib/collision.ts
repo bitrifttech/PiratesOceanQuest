@@ -10,16 +10,16 @@ export function getFeatureRadius(type: EnvironmentFeatureType, scale: number): n
   let baseRadius = 0;
   switch (type) {
     case 'tropical':
-      baseRadius = 25; // Further increased to cover more of the island
+      baseRadius = 15; // Reduced to more reasonable size while still covering the island
       break;
     case 'mountain':
-      baseRadius = 50; // EXTREMELY increased to prevent ships passing through at all costs
+      baseRadius = 30; // Reduced from extreme value but still larger than before
       break;
     case 'rocks':
-      baseRadius = 15; // Increased to match visual appearance better
+      baseRadius = 10; // Reasonably sized to match visual appearance
       break;
     default:
-      baseRadius = 20;
+      baseRadius = 12;
   }
   // Scale the radius based on the feature's scale
   const scaledRadius = baseRadius * scale;

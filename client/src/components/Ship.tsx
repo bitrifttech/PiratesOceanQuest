@@ -433,9 +433,9 @@ const Ship = () => {
     
     setVelocity(newVelocity);
     
-    // MAXIMUM COLLISION HANDLING: Absolutely prevent ships from passing through islands
-    const shipRadius = 20; // Extreme collision radius to guarantee detection
-    const safetyMargin = 10; // Massive buffer zone to ensure ships cannot pass through islands
+    // BALANCED COLLISION HANDLING: Prevent ships from passing through islands but keep reasonable boundaries
+    const shipRadius = 12; // Good collision radius for reliable detection without being excessive
+    const safetyMargin = 5; // Reasonable buffer zone to ensure ships don't pass through islands
     
     // Calculate proposed new position with velocity
     const futurePosition = position.clone().add(

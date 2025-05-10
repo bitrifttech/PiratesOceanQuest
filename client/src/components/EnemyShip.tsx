@@ -67,9 +67,9 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
     // Calculate distance to player
     const distanceToPlayer = currentPos.distanceTo(playerPosition);
     
-    // Ship collision parameters
-    const enemyShipRadius = 20; // Maximum collision radius to match player ship settings
-    const playerShipRadius = 20; // Match the player ship's collision radius
+    // Ship collision parameters - balanced values
+    const enemyShipRadius = 12; // Collision radius matching player ship's balanced settings
+    const playerShipRadius = 12; // Match the player ship's collision radius
     const collisionDamage = 10; // Damage on collision
     
     // Track collision state and add cooldown for damage
