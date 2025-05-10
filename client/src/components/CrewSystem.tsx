@@ -53,10 +53,13 @@ const CrewSystem: React.FC<CrewSystemProps> = ({
   useEffect(() => {
     const newPositions: CrewPosition[] = [];
     
+    // Ship base height is 1.5 based on the logs
+    const deckHeight = 0.75; // Position crew at deck level, which is roughly halfway up the ship's height
+    
     // Captain is always at the stern
     newPositions.push({
-      position: [0, 1.0, -1.5], // Adjust based on your ship model
-      rotation: [0, 0, 0],
+      position: [0, deckHeight, -1.2], // Captain at the back of the ship
+      rotation: [0, Math.PI, 0], // Facing backward (toward rear of ship)
       type: 'captain',
       deck: true,
       station: 'stern'
@@ -71,7 +74,7 @@ const CrewSystem: React.FC<CrewSystemProps> = ({
     for (let i = 0; i < gunnerCount; i++) {
       // Port side gunners (left)
       newPositions.push({
-        position: [-0.9 * sizeMultiplier, 0.8, (-0.5 + i * 1.0) * sizeMultiplier],
+        position: [-0.7 * sizeMultiplier, deckHeight, (-0.5 + i * 0.8) * sizeMultiplier], 
         rotation: [0, -Math.PI/2, 0], // Facing left
         type: 'gunner',
         deck: true,
@@ -80,7 +83,7 @@ const CrewSystem: React.FC<CrewSystemProps> = ({
       
       // Starboard side gunners (right)
       newPositions.push({
-        position: [0.9 * sizeMultiplier, 0.8, (-0.5 + i * 1.0) * sizeMultiplier],
+        position: [0.7 * sizeMultiplier, deckHeight, (-0.5 + i * 0.8) * sizeMultiplier],
         rotation: [0, Math.PI/2, 0], // Facing right
         type: 'gunner',
         deck: true,
@@ -90,7 +93,7 @@ const CrewSystem: React.FC<CrewSystemProps> = ({
     
     // Add a lookout at the bow
     newPositions.push({
-      position: [0, 1.0, 1.8 * sizeMultiplier],
+      position: [0, deckHeight, 1.2 * sizeMultiplier],
       rotation: [0, 0, 0], // Facing forward
       type: 'lookout',
       deck: true,
@@ -101,15 +104,15 @@ const CrewSystem: React.FC<CrewSystemProps> = ({
     const remainingCrew = Math.max(0, crewSize - (1 + gunnerCount * 2 + 1)); // Captain + gunners + lookout
     
     for (let i = 0; i < remainingCrew; i++) {
-      // Distribute sailors around the ship
+      // Distribute sailors around the ship centrally
       const angle = (i / remainingCrew) * Math.PI * 2; // Distribute in a circle
-      const radius = 0.6 * sizeMultiplier;
+      const radius = 0.4 * sizeMultiplier; // Smaller radius to keep them on deck
       
       newPositions.push({
         position: [
           Math.sin(angle) * radius,
-          0.8,
-          Math.cos(angle) * radius
+          deckHeight, // Same height as other crew
+          Math.cos(angle) * radius * 0.8 // Slightly compressed circle on z-axis
         ],
         rotation: [0, -angle + Math.PI, 0], // Face outward
         type: 'sailor',

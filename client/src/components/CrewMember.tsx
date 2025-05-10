@@ -223,14 +223,14 @@ const CrewMember: React.FC<CrewMemberProps> = ({
   const getModelHeightOffset = () => {
     switch (type) {
       case 'captain':
-        return 0.1;
+        return -0.4; // Lower them to stand on deck
       case 'gunner':
-        return 0.08;
+        return -0.45; // Lower them to stand on deck
       case 'lookout':
-        return 0.1;
+        return -0.45; // Lower them to stand on deck
       case 'sailor':
       default:
-        return 0.08;
+        return -0.45; // Lower them to stand on deck
     }
   };
   
