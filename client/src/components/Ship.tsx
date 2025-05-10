@@ -59,6 +59,18 @@ const Ship = () => {
     resetCannonCooldown,
   } = usePlayer();
   
+  // Get ship event state for crew animations
+  const { 
+    playerShipEvent, 
+    firePlayerCannons, 
+    playerHit, 
+    playerNearCollision, 
+    updateEnemyProximity 
+  } = useShipEvents();
+  
+  // Enemy proximity tracking for crew reactions
+  const enemies = useEnemies(state => state.enemies);
+  
   // Ship mesh references
   const shipRef = useRef<THREE.Group>(null);
   const hullRef = useRef<THREE.Mesh>(null);
@@ -122,6 +134,23 @@ const Ship = () => {
   // Track initialization status
   const isInitialized = useRef(false);
   
+  // Update crew reactions based on enemy proximity
+  useEffect(() => {
+    if (!position || enemies.length === 0) return;
+    
+    // Find closest enemy
+    let closestDistance = Infinity;
+    for (const enemy of enemies) {
+      const distance = position.distanceTo(enemy.position);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+      }
+    }
+    
+    // Update crew reaction based on proximity
+    updateEnemyProximity(closestDistance);
+  }, [position, enemies, updateEnemyProximity]);
+  
   // Initialize ship position if needed - only once
   useEffect(() => {
     // Skip if already initialized
@@ -148,6 +177,12 @@ const Ship = () => {
     
     if (keys.fire && cannonReady) {
       fireCannon();
+      
+      // Trigger crew firing animation
+      firePlayerCannons();
+      
+      // Play sound
+      playSound('cannon_fire');
       
       // Ensure position is not null
       if (!position) return;
