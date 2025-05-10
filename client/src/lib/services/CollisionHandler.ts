@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { EnvironmentFeature, EnvironmentFeatureType } from "../../components/Environment";
 import { CollisionService } from "./CollisionService";
+import { useShipEvents } from "../stores/useShipEvents";
 
 /**
  * Singleton service for handling collisions within the game
@@ -101,14 +102,36 @@ class CollisionHandler {
   /**
    * Checks if there's a collision and returns a safe position if needed
    * Returns null if no collision occurs, otherwise returns the safe position
+   * @param isPlayerShip Set to true when checking for the player's ship to trigger crew animations
+   * @param enemyId Optional enemy ID when checking for enemy ships
    */
   handleCollision(
     position: THREE.Vector3,
-    entityRadius: number = 6
+    entityRadius: number = 6,
+    isPlayerShip: boolean = false,
+    enemyId?: string
   ): THREE.Vector3 | null {
     const collision = this.checkPointCollision(position, entityRadius);
     
     if (collision) {
+      // Trigger crew animation if this is a player ship collision
+      if (isPlayerShip) {
+        try {
+          const { playerNearCollision } = useShipEvents.getState();
+          playerNearCollision();
+        } catch (error) {
+          // Silently handle if the module isn't available yet
+        }
+      } else if (enemyId) {
+        // Trigger enemy ship crew animation
+        try {
+          const { enemyNearCollision } = useShipEvents.getState();
+          enemyNearCollision(enemyId);
+        } catch (error) {
+          // Silently handle if the module isn't available yet
+        }
+      }
+      
       return this.calculateSafePosition(position, collision, entityRadius);
     }
     

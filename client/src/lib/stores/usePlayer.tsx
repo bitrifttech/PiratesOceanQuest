@@ -139,6 +139,16 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     const newHealth = Math.max(0, health - amount);
     set({ health: newHealth });
     
+    // Trigger crew reaction in ship events store if available
+    try {
+      const { playerHit } = require('./useShipEvents').useShipEvents.getState();
+      if (playerHit) {
+        playerHit();
+      }
+    } catch (error) {
+      // Silently handle if the module isn't available yet
+    }
+    
     console.log(`[PLAYER] Took ${amount} damage. Health: ${newHealth}/${get().maxHealth}`);
     return newHealth;
   },
