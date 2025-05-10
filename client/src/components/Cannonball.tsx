@@ -7,6 +7,7 @@ import { useEnemies } from "../lib/stores/useEnemies";
 import { usePlayer } from "../lib/stores/usePlayer";
 import { environmentCollisions } from "../lib/collision";
 import ExplosionEffect from "./ExplosionEffect";
+import WaterSplashEffect from "./WaterSplashEffect";
 
 interface CannonballProps {
   position: THREE.Vector3;
@@ -60,9 +61,10 @@ const Cannonball = ({
   // Hit detection status
   const hitDetected = useRef<boolean>(false);
   
-  // Track explosion state
+  // Track effect states
   const [showExplosion, setShowExplosion] = useState<boolean>(false);
-  const [explosionPosition, setExplosionPosition] = useState<THREE.Vector3 | null>(null);
+  const [showSplash, setShowSplash] = useState<boolean>(false);
+  const [effectPosition, setEffectPosition] = useState<THREE.Vector3 | null>(null);
 
   // Update cannonball position and apply physics independently of ship
   useFrame((_, delta) => {
@@ -105,7 +107,7 @@ const Cannonball = ({
       console.log(`[CANNONBALL] Hit ${environmentCollision.type} at (${environmentCollision.x}, ${environmentCollision.z})`);
       
       // Create explosion effect at the impact point
-      setExplosionPosition(cannonballPosition.clone());
+      setEffectPosition(cannonballPosition.clone());
       setShowExplosion(true);
       
       // Hide the cannonball but don't remove it yet (explosion needs to finish)
@@ -134,7 +136,7 @@ const Cannonball = ({
         console.log(`[CANNONBALL] Hit enemy ship ${enemy.id}! Applied 20 damage.`);
         
         // Create explosion effect at the impact point
-        setExplosionPosition(cannonballPosition.clone());
+        setEffectPosition(cannonballPosition.clone());
         setShowExplosion(true);
         
         // Hide the cannonball but don't remove it yet (explosion needs to finish)
@@ -178,7 +180,7 @@ const Cannonball = ({
           console.log(`[CANNONBALL] Enemy cannonball hit player! Applied 15 damage.`);
           
           // Create explosion effect at the impact point
-          setExplosionPosition(cannonballPosition.clone());
+          setEffectPosition(cannonballPosition.clone());
           setShowExplosion(true);
           
           // Hide the cannonball but don't remove it yet (explosion needs to finish)
@@ -196,18 +198,28 @@ const Cannonball = ({
     }
     
     // Check if cannonball has fallen into the water - raised to -1 for better visibility
-    if (ballRef.current.position.y < -1) {
-      // Immediately set lifespan to zero to remove cannonball
-      lifeRef.current = 0;
-      if (onHit) onHit();
+    if (ballRef.current.position.y < -1 && !hitDetected.current) {
+      // Mark as hit to prevent multiple splashes
+      hitDetected.current = true;
       
-      // Immediately remove cannonball mesh from scene
-      if (ballRef.current && ballRef.current.parent) {
-        ballRef.current.parent.remove(ballRef.current);
+      // Create splash effect at the water surface
+      // Set Y to 0 for proper water level
+      const splashPosition = new THREE.Vector3(
+        ballRef.current.position.x,
+        0, // Always at water level
+        ballRef.current.position.z
+      );
+      
+      console.log(`[CANNONBALL] Splashed into water at (${splashPosition.x.toFixed(1)}, ${splashPosition.z.toFixed(1)})`);
+      
+      // Set effect position and show splash
+      setEffectPosition(splashPosition);
+      setShowSplash(true);
+      
+      // Hide cannonball immediately but keep object for effect completion
+      if (ballRef.current) {
+        ballRef.current.visible = false;
       }
-      
-      // Also move it far away to ensure it's completely gone
-      ballRef.current.position.set(0, -1000, 0);
     }
   });
   
@@ -246,15 +258,36 @@ const Cannonball = ({
         />
       </mesh>
       
-      {/* Explosion effect when cannonball hits something */}
-      {showExplosion && explosionPosition && (
+      {/* Explosion effect when cannonball hits land or ships */}
+      {showExplosion && effectPosition && (
         <ExplosionEffect
-          position={explosionPosition}
+          position={effectPosition}
           size={3.5}
           duration={0.8}
           onComplete={() => {
             // Clean up when explosion finishes
             setShowExplosion(false);
+            
+            // Now remove the cannonball completely
+            if (ballRef.current && ballRef.current.parent) {
+              ballRef.current.parent.remove(ballRef.current);
+            }
+            
+            // Execute callback if provided
+            if (onHit) onHit();
+          }}
+        />
+      )}
+      
+      {/* Splash effect when cannonball hits water */}
+      {showSplash && effectPosition && (
+        <WaterSplashEffect
+          position={effectPosition}
+          size={2.5}
+          duration={1.2}
+          onComplete={() => {
+            // Clean up when splash finishes
+            setShowSplash(false);
             
             // Now remove the cannonball completely
             if (ballRef.current && ballRef.current.parent) {
