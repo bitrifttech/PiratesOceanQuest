@@ -10,9 +10,12 @@ import CollisionBoundaryVisualizer from "./CollisionBoundaryVisualizer";
 useGLTF.preload('/models/tropical_island.glb');
 useGLTF.preload('/models/mountain_island.glb');
 useGLTF.preload('/models/rock_formation.glb');
+useGLTF.preload('/models/shipwreck.glb');
+useGLTF.preload('/models/port.glb');
+useGLTF.preload('/models/lighthouse.glb');
 
 // Define feature types
-export type EnvironmentFeatureType = 'tropical' | 'mountain' | 'rocks';
+export type EnvironmentFeatureType = 'tropical' | 'mountain' | 'rocks' | 'shipwreck' | 'port' | 'lighthouse';
 
 export interface EnvironmentFeature {
   id: string; // Unique ID
@@ -31,11 +34,21 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
   const [positioned, setPositioned] = useState(false);
   
   // Get the proper model path based on feature type
-  const modelPath = type === 'tropical' 
-    ? '/models/tropical_island.glb' 
-    : type === 'mountain' 
-      ? '/models/mountain_island.glb' 
-      : '/models/rock_formation.glb';
+  const getModelPath = () => {
+    switch (type) {
+      case 'tropical': return '/models/tropical_island.glb';
+      case 'mountain': return '/models/mountain_island.glb';
+      case 'rocks': return '/models/rock_formation.glb';
+      case 'shipwreck': return '/models/shipwreck.glb';
+      case 'port': return '/models/port.glb';
+      case 'lighthouse': return '/models/lighthouse.glb';
+      default: 
+        console.warn(`[ENV] Unknown feature type: ${type}, defaulting to rocks`);
+        return '/models/rock_formation.glb';
+    }
+  };
+  
+  const modelPath = getModelPath();
   
   // Load the model - this will use the preloaded version
   const { scene: originalModel } = useGLTF(modelPath) as GLTF & {
