@@ -181,8 +181,10 @@ const Ship = () => {
       // Trigger crew firing animation
       firePlayerCannons();
       
-      // Play sound
-      playSound('cannon_fire');
+      // Play cannon sound (using hit sound)
+      if (useAudio.getState().playHit) {
+        useAudio.getState().playHit();
+      }
       
       // Ensure position is not null
       if (!position) return;
@@ -484,6 +486,11 @@ const Ship = () => {
     
     // Also check if future position would result in a collision
     const futurePositionCollision = collisionHandler.checkPointCollision(futurePosition, shipRadius + safetyMargin);
+    
+    // If we detect a future collision, trigger crew response now
+    if (futurePositionCollision && !currentPositionCollision) {
+      playerNearCollision();
+    }
     
     // Handle collision response
     let newPosition;
