@@ -147,7 +147,10 @@ const Cannonball = ({
     // First determine if this is an enemy cannonball by checking its origin
     // If the cannonball was fired more than 15 units away from the player's position,
     // we assume it's an enemy cannonball and check for collision with the player
-    const playerPosition = usePlayer.getState().position;
+    
+    // Safely get player position using store
+    const playerState = usePlayer.getState();
+    const playerPosition = playerState.position;
     
     if (playerPosition) {
       // Check if cannonball origin is far from player (enemy cannonball)
@@ -165,9 +168,8 @@ const Cannonball = ({
           // Mark as hit to prevent multiple hits
           hitDetected.current = true;
           
-          // Apply damage to player
-          const takeDamage = usePlayer.getState().takeDamage;
-          takeDamage(15); // 15 damage per enemy cannonball (slightly less than player's cannons)
+          // Apply damage to player (correctly access from the state we already retrieved)
+          playerState.takeDamage(15); // 15 damage per enemy cannonball (slightly less than player's cannons)
           
           console.log(`[CANNONBALL] Enemy cannonball hit player! Applied 15 damage.`);
           

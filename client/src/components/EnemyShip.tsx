@@ -212,31 +212,36 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   });
   
   return (
-    <group 
-      ref={shipRef} 
-      position={positionRef.current.toArray()} 
-      rotation={rotationRef.current.toArray()}
-    >
-      {/* Ship model - Positioned to match player ship positioning standards */}
-      <CustomModel
-        path="/models/pirate_ship.glb" 
-        scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP * 1.25} // 25% larger than player ship
-        modelAdjustment={MODEL_ADJUSTMENT.SHIP}
-        modelHeightOffset={STATIC.SHIP_OFFSET} // Use same offset as player ship
-        rotation={[0, Math.PI, 0]} // Rotate 180 degrees so the bow points forward
-        bob={true}
-        bobHeight={0.2}
-        bobSpeed={1.0}
-        castShadow={true}
-        receiveShadow={true}
-        onLoad={() => {
-          console.log(`[ENEMY SHIP ${id}] Model loaded successfully`);
-          console.log(`- Position: ${JSON.stringify(positionRef.current)}`);
-          console.log(`- Rotation: ${JSON.stringify(rotationRef.current)}`);
-          console.log(`- Scale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP * 1.25}`);
-        }}
-      />
-    </group>
+    <>
+      {/* Render all cannonballs fired by this enemy ship */}
+      {cannonballs}
+      
+      <group 
+        ref={shipRef} 
+        position={positionRef.current.toArray()} 
+        rotation={rotationRef.current.toArray()}
+      >
+        {/* Ship model - Positioned to match player ship positioning standards */}
+        <CustomModel
+          path="/models/pirate_ship.glb" 
+          scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP * 1.25} // 25% larger than player ship
+          modelAdjustment={MODEL_ADJUSTMENT.SHIP}
+          modelHeightOffset={STATIC.SHIP_OFFSET} // Use same offset as player ship
+          rotation={[0, Math.PI, 0]} // Rotate 180 degrees so the bow points forward
+          bob={true}
+          bobHeight={0.2}
+          bobSpeed={1.0}
+          castShadow={true}
+          receiveShadow={true}
+          onLoad={() => {
+            console.log(`[ENEMY SHIP ${id}] Model loaded successfully`);
+            console.log(`- Position: ${JSON.stringify(positionRef.current)}`);
+            console.log(`- Rotation: ${JSON.stringify(rotationRef.current)}`);
+            console.log(`- Scale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP * 1.25}`);
+          }}
+        />
+      </group>
+    </>
   );
 });
 
