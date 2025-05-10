@@ -5,8 +5,9 @@ import * as THREE from "three";
 
 import { Controls } from "../App";
 import { usePlayer } from "../lib/stores/usePlayer";
-// import { useEnemies } from "../lib/stores/useEnemies"; // Removed enemies
+import { useEnemies } from "../lib/stores/useEnemies";
 import { useGameState } from "../lib/stores/useGameState";
+import { useShipEvents } from "../lib/stores/useShipEvents";
 import { checkCollision } from "../lib/helpers/collisionDetection";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC } from "../lib/constants";
 import { collisionHandler } from "../lib/services/CollisionHandler";
@@ -15,6 +16,7 @@ import Cannon from "./Cannon";
 import Cannonball from "./Cannonball";
 import CannonFireEffect from "./CannonFireEffect";
 import CustomModel from "./CustomModel";
+import CrewSystem from "./CrewSystem";
 import { useAudio } from "../lib/stores/useAudio";
 
 // Define types for our cannonball and effect tracking
