@@ -9,6 +9,7 @@ import CustomModel from "./CustomModel";
 import Cannonball from "./Cannonball";
 import CrewSystem from "./CrewSystem";
 import { POSITION, SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
+import { collisionHandler } from "../lib/services/CollisionHandler";
 
 interface EnemyShipProps {
   id: string;
