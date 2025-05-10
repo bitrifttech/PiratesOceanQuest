@@ -378,12 +378,12 @@ const Ship = () => {
     // Apply rotation from steering
     let rotationDelta = 0;
     if (keys.leftward) {
-      rotationDelta += 1.5 * delta;
+      rotationDelta += 2.0 * delta; // Increased turning speed by ~33% for better handling at higher speeds
       // console.log("Turning left");
     }
     
     if (keys.rightward) {
-      rotationDelta -= 1.5 * delta;
+      rotationDelta -= 2.0 * delta; // Increased turning speed by ~33% for better handling at higher speeds
       // console.log("Turning right");
     }
     
@@ -414,15 +414,15 @@ const Ship = () => {
     // Check key states and apply acceleration
     if (keys.forward) {
       // Apply acceleration in the direction the ship is facing (W key moves forward)
-      // Reduced to 40% of original speed (from 15 to 6)
-      const forwardForce = direction.clone().multiplyScalar(6 * delta);
+      // Increased by 50% from 6 to 9
+      const forwardForce = direction.clone().multiplyScalar(9 * delta);
       acceleration.add(forwardForce);
     }
     
     if (keys.backward) {
       // Apply acceleration in the opposite direction (S key moves backward)
-      // Reduced to 40% of original speed (from 7.5 to 3)
-      const backwardForce = direction.clone().multiplyScalar(-3 * delta);
+      // Increased by 50% from 3 to 4.5
+      const backwardForce = direction.clone().multiplyScalar(-4.5 * delta);
       acceleration.add(backwardForce);
     }
     
