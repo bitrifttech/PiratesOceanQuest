@@ -80,8 +80,8 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       takeDamage(collisionDamage);
       
       // Damage this enemy ship too
-      const damageEnemy = useEnemies(state => state.damageEnemy);
-      damageEnemy(id, collisionDamage);
+      const enemiesState = useEnemies.getState();
+      enemiesState.damageEnemy(id, collisionDamage);
       
       console.log(`[COLLISION] Ship-to-ship collision! Both ships take ${collisionDamage} damage`);
       
