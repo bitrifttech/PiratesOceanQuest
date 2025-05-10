@@ -8,6 +8,7 @@ import { usePlayer } from "../lib/stores/usePlayer";
 import { environmentCollisions } from "../lib/collision";
 import ExplosionEffect from "./ExplosionEffect";
 import WaterSplashEffect from "./WaterSplashEffect";
+import ShipExplosionEffect from "./ShipExplosionEffect";
 
 interface CannonballProps {
   position: THREE.Vector3;
@@ -63,6 +64,7 @@ const Cannonball = ({
   
   // Track effect states
   const [showExplosion, setShowExplosion] = useState<boolean>(false);
+  const [showShipExplosion, setShowShipExplosion] = useState<boolean>(false);
   const [showSplash, setShowSplash] = useState<boolean>(false);
   const [effectPosition, setEffectPosition] = useState<THREE.Vector3 | null>(null);
 
@@ -135,9 +137,9 @@ const Cannonball = ({
         
         console.log(`[CANNONBALL] Hit enemy ship ${enemy.id}! Applied 20 damage.`);
         
-        // Create explosion effect at the impact point
+        // Create ship explosion effect at the impact point
         setEffectPosition(cannonballPosition.clone());
-        setShowExplosion(true);
+        setShowShipExplosion(true);
         
         // Hide the cannonball but don't remove it yet (explosion needs to finish)
         if (ballRef.current) {
@@ -179,9 +181,9 @@ const Cannonball = ({
           
           console.log(`[CANNONBALL] Enemy cannonball hit player! Applied 15 damage.`);
           
-          // Create explosion effect at the impact point
+          // Create ship explosion effect at the impact point
           setEffectPosition(cannonballPosition.clone());
-          setShowExplosion(true);
+          setShowShipExplosion(true);
           
           // Hide the cannonball but don't remove it yet (explosion needs to finish)
           if (ballRef.current) {
@@ -258,7 +260,7 @@ const Cannonball = ({
         />
       </mesh>
       
-      {/* Explosion effect when cannonball hits land or ships */}
+      {/* Explosion effect when cannonball hits land */}
       {showExplosion && effectPosition && (
         <ExplosionEffect
           position={effectPosition}
@@ -267,6 +269,27 @@ const Cannonball = ({
           onComplete={() => {
             // Clean up when explosion finishes
             setShowExplosion(false);
+            
+            // Now remove the cannonball completely
+            if (ballRef.current && ballRef.current.parent) {
+              ballRef.current.parent.remove(ballRef.current);
+            }
+            
+            // Execute callback if provided
+            if (onHit) onHit();
+          }}
+        />
+      )}
+      
+      {/* Fiery explosion effect when cannonball hits ships */}
+      {showShipExplosion && effectPosition && (
+        <ShipExplosionEffect
+          position={effectPosition}
+          size={4.0}
+          duration={1.2}
+          onComplete={() => {
+            // Clean up when explosion finishes
+            setShowShipExplosion(false);
             
             // Now remove the cannonball completely
             if (ballRef.current && ballRef.current.parent) {
