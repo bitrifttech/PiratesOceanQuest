@@ -97,10 +97,13 @@ export const POSITION = {
 
 // Game world size constants
 export const WORLD = {
-  SIZE: 500,      // World boundary size (square)
+  SIZE: 1000,     // World boundary size (square) - expanded for more exploration
   ISLAND_COUNT: {
     TROPICAL: 6,  // Number of tropical islands to generate
-    MOUNTAIN: 4,  // Number of mountain islands to generate
-    ROCKS: 8      // Number of rock formations to generate
+    MOUNTAIN: 6,  // Number of mountain islands to generate
+    ROCKS: 12,    // Number of rock formations to generate
+    SHIPWRECK: 5, // Number of shipwrecks to generate
+    PORT: 4,      // Number of ports to generate
+    LIGHTHOUSE: 5 // Number of lighthouses to generate
   }
 };

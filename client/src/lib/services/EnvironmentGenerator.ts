@@ -71,8 +71,8 @@ export class EnvironmentGenerator {
     rotationFactor: number = 0.5, // Factor to multiply with PI for rotation
     maxAttempts: number = 50 // Maximum attempts to find non-overlapping position
   ): EnvironmentFeature | null {
-    // Avoid spawning islands too close to the player start position
-    const playerProtectionRadius = 40;
+    // Avoid spawning features too close to the player start position
+    const playerProtectionRadius = 50; // Increased to provide more open water around player
     const playerStartX = 0;
     const playerStartZ = 0;
     
@@ -144,70 +144,70 @@ export class EnvironmentGenerator {
       maxZ: number;
       prefix: string;
     }[] = [
-      // Tropical islands - positioned farther from the starting point
+      // Tropical islands - positioned across the full world map
       {
         type: 'tropical',
-        count: 4,
+        count: 6,
         scale: 1.3,
-        minX: -100,
-        maxX: 100,
-        minZ: -100,
-        maxZ: 100,
+        minX: -220,
+        maxX: 220,
+        minZ: -220,
+        maxZ: 220,
         prefix: 'tropical'
       },
-      // Mountain islands - medium distance
+      // Mountain islands - distributed widely
       {
         type: 'mountain',
-        count: 4,
+        count: 6,
         scale: 1.8,
-        minX: -110,
-        maxX: 110,
-        minZ: -110,
-        maxZ: 110,
+        minX: -210,
+        maxX: 210,
+        minZ: -210,
+        maxZ: 210,
         prefix: 'mountain'
       },
-      // Rock formations - much closer to create immediate obstacles
+      // Rock formations - spread across the map with some near starting area
       {
         type: 'rocks',
-        count: 8,
+        count: 12,
         scale: 1.9,
-        minX: -60,
-        maxX: 60,
-        minZ: -60,
-        maxZ: 60,
+        minX: -200,
+        maxX: 200,
+        minZ: -200,
+        maxZ: 200,
         prefix: 'rocks'
       },
-      // Shipwrecks - scattered around, mostly near the center
+      // Shipwrecks - spread widely across the map
       {
         type: 'shipwreck',
-        count: 3,
+        count: 5,
         scale: 1.5,
-        minX: -80,
-        maxX: 80,
-        minZ: -80,
-        maxZ: 80,
+        minX: -250,
+        maxX: 250,
+        minZ: -250,
+        maxZ: 250,
         prefix: 'shipwreck'
       },
-      // Ports - a few scattered at moderate distance
+      // Ports - scattered at extreme edges of the map
       {
         type: 'port',
-        count: 2,
+        count: 4,
         scale: 1.6,
-        minX: -90,
-        maxX: 90,
-        minZ: -90,
-        maxZ: 90,
+        minX: -240,
+        maxX: 240,
+        minZ: -240,
+        maxZ: 240,
         prefix: 'port'
       },
-      // Lighthouses - few but visible from a distance
+      // Lighthouses - positioned on coastlines across the full map
       {
         type: 'lighthouse',
-        count: 3,
+        count: 5,
         scale: 2.0,
-        minX: -100,
-        maxX: 100,
-        minZ: -100,
-        maxZ: 100,
+        minX: -230,
+        maxX: 230,
+        minZ: -230,
+        maxZ: 230,
         prefix: 'lighthouse'
       }
     ];
