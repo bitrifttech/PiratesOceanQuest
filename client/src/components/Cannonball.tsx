@@ -6,6 +6,7 @@ import { SCALE, MODEL_ADJUSTMENT } from "../lib/constants";
 import { useEnemies } from "../lib/stores/useEnemies";
 import { usePlayer } from "../lib/stores/usePlayer";
 import { environmentCollisions } from "../lib/collision";
+import ExplosionEffect from "./ExplosionEffect";
 
 interface CannonballProps {
   position: THREE.Vector3;
@@ -58,6 +59,10 @@ const Cannonball = ({
   
   // Hit detection status
   const hitDetected = useRef<boolean>(false);
+  
+  // Track explosion state
+  const [showExplosion, setShowExplosion] = useState<boolean>(false);
+  const [explosionPosition, setExplosionPosition] = useState<THREE.Vector3 | null>(null);
 
   // Update cannonball position and apply physics independently of ship
   useFrame((_, delta) => {
@@ -99,15 +104,13 @@ const Cannonball = ({
       // Log collision with environment
       console.log(`[CANNONBALL] Hit ${environmentCollision.type} at (${environmentCollision.x}, ${environmentCollision.z})`);
       
-      // Create a small explosion effect
-      // TODO: Add explosion effect
+      // Create explosion effect at the impact point
+      setExplosionPosition(cannonballPosition.clone());
+      setShowExplosion(true);
       
-      // Trigger callback to remove cannonball
-      if (onHit) onHit();
-      
-      // Remove cannonball immediately
-      if (ballRef.current && ballRef.current.parent) {
-        ballRef.current.parent.remove(ballRef.current);
+      // Hide the cannonball but don't remove it yet (explosion needs to finish)
+      if (ballRef.current) {
+        ballRef.current.visible = false;
       }
       
       // Skip enemy collision checks if we already hit the environment
@@ -130,12 +133,13 @@ const Cannonball = ({
         
         console.log(`[CANNONBALL] Hit enemy ship ${enemy.id}! Applied 20 damage.`);
         
-        // Trigger callback to remove cannonball
-        if (onHit) onHit();
+        // Create explosion effect at the impact point
+        setExplosionPosition(cannonballPosition.clone());
+        setShowExplosion(true);
         
-        // Remove cannonball immediately
-        if (ballRef.current && ballRef.current.parent) {
-          ballRef.current.parent.remove(ballRef.current);
+        // Hide the cannonball but don't remove it yet (explosion needs to finish)
+        if (ballRef.current) {
+          ballRef.current.visible = false;
         }
         
         // Exit loop after first hit
@@ -173,12 +177,13 @@ const Cannonball = ({
           
           console.log(`[CANNONBALL] Enemy cannonball hit player! Applied 15 damage.`);
           
-          // Trigger callback to remove cannonball
-          if (onHit) onHit();
+          // Create explosion effect at the impact point
+          setExplosionPosition(cannonballPosition.clone());
+          setShowExplosion(true);
           
-          // Remove cannonball immediately
-          if (ballRef.current && ballRef.current.parent) {
-            ballRef.current.parent.remove(ballRef.current);
+          // Hide the cannonball but don't remove it yet (explosion needs to finish)
+          if (ballRef.current) {
+            ballRef.current.visible = false;
           }
         }
       }
