@@ -725,16 +725,7 @@ const Ship = () => {
           </mesh>
         )}
         
-        {/* Crew System - adds animated crew members to the ship */}
-        {shipModelLoadedRef.current && (
-          <CrewSystem 
-            shipSize="medium"
-            isPlayerShip={true}
-            shipRef={shipRef}
-            crewSize={8}
-            shipEvent={playerShipEvent}
-          />
-        )}
+        {/* Crew System disabled */}
       </group>
       
       {/* Scene-level projectiles and effects - not children of the ship group */}

@@ -1,7 +1,19 @@
 import { create } from 'zustand';
-import { ShipEvent } from '../../components/CrewSystem';
 import { usePlayer } from './usePlayer';
 import { useEnemies } from './useEnemies';
+
+// Define a simplified ShipEvent type to replace the imported one from CrewSystem
+export type ShipEvent = 
+  | 'idle' 
+  | 'sailing' 
+  | 'combat_started' 
+  | 'hit_by_cannon' 
+  | 'firing_cannons' 
+  | 'near_collision' 
+  | 'victory' 
+  | 'taking_damage' 
+  | 'nearby_enemy' 
+  | 'aiming_cannons';
 
 interface ShipEventsState {
   playerShipEvent: ShipEvent;

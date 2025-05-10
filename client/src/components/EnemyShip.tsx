@@ -347,14 +347,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
           }}
         />
         
-        {/* Enemy ship crew system */}
-        <CrewSystem 
-          shipSize="medium"
-          isPlayerShip={false}
-          shipRef={shipRef}
-          crewSize={6} // Slightly smaller crew than player ship
-          shipEvent={shipEvent}
-        />
+        {/* Enemy ship crew system disabled */}
       </group>
     </>
   );
