@@ -86,6 +86,19 @@ class CollisionHandler {
   }
   
   /**
+   * Legacy method for compatibility - calculates collision response
+   * Uses the safer calculateSafePosition internally
+   */
+  calculateCollisionResponse(
+    position: THREE.Vector3,
+    velocity: THREE.Vector3,
+    feature: EnvironmentFeature
+  ): THREE.Vector3 {
+    // Just delegate to the safer implementation
+    return this.calculateSafePosition(position, feature);
+  }
+  
+  /**
    * Checks if there's a collision and returns a safe position if needed
    * Returns null if no collision occurs, otherwise returns the safe position
    */

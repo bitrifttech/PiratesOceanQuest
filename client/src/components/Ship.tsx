@@ -443,69 +443,75 @@ const Ship = () => {
     );
     
     // Check if current position is already inside a feature (in case we somehow got inside)
-    const currentCollision = collisionHandler.checkPointCollision(position, shipRadius);
+    const currentPositionCollision = collisionHandler.checkPointCollision(position, shipRadius);
     
     // Also check if future position would result in a collision
-    const futureCollision = collisionHandler.checkPointCollision(futurePosition, shipRadius + safetyMargin);
+    const futurePositionCollision = collisionHandler.checkPointCollision(futurePosition, shipRadius + safetyMargin);
     
     // Handle collision response
     let newPosition;
-    if (currentCollision || futureCollision) {
+    if (currentPositionCollision || futurePositionCollision) {
       // Get the feature we're colliding with (prioritize current collision)
-      const collidingFeature = currentCollision || futureCollision;
+      const collidingFeature = currentPositionCollision || futurePositionCollision;
       
-      // Log detailed collision information
-      console.log(`[COLLISION] Ship colliding with ${collidingFeature.type} at (${collidingFeature.x.toFixed(1)}, ${collidingFeature.z.toFixed(1)})`);
-      
-      if (currentCollision) {
-        // We're already inside a feature - use collision response to push out
-        console.log(`[COLLISION] Already inside feature - calculating push vector`);
+      if (collidingFeature) {
+        // Log detailed collision information
+        console.log(`[COLLISION] Ship colliding with ${collidingFeature.type} at (${collidingFeature.x.toFixed(1)}, ${collidingFeature.z.toFixed(1)})`);
         
-        // Get push-back position from collision handler
-        newPosition = collisionHandler.calculateCollisionResponse(
-          position,
-          velocity.clone(),
-          collidingFeature
-        );
-        
-        // Calculate bounce direction away from the feature center
-        const bounceDirection = new THREE.Vector3()
-          .subVectors(position, new THREE.Vector3(collidingFeature.x, 0, collidingFeature.z))
-          .normalize();
-        
-        // Apply a stronger bounce velocity in that direction
-        const bounceVelocity = bounceDirection.multiplyScalar(5.0);
-        setVelocity(bounceVelocity);
-        
-        console.log(`[COLLISION] Bounce applied with velocity (${bounceVelocity.x.toFixed(2)}, ${bounceVelocity.z.toFixed(2)})`);
-      } else {
-        // Future collision - calculate a safe position to prevent penetration
-        // Use a stronger response to prevent ships from passing through islands
-        console.log(`[COLLISION] Avoiding future collision`);
-        
-        // Calculate a deflection position based on approach angle
-        const toFeatureDirection = new THREE.Vector3()
-          .subVectors(new THREE.Vector3(collidingFeature.x, 0, collidingFeature.z), position)
-          .normalize();
+        if (currentPositionCollision) {
+          // We're already inside a feature - use safe position calculation to push out
+          console.log(`[COLLISION] Already inside feature - calculating push vector`);
           
-        // Get deflection angle (perpendicular to approach)
-        const deflectionAngle = Math.atan2(toFeatureDirection.x, toFeatureDirection.z) + Math.PI/2;
-        const deflectionDirection = new THREE.Vector3(
-          Math.sin(deflectionAngle),
-          0,
-          Math.cos(deflectionAngle)
-        ).normalize();
-        
-        // Apply deflection to velocity instead of zeroing it out
-        const deflectionVelocity = deflectionDirection.multiplyScalar(velocity.length() * 0.8);
-        setVelocity(deflectionVelocity);
-        
-        // Stay at current position but slightly away from the feature
-        newPosition = position.clone().add(
-          deflectionDirection.multiplyScalar(0.5) // Small push away from collision path
-        );
-        
-        console.log(`[COLLISION] Deflected with new velocity (${deflectionVelocity.x.toFixed(2)}, ${deflectionVelocity.z.toFixed(2)})`);
+          // Get push-back position from collision handler
+          newPosition = collisionHandler.calculateSafePosition(
+            position,
+            collidingFeature,
+            shipRadius,
+            safetyMargin
+          );
+          
+          // Calculate bounce direction away from the feature center
+          const bounceDirection = new THREE.Vector3()
+            .subVectors(position, new THREE.Vector3(collidingFeature.x, 0, collidingFeature.z))
+            .normalize();
+          
+          // Apply a stronger bounce velocity in that direction
+          const bounceVelocity = bounceDirection.multiplyScalar(5.0);
+          setVelocity(bounceVelocity);
+          
+          console.log(`[COLLISION] Bounce applied with velocity (${bounceVelocity.x.toFixed(2)}, ${bounceVelocity.z.toFixed(2)})`);
+        } else {
+          // Future collision - calculate a safe position to prevent penetration
+          // Use a stronger response to prevent ships from passing through islands
+          console.log(`[COLLISION] Avoiding future collision`);
+          
+          // Calculate a deflection position based on approach angle
+          const toFeatureDirection = new THREE.Vector3()
+            .subVectors(new THREE.Vector3(collidingFeature.x, 0, collidingFeature.z), position)
+            .normalize();
+            
+          // Get deflection angle (perpendicular to approach)
+          const deflectionAngle = Math.atan2(toFeatureDirection.x, toFeatureDirection.z) + Math.PI/2;
+          const deflectionDirection = new THREE.Vector3(
+            Math.sin(deflectionAngle),
+            0,
+            Math.cos(deflectionAngle)
+          ).normalize();
+          
+          // Apply deflection to velocity instead of zeroing it out
+          const deflectionVelocity = deflectionDirection.multiplyScalar(velocity.length() * 0.8);
+          setVelocity(deflectionVelocity);
+          
+          // Stay at current position but slightly away from the feature
+          newPosition = position.clone().add(
+            deflectionDirection.multiplyScalar(0.5) // Small push away from collision path
+          );
+          
+          console.log(`[COLLISION] Deflected with new velocity (${deflectionVelocity.x.toFixed(2)}, ${deflectionVelocity.z.toFixed(2)})`);
+        }
+      } else {
+        // This shouldn't happen, but just in case
+        newPosition = position.clone();
       }
     } else {
       // No collision at the future position - allow the ship to move
