@@ -3,6 +3,13 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { SCALE, MODEL_ADJUSTMENT } from "../lib/constants";
+import { ModelService } from "../lib/services/ModelService";
+
+// Preload crew member models
+useGLTF.preload('/models/pirate_captain.glb');
+useGLTF.preload('/models/pirate_sailor.glb');
+useGLTF.preload('/models/pirate_gunner.glb');
+useGLTF.preload('/models/pirate_lookout.glb');
 
 // Crew member types to determine appearance and behavior
 export type CrewMemberType = 'captain' | 'sailor' | 'gunner' | 'lookout';
@@ -185,60 +192,92 @@ const CrewMember: React.FC<CrewMemberProps> = ({
     }
   });
   
-  // Use a simple placeholder for crew members
-  // This will be replaced with proper character models later
+  // Get the appropriate model path based on crew type
+  const getModelPath = () => {
+    switch (type) {
+      case 'captain':
+        return '/models/pirate_captain.glb';
+      case 'gunner':
+        return '/models/pirate_gunner.glb';
+      case 'lookout':
+        return '/models/pirate_lookout.glb';
+      case 'sailor':
+      default:
+        return '/models/pirate_sailor.glb';
+    }
+  };
+  
+  // Load the 3D model for this crew member
+  const modelPath = getModelPath();
+  const { scene } = useGLTF(modelPath) as any;
+  
+  // Create a clone of the model to avoid sharing issues
+  const model = scene.clone();
+  
+  // Log when the model is loaded
+  useEffect(() => {
+    console.log(`[CREW] Loaded ${type} model from ${modelPath}`);
+  }, [type, modelPath]);
+  
+  // Get model-specific height adjustment
+  const getModelHeightOffset = () => {
+    switch (type) {
+      case 'captain':
+        return 0.1;
+      case 'gunner':
+        return 0.08;
+      case 'lookout':
+        return 0.1;
+      case 'sailor':
+      default:
+        return 0.08;
+    }
+  };
+  
+  // Apply any model-specific rotation adjustment
+  const getModelRotationAdjustment = () => {
+    switch (type) {
+      case 'captain':
+        return [0, Math.PI, 0]; // Face forward
+      case 'gunner':
+        return [0, Math.PI, 0]; // Face forward
+      case 'lookout':
+        return [0, Math.PI, 0]; // Face forward
+      case 'sailor':
+      default:
+        return [0, Math.PI, 0]; // Face forward
+    }
+  };
+  
+  // Calculate adjusted position with height offset
+  const adjustedPosition: [number, number, number] = [
+    position[0],
+    position[1] + getModelHeightOffset(), // Adjust height
+    position[2]
+  ];
+  
+  // Combine the base rotation with model-specific adjustments
+  const baseRotation = rotation || [0, 0, 0];
+  const rotationAdjustment = getModelRotationAdjustment();
+  const adjustedRotation: [number, number, number] = [
+    baseRotation[0] + rotationAdjustment[0],
+    baseRotation[1] + rotationAdjustment[1],
+    baseRotation[2] + rotationAdjustment[2]
+  ];
+  
   return (
     <group 
       ref={meshRef} 
-      position={position} 
-      rotation={rotation as [number, number, number]}
+      position={adjustedPosition} 
+      rotation={adjustedRotation}
       scale={[scale, scale, scale]}
     >
-      {/* Body */}
-      <mesh castShadow>
-        <capsuleGeometry args={[0.12, 0.5, 8, 8]} />
-        <meshStandardMaterial color={getCrewColor()} />
-      </mesh>
-      
-      {/* Head */}
-      <mesh position={[0, 0.4, 0]} castShadow>
-        <sphereGeometry args={[0.12, 16, 16]} />
-        <meshStandardMaterial color={0xffcc99} />
-      </mesh>
-      
-      {/* Arms - left */}
-      <mesh position={[-0.18, 0.1, 0]} castShadow>
-        <capsuleGeometry args={[0.05, 0.3, 8, 8]} />
-        <meshStandardMaterial color={getCrewColor()} />
-      </mesh>
-      
-      {/* Arms - right */}
-      <mesh position={[0.18, 0.1, 0]} castShadow>
-        <capsuleGeometry args={[0.05, 0.3, 8, 8]} />
-        <meshStandardMaterial color={getCrewColor()} />
-      </mesh>
-      
-      {/* Special items based on crew type */}
-      {type === 'captain' && (
-        <mesh position={[0, 0.5, 0]} rotation={[0, 0, 0.3]} castShadow>
-          <cylinderGeometry args={[0.15, 0.2, 0.1, 16]} />
-          <meshStandardMaterial color={0x000022} />
-        </mesh>
-      )}
-      
-      {type === 'gunner' && (
-        <mesh position={[0.25, 0.1, 0]} rotation={[0, 0, -Math.PI/2]} castShadow>
-          <cylinderGeometry args={[0.03, 0.03, 0.3, 8]} />
-          <meshStandardMaterial color={0x666666} />
-        </mesh>
-      )}
-      
-      {type === 'lookout' && (
-        <mesh position={[0.15, 0.4, 0.15]} rotation={[0, 0, 0]} castShadow>
-          <cylinderGeometry args={[0.05, 0.05, 0.1, 8]} />
-          <meshStandardMaterial color={0x111111} />
-        </mesh>
-      )}
+      {/* Rendered 3D model based on crew type */}
+      <primitive 
+        object={model} 
+        castShadow 
+        receiveShadow
+      />
     </group>
   );
 };

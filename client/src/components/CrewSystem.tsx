@@ -175,7 +175,7 @@ const CrewSystem: React.FC<CrewSystemProps> = ({
           type={crewPos.type}
           position={crewPos.position}
           rotation={crewPos.rotation}
-          scale={0.5} // Scale to fit ship
+          scale={0.25} // Smaller scale for the detailed 3D models
           animationState={
             // Different crew types may have different reactions to the same event
             crewPos.type === 'gunner' && shipEvent === 'aiming_cannons' 
