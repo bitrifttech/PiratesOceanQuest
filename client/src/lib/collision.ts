@@ -2,24 +2,24 @@ import * as THREE from "three";
 import { EnvironmentFeature, EnvironmentFeatureType } from "../components/Environment";
 
 // Collision constants
-const COLLISION_MARGIN = 2; // Units of extra margin for collision detection
+const COLLISION_MARGIN = 3; // Increased margin for more reliable collision detection
 
 // Get radius based on feature type and scale
 export function getFeatureRadius(type: EnvironmentFeatureType, scale: number): number {
-  // Base radius depends on feature type (these are approximate values)
+  // Base radius depends on feature type
   let baseRadius = 0;
   switch (type) {
     case 'tropical':
-      baseRadius = 8; // Reduced from 20 to more realistic 8
+      baseRadius = 15; // Increased from 8 to cover more of the island
       break;
     case 'mountain':
-      baseRadius = 10; // Reduced from 25 to more realistic 10
+      baseRadius = 18; // Increased from 10 to prevent ships passing through
       break;
     case 'rocks':
-      baseRadius = 5; // Reduced from 10 to more realistic 5
+      baseRadius = 8; // Increased from 5 to match visual appearance better
       break;
     default:
-      baseRadius = 6;
+      baseRadius = 10;
   }
   // Scale the radius based on the feature's scale
   return baseRadius * scale;
@@ -80,12 +80,18 @@ export function calculateCollisionResponse(
     0,
     position.z - feature.z
   ).length();
-  const pushDistance = featureRadius + COLLISION_MARGIN - distance;
   
-  // Adjust position to prevent penetration
-  const pushVector = direction.clone().multiplyScalar(pushDistance + 0.1);
+  // Calculate a stronger push distance with extra safety margin
+  const pushDistance = (featureRadius + COLLISION_MARGIN - distance) * 1.5;
   
-  // Return the adjusted position
+  // Apply a more forceful push vector with additional safety buffer
+  const pushVector = direction.clone().multiplyScalar(pushDistance + 1.5);
+  
+  // Log collision for debugging
+  console.log(`[COLLISION] Ship collided with ${feature.type} at (${feature.x.toFixed(1)}, ${feature.z.toFixed(1)})`);
+  console.log(`[COLLISION] Pushing ship by ${pushDistance.toFixed(2)} units in direction (${direction.x.toFixed(2)}, ${direction.z.toFixed(2)})`);
+  
+  // Return the adjusted position with a stronger push to prevent getting stuck
   return new THREE.Vector3(
     position.x + pushVector.x,
     position.y,
