@@ -10,19 +10,21 @@ export function getFeatureRadius(type: EnvironmentFeatureType, scale: number): n
   let baseRadius = 0;
   switch (type) {
     case 'tropical':
-      baseRadius = 15; // Increased from 8 to cover more of the island
+      baseRadius = 20; // Further increased to cover more of the island
       break;
     case 'mountain':
-      baseRadius = 18; // Increased from 10 to prevent ships passing through
+      baseRadius = 35; // Dramatically increased to prevent ships passing through
       break;
     case 'rocks':
-      baseRadius = 8; // Increased from 5 to match visual appearance better
+      baseRadius = 12; // Increased to match visual appearance better
       break;
     default:
-      baseRadius = 10;
+      baseRadius = 15;
   }
   // Scale the radius based on the feature's scale
-  return baseRadius * scale;
+  const scaledRadius = baseRadius * scale;
+  console.log(`[COLLISION RADIUS] ${type} with scale ${scale.toFixed(2)} has radius ${scaledRadius.toFixed(2)}`);
+  return scaledRadius;
 }
 
 // Check if a point collides with an environment feature

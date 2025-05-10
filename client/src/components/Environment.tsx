@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { GLTF } from "three-stdlib";
 import { SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
 import { environmentCollisions } from "../lib/collision";
+import CollisionBoundaryVisualizer from "./CollisionBoundaryVisualizer";
 
 // Preload all models once at module level
 useGLTF.preload('/models/tropical_island.glb');
@@ -161,6 +162,23 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
 
 // Main Environment component - renders all features
 const Environment = ({ features }: { features: EnvironmentFeature[] }) => {
+  // State for showing collision boundaries (debug tool)
+  const [showCollisionBoundaries, setShowCollisionBoundaries] = useState(true);
+  
+  // Set up keyboard listener for toggling collision visualization 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Toggle collision boundaries with "B" key
+      if (event.key === 'b' || event.key === 'B') {
+        setShowCollisionBoundaries(prev => !prev);
+        console.log(`[COLLISION DEBUG] ${!showCollisionBoundaries ? 'Showing' : 'Hiding'} collision boundaries`);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showCollisionBoundaries]);
+  
   // Log once on mount and register features with collision system
   useEffect(() => {
     console.log(`[ENV] Environment initialized with ${features.length} features`, features);
@@ -191,12 +209,17 @@ const Environment = ({ features }: { features: EnvironmentFeature[] }) => {
   }
   
   console.log('[ENV-RENDER] Rendering environment features');
+  console.log('[COLLISION DEBUG] Press B to toggle collision boundary visualization');
   
   return (
     <group name="environment">
+      {/* Render all environmental features */}
       {features.map(feature => (
         <EnvironmentalFeature key={feature.id} feature={feature} />
       ))}
+      
+      {/* Render collision boundary visualizer */}
+      <CollisionBoundaryVisualizer features={features} visible={showCollisionBoundaries} />
     </group>
   );
 };
