@@ -10,16 +10,16 @@ export function getFeatureRadius(type: EnvironmentFeatureType, scale: number): n
   let baseRadius = 0;
   switch (type) {
     case 'tropical':
-      baseRadius = 20; // Further increased to cover more of the island
+      baseRadius = 25; // Further increased to cover more of the island
       break;
     case 'mountain':
-      baseRadius = 35; // Dramatically increased to prevent ships passing through
+      baseRadius = 50; // EXTREMELY increased to prevent ships passing through at all costs
       break;
     case 'rocks':
-      baseRadius = 12; // Increased to match visual appearance better
+      baseRadius = 15; // Increased to match visual appearance better
       break;
     default:
-      baseRadius = 15;
+      baseRadius = 20;
   }
   // Scale the radius based on the feature's scale
   const scaledRadius = baseRadius * scale;
@@ -86,19 +86,63 @@ export function calculateCollisionResponse(
   // Calculate a stronger push distance with extra safety margin
   const pushDistance = (featureRadius + COLLISION_MARGIN - distance) * 1.5;
   
-  // Apply a more forceful push vector with additional safety buffer
-  const pushVector = direction.clone().multiplyScalar(pushDistance + 1.5);
+  // Apply an extremely forceful push vector with large safety buffer
+  // Multiply by a factor of 3 to ensure ships are pushed well clear of the feature
+  const pushVector = direction.clone().multiplyScalar(pushDistance * 3 + 5);
+  
+  // Add a slight randomization to avoid getting stuck in certain patterns
+  pushVector.x += (Math.random() - 0.5) * 2;
+  pushVector.z += (Math.random() - 0.5) * 2;
   
   // Log collision for debugging
   console.log(`[COLLISION] Ship collided with ${feature.type} at (${feature.x.toFixed(1)}, ${feature.z.toFixed(1)})`);
-  console.log(`[COLLISION] Pushing ship by ${pushDistance.toFixed(2)} units in direction (${direction.x.toFixed(2)}, ${direction.z.toFixed(2)})`);
+  console.log(`[COLLISION] EXTREME PUSH applied: ${pushDistance.toFixed(2)} units × 3 in direction (${direction.x.toFixed(2)}, ${direction.z.toFixed(2)})`);
   
-  // Return the adjusted position with a stronger push to prevent getting stuck
+  // Return the adjusted position with a much stronger push to guarantee no getting stuck
   return new THREE.Vector3(
     position.x + pushVector.x,
     position.y,
     position.z + pushVector.z
   );
+}
+
+// Calculate a safe position when we're inside a feature
+// This is crucial for emergency corrections when a ship somehow gets inside a collision boundary
+export function calculateSafePosition(
+  position: THREE.Vector3,
+  feature: EnvironmentFeature,
+  shipRadius: number,
+  safetyMargin: number
+): THREE.Vector3 {
+  // Calculate direction away from the feature center
+  const direction = new THREE.Vector3(
+    position.x - feature.x,
+    0,
+    position.z - feature.z
+  );
+  
+  // If direction length is zero (exactly at center), use a random direction
+  if (direction.length() < 0.001) {
+    direction.set(Math.random() - 0.5, 0, Math.random() - 0.5);
+  }
+  
+  // Normalize the direction
+  direction.normalize();
+  
+  // Calculate the minimum distance needed to be safely outside the feature
+  const featureRadius = getFeatureRadius(feature.type, feature.scale);
+  const safeDistance = featureRadius + shipRadius + safetyMargin + 5; // Extra +5 for absolute safety
+  
+  // Calculate a position that's safely outside the feature
+  const safePosition = new THREE.Vector3(
+    feature.x + direction.x * safeDistance,
+    position.y,
+    feature.z + direction.z * safeDistance
+  );
+  
+  console.log(`[COLLISION] EMERGENCY SAFE POSITION calculated: (${safePosition.x.toFixed(1)}, ${safePosition.z.toFixed(1)})`);
+  
+  return safePosition;
 }
 
 // Export a singleton for tracking environment collisions globally
@@ -128,5 +172,15 @@ export const environmentCollisions = {
       }
     }
     return null;
+  },
+  
+  // Calculate a safe position when inside a feature
+  calculateSafePosition(
+    position: THREE.Vector3,
+    feature: EnvironmentFeature,
+    shipRadius: number,
+    safetyMargin: number
+  ): THREE.Vector3 {
+    return calculateSafePosition(position, feature, shipRadius, safetyMargin);
   }
 };

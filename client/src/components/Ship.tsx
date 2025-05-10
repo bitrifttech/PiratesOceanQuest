@@ -433,9 +433,9 @@ const Ship = () => {
     
     setVelocity(newVelocity);
     
-    // ENHANCED COLLISION APPROACH: Better handling of island collisions
-    const shipRadius = 8; // Increased ship collision radius for more reliable detection
-    const safetyMargin = 2.5; // Increased buffer to keep from islands
+    // MAXIMUM COLLISION HANDLING: Absolutely prevent ships from passing through islands
+    const shipRadius = 20; // Extreme collision radius to guarantee detection
+    const safetyMargin = 10; // Massive buffer zone to ensure ships cannot pass through islands
     
     // Calculate proposed new position with velocity
     const futurePosition = position.clone().add(
