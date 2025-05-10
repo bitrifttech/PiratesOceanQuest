@@ -4,8 +4,10 @@ import * as THREE from "three";
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
 import { useGameState } from "../lib/stores/useGameState";
+import { useShipEvents } from "../lib/stores/useShipEvents";
 import CustomModel from "./CustomModel";
 import Cannonball from "./Cannonball";
+import CrewSystem from "./CrewSystem";
 import { POSITION, SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
 
 interface EnemyShipProps {
@@ -28,6 +30,9 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   
   // Collision and combat references
   const collisionCooldown = useRef<number>(0);
+  
+  // Get the ship event state for this specific enemy ship
+  const shipEvent = useShipEvents(state => state.enemyShipEvents[id] || 'sailing');
   const cannonballsRef = useRef<JSX.Element[]>([]);
   const cannonCooldownRef = useRef<number>(0);
   
@@ -94,6 +99,11 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         const enemiesState = useEnemies.getState();
         enemiesState.damageEnemy(id, collisionDamage);
         
+        // Trigger crew reactions
+        const { enemyHit, playerHit } = useShipEvents.getState();
+        enemyHit(id); // Enemy ship crew reacts to being hit
+        playerHit(); // Player ship crew also reacts
+        
         // Set collision cooldown to avoid rapid damage
         collisionCooldown.current = 1.5; // 1.5 second cooldown
         
@@ -136,6 +146,10 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         
         // Log collision avoidance when first triggered
         if (inCollisionDanger && Math.random() < 0.05) {
+          // Trigger crew near collision animation
+          const { enemyNearCollision } = useShipEvents.getState();
+          enemyNearCollision(id);
+          
           console.log(`[ENEMY SHIP ${id}] Collision warning! Taking evasive action.`);
         }
       } 
@@ -295,6 +309,15 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
             console.log(`- Rotation: ${JSON.stringify(rotationRef.current)}`);
             console.log(`- Scale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP * 1.25}`);
           }}
+        />
+        
+        {/* Enemy ship crew system */}
+        <CrewSystem 
+          shipSize="medium"
+          isPlayerShip={false}
+          shipRef={shipRef}
+          crewSize={6} // Slightly smaller crew than player ship
+          shipEvent={shipEvent}
         />
       </group>
     </>
