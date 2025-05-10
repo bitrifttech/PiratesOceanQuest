@@ -39,6 +39,8 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   const rotationSpeed = 0.01;
   const detectionRange = 80; // Units at which the enemy ship detects the player
   const canFireRange = 30; // Range at which enemy will fire cannons
+  const optimalRange = 25; // Ideal distance to maintain from player
+  const minimumRange = 15; // Minimum distance before retreating
   
   // Update the enemy in the game state
   const moveEnemy = useEnemies((state) => state.moveEnemy);
@@ -70,48 +72,101 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
     const playerShipRadius = 5; // Units radius for player ship
     const collisionDamage = 10; // Damage on collision
     
-    // Create a local collision handler for this frame
-    const localCollisionCooldown = 0; // Just use a local variable instead of ref
+    // Track collision state and add cooldown for damage
+    if (collisionCooldown.current > 0) {
+      collisionCooldown.current -= delta;
+    }
     
-    // Check for collision with player ship - apply damage to both ships
+    // Proximity alert - start evasive maneuvers when getting too close to player
+    // This helps avoid collisions before they happen
+    const collisionWarningDistance = (enemyShipRadius + playerShipRadius) * 1.5;
+    const inCollisionDanger = distanceToPlayer < collisionWarningDistance;
+    
+    // Check for actual collision with player ship
     if (distanceToPlayer < (enemyShipRadius + playerShipRadius)) {
-      // Damage both ships - no cooldown for now
-      const takeDamage = usePlayer.getState().takeDamage;
-      takeDamage(collisionDamage);
+      // Only apply damage if not in cooldown to prevent rapid damage
+      if (collisionCooldown.current <= 0) {
+        // Damage both ships
+        const takeDamage = usePlayer.getState().takeDamage;
+        takeDamage(collisionDamage);
+        
+        // Damage this enemy ship too
+        const enemiesState = useEnemies.getState();
+        enemiesState.damageEnemy(id, collisionDamage);
+        
+        // Set collision cooldown to avoid rapid damage
+        collisionCooldown.current = 1.5; // 1.5 second cooldown
+        
+        console.log(`[COLLISION] Ship-to-ship collision! Both ships take ${collisionDamage} damage`);
+      }
       
-      // Damage this enemy ship too
-      const enemiesState = useEnemies.getState();
-      enemiesState.damageEnemy(id, collisionDamage);
-      
-      console.log(`[COLLISION] Ship-to-ship collision! Both ships take ${collisionDamage} damage`);
-      
-      // Apply bounce effect - push ships away from each other
+      // Apply stronger bounce effect - push ships away from each other
+      // Do this regardless of damage cooldown to ensure ships separate
       const bounceDirection = new THREE.Vector3()
         .subVectors(currentPos, playerPosition)
         .normalize()
-        .multiplyScalar(1.0); // Bounce force
+        .multiplyScalar(2.5); // Stronger bounce force
       
       // Apply bounce to enemy position
       currentPos.add(bounceDirection);
+      
+      // Log evasive action
+      console.log(`[ENEMY SHIP ${id}] Collision detected! Taking evasive action.`);
     }
     
-    // Basic AI behavior
+    // Improved AI behavior with tactical movement
     if (distanceToPlayer < detectionRange) {
-      // Calculate angle to player - this is the direction we need to face
+      // Calculate angle to player - direction we need to either face or flee from
       const angleToPlayer = Math.atan2(
         playerPosition.x - currentPos.x,
         playerPosition.z - currentPos.z
       );
       
-      // Gradually rotate toward player with smooth turning
+      // Decide whether to approach, maintain distance, or retreat
+      let targetAngle = angleToPlayer;
+      let movementSpeed = speed;
+      let behaviorState = "approach"; // Default behavior
+      
+      // If too close to player or in collision warning, turn around and retreat
+      if (distanceToPlayer < minimumRange || inCollisionDanger) {
+        // Reverse the direction to move away
+        targetAngle = angleToPlayer + Math.PI; // Turn 180° away
+        movementSpeed = speed * 1.5; // Move away faster
+        behaviorState = "retreat";
+        
+        // Log collision avoidance when first triggered
+        if (inCollisionDanger && Math.random() < 0.05) {
+          console.log(`[ENEMY SHIP ${id}] Collision warning! Taking evasive action.`);
+        }
+      } 
+      // Otherwise, if within optimal firing range, circle the player
+      else if (distanceToPlayer < optimalRange) {
+        // Calculate a perpendicular angle for circling (90 degrees offset)
+        targetAngle = angleToPlayer + Math.PI / 2;
+        // Randomly reverse circle direction occasionally
+        if (Math.random() < 0.01) {
+          targetAngle = angleToPlayer - Math.PI / 2;
+        }
+        movementSpeed = speed * 0.8; // Slower circular movement
+        behaviorState = "circle";
+      }
+      // If beyond optimal range but within detection, approach cautiously
+      else {
+        // Approach normally
+        targetAngle = angleToPlayer;
+        movementSpeed = speed * 0.9; // Slightly slower approach
+        behaviorState = "approach";
+      }
+      
+      // Gradually rotate toward the target angle with smooth turning
       const currentAngle = currentRot.y;
-      let angleDiff = angleToPlayer - currentAngle;
+      let angleDiff = targetAngle - currentAngle;
       
       // Normalize angle difference to [-PI, PI]
       while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
       while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
       
-      // Apply smooth rotation toward player
+      // Apply smooth rotation toward target angle
       const newRotY = currentAngle + Math.sign(angleDiff) * 
                       Math.min(Math.abs(angleDiff), rotationSpeed * delta * 60);
       
@@ -127,9 +182,8 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         Math.cos(newRotY)
       );
       
-      // The velocity is applied directly from this direction vector
-      // The bow of the ship points in this direction because of the model's PI rotation
-      const velocity = direction.clone().multiplyScalar(speed * delta * 60);
+      // Calculate velocity with dynamic speed adjustment
+      const velocity = direction.clone().multiplyScalar(movementSpeed * delta * 60);
       
       // Apply velocity to position
       currentPos.add(velocity);
@@ -137,7 +191,9 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       // Log for debugging, but only occasionally
       if (Math.random() < 0.002) {
         console.log(`[ENEMY SHIP ${id}] Movement details: 
+        - Behavior: ${behaviorState}
         - Angle to player: ${(angleToPlayer * 180 / Math.PI).toFixed(1)}°
+        - Target angle: ${(targetAngle * 180 / Math.PI).toFixed(1)}°
         - Current rotation: ${(currentAngle * 180 / Math.PI).toFixed(1)}°
         - New rotation: ${(newRotY * 180 / Math.PI).toFixed(1)}°
         - Direction: (${direction.x.toFixed(2)}, ${direction.z.toFixed(2)})
