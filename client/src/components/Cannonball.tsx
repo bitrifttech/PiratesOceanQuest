@@ -245,6 +245,27 @@ const Cannonball = ({
           attenuation={(width) => width}
         />
       </mesh>
+      
+      {/* Explosion effect when cannonball hits something */}
+      {showExplosion && explosionPosition && (
+        <ExplosionEffect
+          position={explosionPosition}
+          size={3.5}
+          duration={0.8}
+          onComplete={() => {
+            // Clean up when explosion finishes
+            setShowExplosion(false);
+            
+            // Now remove the cannonball completely
+            if (ballRef.current && ballRef.current.parent) {
+              ballRef.current.parent.remove(ballRef.current);
+            }
+            
+            // Execute callback if provided
+            if (onHit) onHit();
+          }}
+        />
+      )}
     </group>
   );
 };
