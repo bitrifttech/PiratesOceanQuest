@@ -3,6 +3,9 @@ import { create } from "zustand";
 // Track identifiers
 export type MusicTrack = 'main' | 'alternate';
 
+// Sound types for playSound function
+export type SoundEffect = 'hit' | 'success' | 'powerUp' | 'explosion' | 'splash';
+
 interface AudioState {
   // Audio elements
   backgroundMusic: HTMLAudioElement | null;
@@ -26,6 +29,9 @@ interface AudioState {
   playSuccess: () => void;
   playBackgroundMusic: () => void;
   stopBackgroundMusic: () => void;
+  
+  // Generic sound player
+  playSound: (soundType: SoundEffect) => void;
 }
 
 export const useAudio = create<AudioState>((set, get) => ({
@@ -188,6 +194,60 @@ export const useAudio = create<AudioState>((set, get) => ({
       activeMusic.pause();
       activeMusic.currentTime = 0;
       console.log("Background music stopped");
+    }
+  },
+  
+  // Generic sound player
+  playSound: (soundType: SoundEffect) => {
+    const { hitSound, successSound, isMuted, volume } = get();
+    
+    if (isMuted) return; // Don't play sounds when muted
+    
+    let sound: HTMLAudioElement | null = null;
+    
+    // Select the appropriate sound
+    switch (soundType) {
+      case 'hit':
+        sound = hitSound;
+        break;
+      case 'success':
+        sound = successSound;
+        break;
+      case 'powerUp':
+        // Use success sound for powerUp for now
+        sound = successSound;
+        break;
+      case 'explosion':
+        // Use hit sound for explosion for now
+        sound = hitSound;
+        break;
+      case 'splash':
+        // Use hit sound for splash for now 
+        sound = hitSound;
+        break;
+      default:
+        console.warn(`Unknown sound type: ${soundType}`);
+        return;
+    }
+    
+    // Play the sound if available
+    if (sound) {
+      // Clone the sound to allow overlapping playback
+      const soundClone = sound.cloneNode() as HTMLAudioElement;
+      soundClone.volume = volume;
+      
+      // Adjust volume based on sound type
+      if (soundType === 'powerUp') {
+        soundClone.volume = volume * 1.2; // Make power-ups slightly louder
+      } else if (soundType === 'explosion') {
+        soundClone.volume = volume * 1.3; // Make explosions louder
+      } else if (soundType === 'splash') {
+        soundClone.volume = volume * 0.7; // Make splashes quieter
+      }
+      
+      soundClone.play().catch(error => {
+        console.log(`${soundType} sound play prevented:`, error);
+      });
     }
   }
 }));

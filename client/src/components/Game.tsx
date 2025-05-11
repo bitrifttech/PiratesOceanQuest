@@ -8,12 +8,14 @@ import Ship from "./Ship";
 import EnemyShip from "./EnemyShip"; // Added back enemy ship component
 import SkyWithClouds from "./SkyWithClouds"; // New enhanced sky with cloud system
 import EnvironmentComponent, { EnvironmentFeature, EnvironmentFeatureType } from "./Environment";
+import PowerUpManager from "./PowerUpManager"; // Power-up system for prizes
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC, WORLD } from "../lib/constants";
 
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies"; // Re-enabled enemies
 import { useGameState } from "../lib/stores/useGameState";
 import { useAudio } from "../lib/stores/useAudio";
+import { usePowerUps } from "../lib/stores/usePowerUps"; // Power-up state management
 
 // Import services
 import { EnemyManager } from "../lib/services/EnemyManager";
