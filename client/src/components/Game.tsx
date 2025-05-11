@@ -136,9 +136,29 @@ const Game = () => {
   // Camera dynamics settings
   const [cameraSmoothing, setCameraSmoothing] = useState<number>(0.05);
   
+  // Health regeneration timer
+  const healthRegenTimer = useRef<number>(0);
+  const regenInterval = 3; // Regenerate health every 3 seconds
+  const regenAmount = 5; // Amount of health to regenerate each interval
+  
   // Camera follows player ship but preserves manual adjustments
-  useFrame(() => {
+  useFrame((state, delta) => {
     if (!playerPosition) return;
+    
+    // Health regeneration system
+    const playerState = usePlayer.getState();
+    healthRegenTimer.current += delta;
+    
+    // Check if it's time to regenerate health
+    if (healthRegenTimer.current >= regenInterval) {
+      // Only regenerate if player health is below max and above 0 (not dead)
+      if (playerState.health > 0 && playerState.health < playerState.maxHealth) {
+        playerState.heal(regenAmount);
+        console.log(`[PLAYER] Health regenerated +${regenAmount}. Health: ${playerState.health}/${playerState.maxHealth}`);
+      }
+      // Reset timer
+      healthRegenTimer.current = 0;
+    }
     
     // Update target to always follow the player ship
     cameraTargetRef.current.set(
