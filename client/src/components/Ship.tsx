@@ -727,6 +727,7 @@ const Ship = () => {
           direction={ball.direction}
           speed={35}
           lifespan={2.5}
+          sourceId="player" // Add player as source ID to prevent friendly fire
         />
       ))}
       
