@@ -206,13 +206,13 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
 
 // Main Environment component - renders all features
 const Environment = ({ features }: { features: EnvironmentFeature[] }) => {
-  // State for showing collision boundaries (debug tool)
-  const [showCollisionBoundaries, setShowCollisionBoundaries] = useState(true);
+  // State for showing collision boundaries (debug tool) - default to false
+  const [showCollisionBoundaries, setShowCollisionBoundaries] = useState(false);
   
   // Set up keyboard listener for toggling collision visualization 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Toggle collision boundaries with "B" key
+      // Toggle collision boundaries with "B" key (for development purposes only)
       if (event.key === 'b' || event.key === 'B') {
         setShowCollisionBoundaries(prev => !prev);
         console.log(`[COLLISION DEBUG] ${!showCollisionBoundaries ? 'Showing' : 'Hiding'} collision boundaries`);
