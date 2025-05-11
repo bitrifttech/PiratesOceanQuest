@@ -56,7 +56,8 @@ const GameUI = () => {
   // Using a ref to track game time for auto victory
   const gameTimeRef = useRef(0);
   
-  // Trigger victory after a set amount of time for demo purposes
+  // Victory screen disabled as requested
+  /* Victory screen auto-trigger has been removed
   useEffect(() => {
     if (gameState === 'playing') {
       // Set a timeout to show victory after 2 minutes of gameplay
@@ -69,6 +70,7 @@ const GameUI = () => {
       return () => clearTimeout(victoryTimeout);
     }
   }, [gameState, addLoot]);
+  */
   
   // Handle game restart
   const handleRestart = () => {
@@ -195,8 +197,8 @@ const GameUI = () => {
         </div>
       )}
       
-      {/* Victory overlay */}
-      {showVictory && (
+      {/* Victory overlay - disabled as requested */}
+      {false && showVictory && (
         <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center pointer-events-auto">
           <div className="bg-gray-900 p-8 rounded-lg max-w-md text-center border-2 border-[#FFD700]">
             <h2 className="text-4xl text-[#FFD700] font-['Pirata_One'] mb-4">Victory!</h2>
