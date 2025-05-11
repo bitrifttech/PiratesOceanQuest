@@ -44,6 +44,22 @@ export const SCALE = {
       MIN: 6.0,   // Smaller lighthouses
       MAX: 8.0,   // Larger lighthouses
       BASE: 7.0,  // Default size
+    },
+    // New island types
+    VOLCANIC: {
+      MIN: 7.0,   // Smaller volcanic islands
+      MAX: 11.0,  // Larger volcanic islands
+      BASE: 9.0,  // Default size - impressive volcanic mountains
+    },
+    ATOLL: {
+      MIN: 4.0,   // Smaller atoll islands
+      MAX: 7.0,   // Larger atoll islands
+      BASE: 5.5,  // Default size - wide but low profile
+    },
+    ICE: {
+      MIN: 5.0,   // Smaller ice islands
+      MAX: 9.0,   // Larger ice islands
+      BASE: 7.0,  // Default size - striking ice formations
     }
   },
   
@@ -71,6 +87,10 @@ export const MODEL_ADJUSTMENT = {
   SHIPWRECK: 2.5,   // Multiplier for shipwreck models
   PORT: 3.0,        // Multiplier for port models
   LIGHTHOUSE: 4.0,  // Multiplier for lighthouse models
+  // New island types
+  VOLCANIC: 5.0,    // Multiplier for volcanic island models - tall and dramatic
+  ATOLL: 3.5,       // Multiplier for atoll island models - wide and flat
+  ICE: 4.5,         // Multiplier for ice island models - striking blue ice formations
   CANNON: 20.0,     // Multiplier for cannon models
   CANNONBALL: 15.0  // Multiplier for cannonball models
 };

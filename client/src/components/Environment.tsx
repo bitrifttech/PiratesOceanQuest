@@ -13,9 +13,22 @@ useGLTF.preload('/models/rock_formation.glb');
 useGLTF.preload('/models/shipwreck.glb');
 useGLTF.preload('/models/port.glb');
 useGLTF.preload('/models/lighthouse.glb');
+// Preload new island type models
+useGLTF.preload('/models/volcanic_island.glb');
+useGLTF.preload('/models/atoll_island.glb');
+useGLTF.preload('/models/ice_island.glb');
 
 // Define feature types
-export type EnvironmentFeatureType = 'tropical' | 'mountain' | 'rocks' | 'shipwreck' | 'port' | 'lighthouse';
+export type EnvironmentFeatureType = 
+  | 'tropical' 
+  | 'mountain' 
+  | 'rocks' 
+  | 'shipwreck' 
+  | 'port' 
+  | 'lighthouse'
+  | 'volcanic'  // New type: volcanic island 
+  | 'atoll'     // New type: coral atoll island
+  | 'ice';      // New type: ice island
 
 export interface EnvironmentFeature {
   id: string; // Unique ID
@@ -42,6 +55,10 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
       case 'shipwreck': return '/models/shipwreck.glb';
       case 'port': return '/models/port.glb';
       case 'lighthouse': return '/models/lighthouse.glb';
+      // New island types
+      case 'volcanic': return '/models/volcanic_island.glb';
+      case 'atoll': return '/models/atoll_island.glb';
+      case 'ice': return '/models/ice_island.glb';
       default: 
         console.warn(`[ENV] Unknown feature type: ${type}, defaulting to rocks`);
         return '/models/rock_formation.glb';
