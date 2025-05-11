@@ -11,19 +11,29 @@ export class CollisionService {
    */
   static getFeatureRadius(type: EnvironmentFeatureType, scale: number): number {
     // Base radius depends on feature type (these are approximate values)
+    // All values reduced by half to allow easier navigation
     let baseRadius = 0;
     switch (type) {
       case 'tropical':
-        baseRadius = 8; // Adjusted for gameplay
+        baseRadius = 4; // Reduced by half for easier navigation
         break;
       case 'mountain':
-        baseRadius = 10; // Adjusted for gameplay
+        baseRadius = 5; // Reduced by half for easier navigation
         break;
       case 'rocks':
-        baseRadius = 5; // Adjusted for gameplay
+        baseRadius = 2.5; // Reduced by half for easier navigation
+        break;
+      case 'shipwreck':
+        baseRadius = 3; // Reduced by half for easier navigation
+        break;
+      case 'port':
+        baseRadius = 3; // Reduced by half for easier navigation
+        break;
+      case 'lighthouse':
+        baseRadius = 3; // Reduced by half for easier navigation
         break;
       default:
-        baseRadius = 6;
+        baseRadius = 3; // Reduced by half for easier navigation
     }
     // Scale the radius based on the feature's scale
     return baseRadius * scale;

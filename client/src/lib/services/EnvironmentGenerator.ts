@@ -15,28 +15,29 @@ export class EnvironmentGenerator {
     // Calculate radius based on feature type and scale
     const getRadius = (type: EnvironmentFeatureType, scale: number): number => {
       // Base radius depends on feature type (these are approximate values)
+      // All values reduced by half for easier navigation between environment features
       let baseRadius = 0;
       switch (type) {
         case 'tropical':
-          baseRadius = 20;
+          baseRadius = 10; // Reduced from 20
           break;
         case 'mountain':
-          baseRadius = 25;
+          baseRadius = 12.5; // Reduced from 25
           break;
         case 'rocks':
-          baseRadius = 10;
+          baseRadius = 5; // Reduced from 10
           break;
         case 'shipwreck':
-          baseRadius = 15;
+          baseRadius = 7.5; // Reduced from 15
           break;
         case 'port':
-          baseRadius = 18;
+          baseRadius = 9; // Reduced from 18
           break;
         case 'lighthouse':
-          baseRadius = 12;
+          baseRadius = 6; // Reduced from 12
           break;
         default:
-          baseRadius = 15;
+          baseRadius = 7.5; // Reduced from 15
       }
       // Scale the radius based on the feature's scale
       return baseRadius * scale;
