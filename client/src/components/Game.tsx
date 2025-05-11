@@ -3,7 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { Environment as ThreeEnvironment, OrbitControls, Text, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
-import GridPlane from "./GridPlane"; // Using GridPlane instead of Ocean
+import Ocean from "./Ocean"; // Using Ocean for water surface
 import Ship from "./Ship";
 import EnemyShip from "./EnemyShip"; // Added back enemy ship component
 import SkyWithClouds from "./SkyWithClouds"; // New enhanced sky with cloud system
@@ -186,17 +186,8 @@ const Game = () => {
       />
       <ThreeEnvironment preset="sunset" />
       
-      {/* Grid Plane (replaces Ocean) */}
-      <GridPlane 
-        size={1000}
-        divisions={100}
-        cellSize={10}
-        cellThickness={0.3}
-        cellColor="#222266"
-        sectionSize={50}
-        sectionThickness={0.8}
-        sectionColor="#3333AA"
-      />
+      {/* Ocean water surface */}
+      <Ocean />
       
       {/* Direction indicators removed - no longer needed after fixing ship orientation */}
       

@@ -5,7 +5,12 @@ import * as THREE from "three";
 import { useGameState } from "../lib/stores/useGameState";
 import { STATIC } from "../lib/constants";
 
-const Ocean = () => {
+interface OceanProps {
+  // The Ocean component doesn't need props currently, 
+  // but having the interface makes it future-proof
+}
+
+const Ocean: React.FC<OceanProps> = () => {
   const meshRef = useRef<THREE.Mesh>(null);
   
   // Calculate the size to cover a large area
