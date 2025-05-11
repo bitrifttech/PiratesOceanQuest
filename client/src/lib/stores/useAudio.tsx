@@ -43,6 +43,8 @@ export const useAudio = create<AudioState>((set, get) => ({
   currentTrack: 'main',
   volume: 0.3,
   
+  // Placeholder will be properly implemented below
+  
   loadSounds: () => {
     // Create audio elements
     const background = new Audio('/sounds/background.mp3');

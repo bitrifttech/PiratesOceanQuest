@@ -223,6 +223,9 @@ const Game = () => {
       {/* This component only loads and positions models once */}
       <EnvironmentComponent features={environmentFeatures} />
       
+      {/* Power-up system to handle prizes from defeated enemy ships */}
+      <PowerUpManager />
+      
       {/* Enemy ships */}
       {enemies.map((enemy) => (
         <EnemyShip
