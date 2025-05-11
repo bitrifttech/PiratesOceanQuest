@@ -138,8 +138,8 @@ const Game = () => {
   
   // Health regeneration timer
   const healthRegenTimer = useRef<number>(0);
-  const regenInterval = 3; // Regenerate health every 3 seconds
-  const regenAmount = 5; // Amount of health to regenerate each interval
+  const regenInterval = 2; // Regenerate health every 2 seconds
+  const regenAmount = 1; // Amount of health to regenerate each interval (slowed down)
   
   // Camera follows player ship but preserves manual adjustments
   useFrame((state, delta) => {
@@ -154,7 +154,10 @@ const Game = () => {
       // Only regenerate if player health is below max and above 0 (not dead)
       if (playerState.health > 0 && playerState.health < playerState.maxHealth) {
         playerState.heal(regenAmount);
-        console.log(`[PLAYER] Health regenerated +${regenAmount}. Health: ${playerState.health}/${playerState.maxHealth}`);
+        // Only log every 5th regeneration to reduce console spam (every 10 seconds)
+        if (Math.floor(playerState.health) % 5 === 0) {
+          console.log(`[PLAYER] Health: ${playerState.health}/${playerState.maxHealth} (slowly regenerating)`);
+        }
       }
       // Reset timer
       healthRegenTimer.current = 0;
