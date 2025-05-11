@@ -112,6 +112,22 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
       const lootAmount = Math.floor(Math.random() * 50) + 50;
       addLoot(lootAmount);
       
+      // Spawn a power-up prize at the enemy's position
+      try {
+        // Import dynamically to avoid circular dependency
+        const { PowerUpSystem } = require('../../components/PowerUpManager');
+        if (PowerUpSystem && PowerUpSystem.spawn) {
+          // Spawn a random power-up at the enemy's position
+          PowerUpSystem.spawn(enemy.position.clone());
+          console.log(`[POWER-UP] Spawned prize at defeated enemy ship position (${enemy.position.x.toFixed(1)}, ${enemy.position.z.toFixed(1)})`);
+        }
+      } catch (error) {
+        console.error("[POWER-UP] Failed to spawn power-up:", error);
+      }
+      
+      // Log the enemy defeat
+      console.log(`[ENEMY] Ship ${id} was destroyed! Added ${lootAmount} loot.`);
+      
       // Remove the enemy
       set((state) => ({
         enemies: state.enemies.filter((e) => e.id !== id),

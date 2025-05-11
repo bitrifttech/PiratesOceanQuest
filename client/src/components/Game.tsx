@@ -165,6 +165,10 @@ const Game = () => {
       healthRegenTimer.current = 0;
     }
     
+    // Update active power-ups
+    const powerUpsState = usePowerUps.getState();
+    powerUpsState.updatePowerUps(delta);
+    
     // Update target to always follow the player ship
     cameraTargetRef.current.set(
       playerPosition.x,
