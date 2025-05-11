@@ -225,7 +225,7 @@ const Game = () => {
         enableRotate={true}
         target={playerPosition ? new THREE.Vector3(playerPosition.x, 0, playerPosition.z) : new THREE.Vector3(0, 0, 0)}
         minDistance={10}
-        maxDistance={100}
+        maxDistance={500}
         minPolarAngle={0.1} 
         maxPolarAngle={Math.PI / 2 - 0.1} // Restrict to avoid going below ground
         enabled={true}

@@ -25,7 +25,7 @@ const SkyWithClouds: React.FC<SkyWithCloudsProps> = ({
 }) => {
   // Time of day tracking (0-1 range)
   const [timeOfDay, setTimeOfDay] = useState<number>(initialTimeOfDay);
-  const [distance, setDistance] = useState<number>(900000); // Doubled for reduced fog effect
+  const [distance, setDistance] = useState<number>(1800000); // Quadrupled for extended visibility when zoomed out
   const [azimuth, setAzimuth] = useState<number>(0.25);
   const [inclination, setInclination] = useState<number>(0.5);
   const [rayleigh, setRayleigh] = useState<number>(1);
@@ -76,21 +76,21 @@ const SkyWithClouds: React.FC<SkyWithCloudsProps> = ({
         setRayleigh(3.0); // Stronger Rayleigh scattering for red sunrises/sunsets
         setTurbidity(5); // Lower turbidity for clearer dawn/dusk
         setMieCoefficient(0.01); // More mie scattering for hazier sunrise/sunset
-        setDistance(760000); // Doubled distance for reduced fog effect
+        setDistance(1500000); // Increased for better visibility when zoomed out
       } 
       // Midday
       else if (timeOfDay > 0.4 && timeOfDay < 0.6) {
         setRayleigh(1.0); // Normal Rayleigh for blue sky
         setTurbidity(10); // Higher turbidity for bright day
         setMieCoefficient(0.005); // Less mie scattering for clear day
-        setDistance(900000); // Doubled distance for reduced fog effect
+        setDistance(1800000); // Increased for better visibility when zoomed out
       }
       // Transitions (morning and afternoon)
       else {
         setRayleigh(2.0); // Moderate Rayleigh
         setTurbidity(8); // Moderate turbidity
         setMieCoefficient(0.008); // Moderate mie scattering
-        setDistance(840000); // Doubled distance for reduced fog effect
+        setDistance(1650000); // Increased for better visibility when zoomed out
       }
       
       // Night adjustments
