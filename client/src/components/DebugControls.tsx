@@ -48,25 +48,35 @@ interface DebugControlsProps {
   onUpdateShipHeight: (height: number) => void;
   onUpdateWaterParams: (params: { waveHeight: number; waveSpeed: number }) => void;
   onUpdateShipScale: (scale: number) => void; // New prop for updating ship scale
+  onToggleWaterVisibility: () => void; // Toggle water visibility
+  onToggleOneShotKill: () => void;     // Toggle one-shot kill
   initialShipHeight: number;
   initialWaveHeight: number;
   initialWaveSpeed: number;
   initialShipScale: number; // New prop for initial ship scale
+  initialWaterVisible: boolean;
+  initialOneShotKill: boolean;
 }
 
 const DebugControls: React.FC<DebugControlsProps> = ({
   onUpdateShipHeight,
   onUpdateWaterParams,
   onUpdateShipScale,
+  onToggleWaterVisibility,
+  onToggleOneShotKill,
   initialShipHeight,
   initialWaveHeight,
   initialWaveSpeed,
   initialShipScale,
+  initialWaterVisible,
+  initialOneShotKill,
 }) => {
   const [shipHeight, setShipHeight] = useState(initialShipHeight);
   const [waveHeight, setWaveHeight] = useState(initialWaveHeight);
   const [waveSpeed, setWaveSpeed] = useState(initialWaveSpeed);
   const [shipScale, setShipScale] = useState(initialShipScale);
+  const [waterVisible, setWaterVisible] = useState(initialWaterVisible);
+  const [oneShotKill, setOneShotKill] = useState(initialOneShotKill);
 
   const handleShipHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newHeight = parseFloat(e.target.value);
@@ -91,6 +101,18 @@ const DebugControls: React.FC<DebugControlsProps> = ({
     const newScale = parseFloat(e.target.value);
     setShipScale(newScale);
     onUpdateShipScale(newScale);
+  };
+  
+  // Handle water visibility toggle
+  const handleWaterVisibilityToggle = () => {
+    setWaterVisible(!waterVisible);
+    onToggleWaterVisibility();
+  };
+  
+  // Handle one-shot kill toggle
+  const handleOneShotKillToggle = () => {
+    setOneShotKill(!oneShotKill);
+    onToggleOneShotKill();
   };
 
   return (
@@ -155,6 +177,49 @@ const DebugControls: React.FC<DebugControlsProps> = ({
           onChange={handleWaveSpeedChange}
           style={{ width: '100%' }}
         />
+      </div>
+      
+      {/* Debug Toggles Section */}
+      <div style={{ marginTop: '20px', borderTop: '1px solid #444', paddingTop: '15px' }}>
+        <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>Debug Options</h3>
+        
+        {/* Water Visibility Toggle */}
+        <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>Water Visibility</span>
+          <button 
+            onClick={handleWaterVisibilityToggle}
+            style={{
+              padding: '5px 10px',
+              backgroundColor: waterVisible ? '#4CAF50' : '#F44336',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              width: '60px'
+            }}
+          >
+            {waterVisible ? 'ON' : 'OFF'}
+          </button>
+        </div>
+        
+        {/* One-Shot Kill Toggle */}
+        <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>One-Shot Kill</span>
+          <button 
+            onClick={handleOneShotKillToggle}
+            style={{
+              padding: '5px 10px',
+              backgroundColor: oneShotKill ? '#4CAF50' : '#F44336',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              width: '60px'
+            }}
+          >
+            {oneShotKill ? 'ON' : 'OFF'}
+          </button>
+        </div>
       </div>
       
       <p style={{ fontSize: '12px', marginTop: '15px', color: '#aaa' }}>

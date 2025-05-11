@@ -6,6 +6,7 @@ import { SCALE, MODEL_ADJUSTMENT } from "../lib/constants";
 import { useEnemies } from "../lib/stores/useEnemies";
 import { usePlayer } from "../lib/stores/usePlayer";
 import { usePowerUps } from "../lib/stores/usePowerUps";
+import { useGameState } from "../lib/stores/useGameState";
 import { environmentCollisions } from "../lib/collision";
 import ExplosionEffect from "./ExplosionEffect";
 import WaterSplashEffect from "./WaterSplashEffect";
@@ -163,8 +164,15 @@ const Cannonball = ({
         // Check for double damage power-up from player ship
         let damage = 20; // Base damage
         
+        // Check for one-shot kill debug feature
+        const gameState = useGameState.getState();
+        if (gameState.oneShotKill && (!sourceId || !sourceId.includes('enemy'))) {
+          // Set damage to a very high value to guarantee a kill
+          damage = 1000;
+          console.log(`[DEBUG] One-shot kill activated! Damage set to ${damage}`);
+        } 
         // Only apply power-ups for player cannonballs (not enemy cannonballs)
-        if (!sourceId || !sourceId.includes('enemy')) {
+        else if (!sourceId || !sourceId.includes('enemy')) {
           const powerUpsState = usePowerUps.getState();
           
           // Apply damage multiplier if double_damage is active
