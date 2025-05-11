@@ -121,6 +121,47 @@ const Ocean: React.FC<OceanProps> = () => {
     return geo;
   }, [oceanSize, segmentCount]);
   
+  // Create the ocean floor with undulating terrain
+  const oceanFloorGeometry = useMemo(() => {
+    const geo = new THREE.PlaneGeometry(
+      oceanSize,
+      oceanSize,
+      64,
+      64
+    );
+    
+    // Rotate to be horizontal
+    geo.rotateX(-Math.PI / 2);
+    
+    // Create random height variations for the ocean floor
+    const positionAttr = geo.attributes.position;
+    const vertices = positionAttr.array;
+    
+    // Seed random heights for terrain
+    for (let i = 0; i < vertices.length; i += 3) {
+      const x = vertices[i];
+      const z = vertices[i + 2];
+      
+      // Distance from center
+      const distanceFromCenter = Math.sqrt(x * x + z * z);
+      
+      // Create gentle rolling hills and valleys with some randomization
+      // More pronounced variations further from center
+      const distanceFactor = Math.min(1.0, distanceFromCenter / 200);
+      
+      vertices[i + 1] = 
+        Math.sin(x / 80) * Math.cos(z / 80) * 2.0 * distanceFactor + // Large rolling hills
+        Math.sin(x / 30 + z / 20) * 1.0 * distanceFactor +          // Medium variations
+        Math.cos(x / 10 - z / 15) * 0.5 * distanceFactor;           // Small details
+    }
+    
+    // Update vertices
+    positionAttr.needsUpdate = true;
+    geo.computeVertexNormals();
+    
+    return geo;
+  }, [oceanSize]);
+  
   // Animate the waves and caustics
   useFrame((_, delta) => {
     if (!meshRef.current) return;
@@ -183,7 +224,7 @@ const Ocean: React.FC<OceanProps> = () => {
       causticPosAttr.needsUpdate = true;
       
       // Update caustic material for pulsing effect
-      if (causticMaterial.emissiveIntensity !== undefined) {
+      if (causticMaterial) {
         causticMaterial.emissiveIntensity = 0.3 + Math.sin(timeRef.current * 2) * 0.15;
         causticMaterial.opacity = 0.3 + Math.sin(timeRef.current * 1.5) * 0.1;
       }
@@ -219,6 +260,27 @@ const Ocean: React.FC<OceanProps> = () => {
           color="#0A4F8C"  // Darker blue for depth
           transparent={true}
           opacity={0.7}
+        />
+      </mesh>
+      
+      {/* Caustic light effect - light patterns under water */}
+      <mesh
+        ref={causticRef}
+        geometry={causticGeometry}
+        material={causticMaterial}
+        position={[0, STATIC.WATER_LEVEL - 2, 0]} // Just above the seabed
+      />
+      
+      {/* Ocean floor with undulating terrain */}
+      <mesh
+        position={[0, STATIC.WATER_LEVEL - 3, 0]}
+        geometry={oceanFloorGeometry}
+        receiveShadow
+      >
+        <meshStandardMaterial 
+          color="#0A3B5C"  // Dark blue for ocean floor
+          roughness={0.9}
+          metalness={0.1}
         />
       </mesh>
     </>
