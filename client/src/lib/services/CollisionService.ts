@@ -32,8 +32,18 @@ export class CollisionService {
       case 'lighthouse':
         baseRadius = 3; // Reduced by half for easier navigation
         break;
+      // New island types with appropriate collision service radii
+      case 'volcanic':
+        baseRadius = 5; // Slightly larger radius for volcanic islands
+        break;
+      case 'atoll':
+        baseRadius = 4; // Standard radius for atoll islands
+        break;
+      case 'ice':
+        baseRadius = 3.5; // Standard radius for ice islands
+        break;
       default:
-        baseRadius = 3; // Reduced by half for easier navigation
+        baseRadius = 3; // Default radius
     }
     // Scale the radius based on the feature's scale
     return baseRadius * scale;

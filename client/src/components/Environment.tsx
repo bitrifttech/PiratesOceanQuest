@@ -92,6 +92,10 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
       case 'shipwreck': return SCALE.ISLAND.SHIPWRECK.BASE;
       case 'port': return SCALE.ISLAND.PORT.BASE;
       case 'lighthouse': return SCALE.ISLAND.LIGHTHOUSE.BASE;
+      // New island types
+      case 'volcanic': return SCALE.ISLAND.VOLCANIC.BASE;
+      case 'atoll': return SCALE.ISLAND.ATOLL.BASE;
+      case 'ice': return SCALE.ISLAND.ICE.BASE;
       default: return 1;
     }
   };
@@ -105,6 +109,10 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
       case 'shipwreck': return MODEL_ADJUSTMENT.SHIPWRECK;
       case 'port': return MODEL_ADJUSTMENT.PORT;
       case 'lighthouse': return MODEL_ADJUSTMENT.LIGHTHOUSE;
+      // New island types
+      case 'volcanic': return MODEL_ADJUSTMENT.VOLCANIC;
+      case 'atoll': return MODEL_ADJUSTMENT.ATOLL;
+      case 'ice': return MODEL_ADJUSTMENT.ICE;
       default: return 1;
     }
   };

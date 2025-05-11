@@ -36,8 +36,18 @@ export class EnvironmentGenerator {
         case 'lighthouse':
           baseRadius = 6; // Reduced from 12
           break;
+        // New island types with appropriate generation spacing
+        case 'volcanic':
+          baseRadius = 12; // Large spacing for the dramatic volcanic islands
+          break;
+        case 'atoll':
+          baseRadius = 10; // Medium spacing for the wide atoll islands
+          break;
+        case 'ice':
+          baseRadius = 9; // Standard spacing for ice islands
+          break;
         default:
-          baseRadius = 7.5; // Reduced from 15
+          baseRadius = 7.5; // Default spacing
       }
       // Scale the radius based on the feature's scale
       return baseRadius * scale;
@@ -210,6 +220,40 @@ export class EnvironmentGenerator {
         minZ: -230,
         maxZ: 230,
         prefix: 'lighthouse'
+      },
+      // NEW ISLAND TYPES
+      // Volcanic islands - dramatic peaks with lava flows
+      {
+        type: 'volcanic',
+        count: 3,
+        scale: 1.7,
+        minX: -210,
+        maxX: 210,
+        minZ: -210,
+        maxZ: 210,
+        prefix: 'volcanic'
+      },
+      // Atoll islands - low sandy rings with lagoons
+      {
+        type: 'atoll',
+        count: 3,
+        scale: 1.6,
+        minX: -200,
+        maxX: 200,
+        minZ: -200,
+        maxZ: 200,
+        prefix: 'atoll'
+      },
+      // Ice islands - icy blue formations
+      {
+        type: 'ice',
+        count: 3,
+        scale: 1.7,
+        minX: -220,
+        maxX: 220,
+        minZ: -220,
+        maxZ: 220,
+        prefix: 'ice'
       }
     ];
     

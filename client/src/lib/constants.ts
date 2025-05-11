@@ -111,7 +111,10 @@ export const POSITION = {
     ROCKS: STATIC.WATER_LEVEL + 6.0,     // Height adjustment for rock formations
     SHIPWRECK: STATIC.WATER_LEVEL + 0.5, // Height adjustment for shipwrecks (mostly submerged)
     PORT: STATIC.WATER_LEVEL + 1.0,      // Height adjustment for ports (just above water)
-    LIGHTHOUSE: STATIC.WATER_LEVEL + 4.0 // Height adjustment for lighthouses (on elevated rocks)
+    LIGHTHOUSE: STATIC.WATER_LEVEL + 4.0, // Height adjustment for lighthouses (on elevated rocks)
+    VOLCANIC: STATIC.WATER_LEVEL + 7.0,  // Height adjustment for volcanic islands (tall with lava flows)
+    ATOLL: STATIC.WATER_LEVEL + 3.0,     // Height adjustment for atoll islands (low profile with sandy beaches)
+    ICE: STATIC.WATER_LEVEL + 5.5        // Height adjustment for ice islands (icy crystalline formations)
   }
 };
 

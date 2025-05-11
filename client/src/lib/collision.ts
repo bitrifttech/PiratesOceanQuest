@@ -27,8 +27,18 @@ export function getFeatureRadius(type: EnvironmentFeatureType, scale: number): n
     case 'lighthouse':
       baseRadius = 6; // Reduced by half for easier navigation
       break;
+    // New island types with appropriate collision radii
+    case 'volcanic':
+      baseRadius = 10; // Larger collision for the dramatic volcanic island
+      break;
+    case 'atoll':
+      baseRadius = 8; // Wider but low profile atoll island
+      break;
+    case 'ice':
+      baseRadius = 7; // Standard ice island collision radius
+      break;
     default:
-      baseRadius = 6; // Reduced by half for easier navigation
+      baseRadius = 6; // Default collision radius
   }
   // Scale the radius based on the feature's scale
   const scaledRadius = baseRadius * scale;
