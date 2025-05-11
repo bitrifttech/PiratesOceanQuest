@@ -13,6 +13,14 @@ interface OceanProps {
 const Ocean: React.FC<OceanProps> = () => {
   const meshRef = useRef<THREE.Mesh>(null);
   
+  // Check if water should be visible from game state
+  const waterVisible = useGameState((state) => state.waterVisible);
+  
+  // If water is not visible, don't render anything
+  if (!waterVisible) {
+    return null;
+  }
+  
   // Calculate the size to cover a large area
   const oceanSize = 1000;
   

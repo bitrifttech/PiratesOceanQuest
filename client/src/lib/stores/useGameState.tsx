@@ -14,10 +14,16 @@ interface GameStateStore {
   waveSpeed: number;
   shipScale: number; // Ship size scale factor
   
+  // Debug features
+  waterVisible: boolean; // Toggle for water visibility
+  oneShotKill: boolean;  // Toggle for one-shot kill feature
+  
   // Update functions
   setShipHeight: (height: number) => void;
   setWaveParameters: (params: { waveHeight: number; waveSpeed: number }) => void;
   setShipScale: (scale: number) => void; // Function to update ship scale
+  toggleWaterVisibility: () => void; // Toggle water on/off
+  toggleOneShotKill: () => void;    // Toggle one-shot kill feature
 }
 
 export const useGameState = create<GameStateStore>((set) => ({
@@ -39,6 +45,10 @@ export const useGameState = create<GameStateStore>((set) => ({
   waveSpeed: 0.0006, // Wave animation speed
   shipScale: 3.0, // Standard scale for all ships
   
+  // Debug features - default values
+  waterVisible: true,  // Water is visible by default
+  oneShotKill: false,  // One-shot kill is disabled by default
+  
   // Update functions
   setShipHeight: (height) => {
     set({ shipHeight: height });
@@ -56,5 +66,23 @@ export const useGameState = create<GameStateStore>((set) => ({
   setShipScale: (scale) => {
     set({ shipScale: scale });
     console.log(`Ship scale updated to: ${scale}`);
+  },
+  
+  // Toggle water visibility
+  toggleWaterVisibility: () => {
+    set((state) => {
+      const newValue = !state.waterVisible;
+      console.log(`Water visibility toggled: ${newValue ? 'ON' : 'OFF'}`);
+      return { waterVisible: newValue };
+    });
+  },
+  
+  // Toggle one-shot kill feature
+  toggleOneShotKill: () => {
+    set((state) => {
+      const newValue = !state.oneShotKill;
+      console.log(`One-shot kill toggled: ${newValue ? 'ON' : 'OFF'}`);
+      return { oneShotKill: newValue };
+    });
   },
 }));
