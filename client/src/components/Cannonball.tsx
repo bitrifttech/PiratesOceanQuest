@@ -207,6 +207,7 @@ const Cannonball = ({
     }
     
     // Check if cannonball has fallen into the water - raised to -1 for better visibility
+    // Allow cannonballs to travel further out before hitting the water
     if (ballRef.current.position.y < -1 && !hitDetected.current) {
       // Mark as hit to prevent multiple splashes
       hitDetected.current = true;
