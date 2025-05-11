@@ -151,8 +151,8 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
       const baselineOffset = -modelBottom; // This moves the model up so its bottom is at y=0
       
       // Calculate final Y position - we want bottom of model at exactly grid level
-      // STATIC.WATER_LEVEL is where our grid is positioned
-      const yPosition = STATIC.WATER_LEVEL;
+      // For environment objects, we want them placed directly on the water/grid
+      const yPosition = 0; // The grid is at y=0
       
       // Set the position once, but use a group to handle the vertical offset
       featureRef.current.position.set(x, yPosition, z);
@@ -175,10 +175,10 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
     } catch (error) {
       console.error(`[ENV] Error positioning ${id}:`, error);
       
-      // Fallback positioning at water level
+      // Fallback positioning at grid level
       if (featureRef.current) {
-        featureRef.current.position.set(x, STATIC.WATER_LEVEL, z);
-        console.log(`[ENV] Fallback positioned ${id} at (${x}, ${STATIC.WATER_LEVEL}, ${z})`);
+        featureRef.current.position.set(x, 0, z);
+        console.log(`[ENV] Fallback positioned ${id} at (${x}, 0, ${z})`);
         setPositioned(true);
       }
     }
