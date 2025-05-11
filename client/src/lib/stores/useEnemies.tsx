@@ -112,14 +112,30 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
       const lootAmount = Math.floor(Math.random() * 50) + 50;
       addLoot(lootAmount);
       
+      console.log(`[ENEMY] Ship ${id} DESTROYED! Attempting to spawn power-up at position:`, 
+        JSON.stringify(enemy.position.toArray()));
+      
       // Spawn a power-up prize at the enemy's position
       try {
         // Import dynamically to avoid circular dependency
+        console.log("[POWER-UP] Importing PowerUpSystem...");
         const { PowerUpSystem } = require('../../components/PowerUpManager');
+        
+        console.log("[POWER-UP] PowerUpSystem imported:", !!PowerUpSystem);
+        console.log("[POWER-UP] PowerUpSystem.spawn available:", !!(PowerUpSystem && PowerUpSystem.spawn));
+        
         if (PowerUpSystem && PowerUpSystem.spawn) {
           // Spawn a random power-up at the enemy's position
-          PowerUpSystem.spawn(enemy.position.clone());
-          console.log(`[POWER-UP] Spawned prize at defeated enemy ship position (${enemy.position.x.toFixed(1)}, ${enemy.position.z.toFixed(1)})`);
+          const enemyPosition = enemy.position.clone();
+          const powerUpId = PowerUpSystem.spawn(enemyPosition);
+          
+          if (powerUpId) {
+            console.log(`[POWER-UP] Successfully spawned prize (id: ${powerUpId}) at defeated enemy ship position (${enemyPosition.x.toFixed(1)}, ${enemyPosition.z.toFixed(1)})`);
+          } else {
+            console.error("[POWER-UP] Failed to spawn power-up: spawn function returned null");
+          }
+        } else {
+          console.error("[POWER-UP] PowerUpSystem.spawn function not available");
         }
       } catch (error) {
         console.error("[POWER-UP] Failed to spawn power-up:", error);

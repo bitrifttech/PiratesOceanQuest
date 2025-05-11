@@ -81,14 +81,14 @@ const PowerUpManager: React.FC<PowerUpManagerProps> = () => {
     // Add to window for global access
     (window as any).spawnPowerUp = spawnPowerUp;
     
-    // Also directly assign to PowerUpSystem for immediate access
-    PowerUpSystem._internalSpawnFunction = spawnPowerUp;
+    // Export the function directly using the global object
+    (window as any)._powerUpSpawnFunction = spawnPowerUp;
     
     // Cleanup
     return () => {
       console.log("[POWER-UP] Cleaning up global spawn function");
       delete (window as any).spawnPowerUp;
-      PowerUpSystem._internalSpawnFunction = null;
+      delete (window as any)._powerUpSpawnFunction;
     };
   }, []);
   
@@ -110,28 +110,30 @@ const PowerUpManager: React.FC<PowerUpManagerProps> = () => {
 
 export default PowerUpManager;
 
-// Define the type for our PowerUpSystem to avoid TypeScript errors
+// Simple interface for the power-up system
 interface PowerUpSystemType {
-  _internalSpawnFunction: ((position: THREE.Vector3, type?: PowerUpType) => string | null) | null;
   spawn: (position: THREE.Vector3, type?: PowerUpType) => string | null;
 }
 
 // Export singleton instance for direct access from other components
 export const PowerUpSystem: PowerUpSystemType = {
-  _internalSpawnFunction: null,
   spawn: (position: THREE.Vector3, type?: PowerUpType) => {
-    // First try to use the direct function reference (reliable)
-    if (PowerUpSystem._internalSpawnFunction) {
-      console.log("[POWER-UP] Using direct function reference to spawn power-up");
-      return PowerUpSystem._internalSpawnFunction(position, type);
+    // Try direct access from window
+    if (typeof window !== 'undefined') {
+      // Try the specialized function first
+      if ((window as any)._powerUpSpawnFunction) {
+        console.log("[POWER-UP] Using _powerUpSpawnFunction to spawn power-up");
+        return (window as any)._powerUpSpawnFunction(position, type);
+      }
+      
+      // Fallback to standard function
+      if ((window as any).spawnPowerUp) {
+        console.log("[POWER-UP] Using window.spawnPowerUp to spawn power-up");
+        return (window as any).spawnPowerUp(position, type);
+      }
     }
     
-    // Fallback to window method (less reliable)
-    if (typeof window !== 'undefined' && (window as any).spawnPowerUp) {
-      console.log("[POWER-UP] Using window.spawnPowerUp to spawn power-up");
-      return (window as any).spawnPowerUp(position, type);
-    }
-    
+    // Log error if no function is available
     console.error("[POWER-UP] Failed to spawn power-up: No spawn function available");
     return null;
   }
