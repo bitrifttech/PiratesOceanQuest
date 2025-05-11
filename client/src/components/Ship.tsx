@@ -8,6 +8,7 @@ import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
 import { useGameState } from "../lib/stores/useGameState";
 import { useShipEvents } from "../lib/stores/useShipEvents";
+import { usePowerUps } from "../lib/stores/usePowerUps";
 import { checkCollision } from "../lib/helpers/collisionDetection";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC } from "../lib/constants";
 import { collisionHandler } from "../lib/services/CollisionHandler";
@@ -450,12 +451,13 @@ const Ship = () => {
     // Apply acceleration from controls
     const acceleration = new THREE.Vector3(0, 0, 0);
     
+    // Get power-up state
+    const powerUpState = usePowerUps.getState();
+    const hasSpeedBoost = powerUpState.hasPowerUp('speed_boost');
+    const speedMultiplier = hasSpeedBoost ? (powerUpState.getPowerUpValue('speed_boost') || 1) : 1;
+    
     // Check key states and apply acceleration
     if (keys.forward) {
-      // Check for speed boost power-up
-      const speedMultiplier = usePowerUps.getState().hasPowerUp('speed_boost') ? 
-                             usePowerUps.getState().getPowerUpValue('speed_boost') || 1 : 1;
-      
       // Apply acceleration in the direction the ship is facing (W key moves forward)
       // Base speed increased by 50% from 6 to 9, then multiplied by speed boost
       const forwardForce = direction.clone().multiplyScalar(9 * speedMultiplier * delta);
@@ -463,19 +465,17 @@ const Ship = () => {
       
       // If speed boost is active, add visual effect
       if (speedMultiplier > 1) {
-        if (boostEffectTimer <= 0) {
+        if (boostEffectTimer.current <= 0) {
           console.log(`[POWER-UP] Speed boost active: ${speedMultiplier.toFixed(1)}x speed`);
-          boostEffectTimer = 2; // Show message every 2 seconds
+          boostEffectTimer.current = 2; // Show message every 2 seconds
         } else {
-          boostEffectTimer -= delta;
+          boostEffectTimer.current -= delta;
         }
       }
     }
     
     if (keys.backward) {
-      // Check for speed boost power-up (also applies to backward movement)
-      const speedMultiplier = usePowerUps.getState().hasPowerUp('speed_boost') ? 
-                             usePowerUps.getState().getPowerUpValue('speed_boost') || 1 : 1;
+      // Speed boost also applies to backward movement
       
       // Apply acceleration in the opposite direction (S key moves backward)
       // Base speed increased by 50% from 3 to 4.5, then multiplied by speed boost

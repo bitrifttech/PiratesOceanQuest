@@ -5,6 +5,7 @@ import { Trail } from "@react-three/drei";
 import { SCALE, MODEL_ADJUSTMENT } from "../lib/constants";
 import { useEnemies } from "../lib/stores/useEnemies";
 import { usePlayer } from "../lib/stores/usePlayer";
+import { usePowerUps } from "../lib/stores/usePowerUps";
 import { environmentCollisions } from "../lib/collision";
 import ExplosionEffect from "./ExplosionEffect";
 import WaterSplashEffect from "./WaterSplashEffect";
@@ -139,10 +140,28 @@ const Cannonball = ({
         // Mark as hit to prevent multiple hits
         hitDetected.current = true;
         
-        // Apply damage to enemy
-        damageEnemy(enemy.id, 20); // 20 damage per cannonball
+        // Check for double damage power-up from player ship
+        let damage = 20; // Base damage
         
-        console.log(`[CANNONBALL] Hit enemy ship ${enemy.id}! Applied 20 damage.`);
+        // Only apply power-ups for player cannonballs (not enemy cannonballs)
+        if (!sourceId || !sourceId.includes('enemy')) {
+          const powerUpsState = usePowerUps.getState();
+          
+          // Apply damage multiplier if double_damage is active
+          if (powerUpsState.hasPowerUp('double_damage')) {
+            const multiplier = powerUpsState.getPowerUpValue('double_damage') || 1;
+            damage = Math.round(damage * multiplier);
+            
+            // Consume one shot from the double_damage power-up
+            powerUpsState.consumeShot('double_damage');
+            console.log(`[POWER-UP] Applied double damage: ${damage} damage (${multiplier}x multiplier)`);
+          }
+        }
+        
+        // Apply damage to enemy
+        damageEnemy(enemy.id, damage);
+        
+        console.log(`[CANNONBALL] Hit enemy ship ${enemy.id}! Applied ${damage} damage.`);
         
         // Create ship explosion effect at the impact point
         setEffectPosition(cannonballPosition.clone());
