@@ -48,6 +48,9 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   const optimalRange = 25; // Ideal distance to maintain from player
   const minimumRange = 15; // Minimum distance before retreating
   
+  // Peaceful start timer (seconds) - when positive, ship won't attack
+  const peacefulStartTimerRef = useRef<number | undefined>(undefined);
+  
   // Update the enemy in the game state
   const moveEnemy = useEnemies((state) => state.moveEnemy);
   
@@ -57,6 +60,15 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   // Initialize on first render
   useEffect(() => {
     if (!initialized.current) {
+      const enemies = useEnemies.getState().enemies;
+      const enemyData = enemies.find(e => e.id === id);
+      
+      if (enemyData?.peacefulStartTimer) {
+        // Initialize peaceful start timer if provided in enemy data
+        peacefulStartTimerRef.current = enemyData.peacefulStartTimer;
+        console.log(`[ENEMY SHIP ${id}] Initializing with ${peacefulStartTimerRef.current}s peaceful start timer`);
+      }
+      
       console.log(`[ENEMY SHIP ${id}] Initializing at position ${JSON.stringify(positionRef.current)}`);
       initialized.current = true;
     }
@@ -251,8 +263,21 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       }
     }
     
-    // Fire cannons if in range and cooldown is ready
-    if (distanceToPlayer < canFireRange && cannonCooldownRef.current <= 0) {
+    // Update peaceful start timer if it exists
+    if (peacefulStartTimerRef.current !== undefined && peacefulStartTimerRef.current > 0) {
+      peacefulStartTimerRef.current -= delta;
+      
+      // Log when peaceful timer expires
+      if (peacefulStartTimerRef.current <= 0) {
+        console.log(`[ENEMY SHIP ${id}] Peaceful start period ended - now hostile!`);
+        peacefulStartTimerRef.current = 0; // Set to exactly zero to avoid negative values
+      }
+    }
+    
+    // Fire cannons if in range, cooldown is ready, and not in peaceful start period
+    if (distanceToPlayer < canFireRange && 
+        cannonCooldownRef.current <= 0 && 
+        (peacefulStartTimerRef.current === undefined || peacefulStartTimerRef.current <= 0)) {
       // Get direction vector toward player for aiming cannons
       const toPlayerDirection = new THREE.Vector3()
         .subVectors(playerPosition, currentPos)
