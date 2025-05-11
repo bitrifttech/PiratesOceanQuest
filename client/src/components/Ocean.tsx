@@ -15,18 +15,36 @@ const Ocean: React.FC<OceanProps> = () => {
   
   // Calculate the size to cover a large area
   const oceanSize = 1000;
+  
+  // Caustic effect - light patterns that show below water
+  const causticRef = useRef<THREE.Mesh>(null);
   const segmentCount = 128;
+  
+  // Create caustic material
+  const causticMaterial = useMemo(() => {
+    const mat = new MeshStandardMaterial({
+      color: "#6FC0FF", // Light blue for caustics
+      transparent: true,
+      opacity: 0.3,
+      emissive: "#2E93FF",
+      emissiveIntensity: 0.3,
+      roughness: 0.1,
+    });
+    return mat;
+  }, []);
   
   // Time uniform for wave animation
   const materialRef = useRef<MeshStandardMaterial>();
   const timeRef = useRef(0);
   
-  // Create the ocean material without texture
+  // Create the ocean material with enhanced water properties
   const material = useMemo(() => {
     const mat = new MeshStandardMaterial({
-      color: "#0077BE",
-      metalness: 0.1,
-      roughness: 0.3,
+      color: "#1E65AA", // Deeper blue color for water
+      metalness: 0.6,   // More reflective
+      roughness: 0.2,   // Smoother surface
+      transparent: true,
+      opacity: 0.9,     // Slight transparency
     });
     
     // Store ref for animation updates
@@ -55,8 +73,11 @@ const Ocean: React.FC<OceanProps> = () => {
       const x = vertices[i];
       const z = vertices[i + 2];
       
-      // Small initial displacement
-      vertices[i + 1] = Math.sin(x / 20) * Math.cos(z / 20) * 1.5;
+      // Initial wave pattern with multiple frequencies for more natural look
+      vertices[i + 1] = 
+        Math.sin(x / 20) * Math.cos(z / 20) * 1.0 +  // Primary waves
+        Math.sin(x / 8 + z / 10) * 0.3 +            // Secondary pattern
+        Math.cos(x / 30 - z / 25) * 0.8;            // Tertiary longer waves
     }
     
     // Update vertices
@@ -66,7 +87,41 @@ const Ocean: React.FC<OceanProps> = () => {
     return geo;
   }, [oceanSize, segmentCount]);
   
-  // Animate the waves
+  // Create the caustic effect geometry (light patterns through water)
+  const causticGeometry = useMemo(() => {
+    const geo = new THREE.PlaneGeometry(
+      oceanSize * 0.8, // Slightly smaller than ocean
+      oceanSize * 0.8,
+      segmentCount / 2, // Lower resolution is fine for caustics
+      segmentCount / 2
+    );
+    
+    // Rotate to be horizontal
+    geo.rotateX(-Math.PI / 2);
+    
+    // Create initial caustic pattern
+    const positionAttr = geo.attributes.position;
+    const vertices = positionAttr.array;
+    
+    // Base the caustic pattern on different frequencies
+    for (let i = 0; i < vertices.length; i += 3) {
+      const x = vertices[i];
+      const z = vertices[i + 2];
+      
+      // Create subtle bumps for the caustic effect
+      vertices[i + 1] = 
+        Math.sin(x / 5) * Math.cos(z / 5) * 0.2 +
+        Math.sin(x / 12 - z / 10) * 0.15;
+    }
+    
+    // Update vertices
+    positionAttr.needsUpdate = true;
+    geo.computeVertexNormals();
+    
+    return geo;
+  }, [oceanSize, segmentCount]);
+  
+  // Animate the waves and caustics
   useFrame((_, delta) => {
     if (!meshRef.current) return;
     
@@ -75,38 +130,98 @@ const Ocean: React.FC<OceanProps> = () => {
     
     timeRef.current += delta * 0.5;
     
-    // Animate the wave displacement
+    // Animate the wave displacement with complex wave patterns
     const positionAttr = meshRef.current.geometry.attributes.position;
     const vertices = positionAttr.array;
+    
+    // Different time frequencies for more natural motion
+    const time1 = timeRef.current * (waveSpeed * 0.8);
+    const time2 = timeRef.current * (waveSpeed * 1.2);
+    const time3 = timeRef.current * (waveSpeed * 0.5);
     
     for (let i = 0; i < vertices.length; i += 3) {
       const x = vertices[i];
       const z = vertices[i + 2];
       
-      // Create wave effect with configurable height and speed
-      vertices[i + 1] = 
-        Math.sin(x / 20 + timeRef.current * (waveSpeed * 1000)) * 
-        Math.cos(z / 20 + timeRef.current * (waveSpeed * 1000)) * (waveHeight * 5);
+      // Create complex wave effect with configurable height and multiple wave patterns
+      vertices[i + 1] = (
+        // Primary wave pattern
+        Math.sin(x / 20 + time1) * Math.cos(z / 20 + time1) * (waveHeight * 3) +
+        // Secondary faster waves
+        Math.sin(x / 10 + z / 15 + time2) * (waveHeight * 1.5) +
+        // Long period slow waves
+        Math.cos(x / 40 - z / 30 + time3) * (waveHeight * 2.5)
+      );
+      
+      // Apply distance-based amplitude damping for calmer water in center
+      const distanceFromCenter = Math.sqrt(x * x + z * z);
+      const distanceFactor = Math.min(1.0, distanceFromCenter / 100); 
+      vertices[i + 1] *= distanceFactor;
     }
     
     positionAttr.needsUpdate = true;
     
+    // Animate caustic effect if it exists
+    if (causticRef.current) {
+      const causticPosAttr = causticRef.current.geometry.attributes.position;
+      const causticVertices = causticPosAttr.array;
+      
+      // Faster time frequencies for caustics
+      const causticTime1 = timeRef.current * (waveSpeed * 1.5);
+      const causticTime2 = timeRef.current * (waveSpeed * 2.0);
+      
+      for (let i = 0; i < causticVertices.length; i += 3) {
+        const x = causticVertices[i];
+        const z = causticVertices[i + 2];
+        
+        // Create animated caustic pattern
+        causticVertices[i + 1] = 
+          Math.sin(x / 4 + causticTime1) * Math.cos(z / 4 + causticTime1) * 0.2 +
+          Math.sin(x / 8 - z / 6 + causticTime2) * 0.15;
+      }
+      
+      causticPosAttr.needsUpdate = true;
+      
+      // Update caustic material for pulsing effect
+      if (causticMaterial.emissiveIntensity !== undefined) {
+        causticMaterial.emissiveIntensity = 0.3 + Math.sin(timeRef.current * 2) * 0.15;
+        causticMaterial.opacity = 0.3 + Math.sin(timeRef.current * 1.5) * 0.1;
+      }
+    }
+    
     // Apply a subtle color shift based on time for a water shimmering effect
     if (materialRef.current) {
-      const baseColor = new THREE.Color("#0077BE");
-      const shimmerAmount = (Math.sin(timeRef.current * 0.1) * 0.05) + 0.95;
+      const baseColor = new THREE.Color("#1E65AA"); // Use the updated color
+      const shimmerAmount = (Math.sin(timeRef.current * 0.2) * 0.1) + 0.95;
       materialRef.current.color.copy(baseColor).multiplyScalar(shimmerAmount);
     }
   });
   
   return (
-    <mesh
-      ref={meshRef}
-      geometry={waveGeometry}
-      material={material}
-      receiveShadow
-      position={[0, STATIC.WATER_LEVEL, 0]} // Always use the static water level
-    />
+    <>
+      {/* Main water surface */}
+      <mesh
+        ref={meshRef}
+        geometry={waveGeometry}
+        material={material}
+        receiveShadow
+        position={[0, STATIC.WATER_LEVEL, 0]} // Always use the static water level
+      />
+      
+      {/* Add a secondary flat plane slightly below for depth effect */}
+      <mesh 
+        position={[0, STATIC.WATER_LEVEL - 1, 0]} 
+        rotation={[-Math.PI / 2, 0, 0]}
+        receiveShadow
+      >
+        <planeGeometry args={[oceanSize, oceanSize]} />
+        <meshStandardMaterial 
+          color="#0A4F8C"  // Darker blue for depth
+          transparent={true}
+          opacity={0.7}
+        />
+      </mesh>
+    </>
   );
 };
 
