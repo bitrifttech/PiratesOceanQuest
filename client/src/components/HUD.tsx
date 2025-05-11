@@ -5,7 +5,7 @@ import { useGameState } from "../lib/stores/useGameState";
 import { usePowerUps, PowerUpType, ActivePowerUp } from "../lib/stores/usePowerUps";
 import { environmentCollisions } from "../lib/collision";
 
-// HUD component - displays health, cannon status, mini-map
+// HUD component - displays health, cannon status, mini-map, and active power-ups
 const HUD = () => {
   const health = usePlayer((state) => state.health);
   const cannonReady = usePlayer((state) => state.cannonReady);
@@ -15,6 +15,9 @@ const HUD = () => {
   // Added back enemy state for the mini-map
   const enemies = useEnemies((state) => state.enemies);
   const gameState = useGameState((state) => state.gameState);
+  
+  // Get active power-ups
+  const activePowerUps = usePowerUps((state) => state.activePowerUps);
   
   const [canvasSize, setCanvasSize] = useState({ width: 150, height: 150 });
   
@@ -248,6 +251,60 @@ const HUD = () => {
         
         {/* Enemy ship test controls removed */}
       </div>
+      
+      {/* Center - active power-ups */}
+      {activePowerUps.length > 0 && (
+        <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700 pointer-events-none">
+          <div className="text-white mb-2 font-['Pirata_One'] text-xl">Active Power-ups</div>
+          <div className="flex flex-col gap-2">
+            {activePowerUps.map((powerUp, index) => {
+              // Helper function to format remaining time or shots
+              const formatRemaining = (powerUp: ActivePowerUp) => {
+                if (powerUp.shots && powerUp.shotsRemaining) {
+                  return `${powerUp.shotsRemaining}/${powerUp.shots} shots`;
+                }
+                if (powerUp.remaining > 0) {
+                  return `${Math.ceil(powerUp.remaining)}s`;
+                }
+                return '';
+              };
+              
+              // Map types to display names and colors
+              const getPowerUpColor = (type: PowerUpType): string => {
+                switch (type) {
+                  case 'speed_boost': return 'bg-green-500';
+                  case 'double_damage': return 'bg-red-500';
+                  case 'rapid_fire': return 'bg-yellow-500';
+                  case 'shield': return 'bg-blue-500';
+                  case 'triple_shot': return 'bg-purple-500';
+                  case 'long_range': return 'bg-cyan-500';
+                  default: return 'bg-gray-500';
+                }
+              };
+              
+              const getPowerUpName = (type: PowerUpType): string => {
+                switch (type) {
+                  case 'speed_boost': return 'Speed Boost';
+                  case 'double_damage': return 'Double Damage';
+                  case 'rapid_fire': return 'Rapid Fire';
+                  case 'shield': return 'Shield';
+                  case 'triple_shot': return 'Triple Shot';
+                  case 'long_range': return 'Long Range';
+                  default: return 'Unknown';
+                }
+              };
+              
+              return (
+                <div key={`${powerUp.type}-${index}`} className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${getPowerUpColor(powerUp.type)}`}></div>
+                  <div className="text-white text-sm">{getPowerUpName(powerUp.type)}</div>
+                  <div className="text-yellow-400 text-xs ml-auto">{formatRemaining(powerUp)}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
       
       {/* Right side - mini-map */}
       <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700 pointer-events-none">
