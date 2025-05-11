@@ -80,17 +80,25 @@ export const SCALE = {
 
 // Model scaling adjustments (to correct for model-specific scaling issues)
 export const MODEL_ADJUSTMENT = {
+  // Ships
   SHIP: 1.5,        // Standardized multiplier for all ship models
+  
+  // Original island types
   TROPICAL: 4.0,    // Multiplier for tropical island models
   MOUNTAIN: 8.0,    // Multiplier for mountain island models
   ROCKS: 3.0,       // Multiplier for rock formation models
+  
+  // Environment features
   SHIPWRECK: 2.5,   // Multiplier for shipwreck models
   PORT: 3.0,        // Multiplier for port models
   LIGHTHOUSE: 4.0,  // Multiplier for lighthouse models
+  
   // New island types
-  VOLCANIC: 5.0,    // Multiplier for volcanic island models - tall and dramatic
-  ATOLL: 3.5,       // Multiplier for atoll island models - wide and flat
-  ICE: 4.5,         // Multiplier for ice island models - striking blue ice formations
+  VOLCANIC: 5.0,    // Multiplier for volcanic island models - tall dramatic mountains with lava
+  ATOLL: 3.5,       // Multiplier for atoll island models - low ring-shaped sandy islands
+  ICE: 4.5,         // Multiplier for ice island models - beautiful crystalline formations
+  
+  // Weapons
   CANNON: 20.0,     // Multiplier for cannon models
   CANNONBALL: 15.0  // Multiplier for cannonball models
 };

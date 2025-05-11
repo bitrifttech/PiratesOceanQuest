@@ -78,12 +78,26 @@ function App() {
       <Routes>
         {/* Model Test Route */}
         <Route path="/model-test" element={<ModelTestScene modelPath="/models/base_pirate_ship.glb" modelScale={1.0} modelAdjustment={1.6} modelHeightOffset={0.6} enableBob={true} bobHeight={0.03} />} />
+        
+        {/* Ship Models */}
         <Route path="/model-test/ship" element={<ModelTestScene modelPath="/models/base_pirate_ship.glb" modelScale={1.0} modelAdjustment={1.6} modelHeightOffset={0.6} enableBob={true} bobHeight={0.03} />} />
         <Route path="/model-test/advanced-ship" element={<ModelTestScene modelPath="/models/advanced_pirate_ship.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.SHIP} modelHeightOffset={2.5} enableBob={true} bobHeight={0.03} bobSpeed={0.5} />} />
-        <Route path="/model-test/tropical" element={<ModelTestScene modelPath="/models/tropical_island.glb" modelScale={3.0} modelAdjustment={4.8} modelHeightOffset={3.7} enableBob={true} bobHeight={0.03} bobSpeed={0.5} />} />
+        
+        {/* Original Island Types */}
+        <Route path="/model-test/tropical" element={<ModelTestScene modelPath="/models/tropical_island.glb" modelScale={3.0} modelAdjustment={MODEL_ADJUSTMENT.TROPICAL} modelHeightOffset={3.7} />} />
         <Route path="/model-test/mountain" element={<ModelTestScene modelPath="/models/mountain_island.glb" modelScale={5.0} modelAdjustment={MODEL_ADJUSTMENT.MOUNTAIN} modelHeightOffset={0} />} />
-        <Route path="/model-test/rock" element={<ModelTestScene modelPath="/models/rock_formation.glb" modelScale={7.7} modelAdjustment={3.19} modelHeightOffset={5} enableBob={true} bobHeight={0.03} bobSpeed={0.5} />} />
+        <Route path="/model-test/rock" element={<ModelTestScene modelPath="/models/rock_formation.glb" modelScale={7.7} modelAdjustment={3.19} modelHeightOffset={5} />} />
         <Route path="/model-test/rocks" element={<ModelTestScene modelPath="/models/rock_formation.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.ROCKS} modelHeightOffset={0} />} />
+        
+        {/* Environment Features */}
+        <Route path="/model-test/shipwreck" element={<ModelTestScene modelPath="/models/shipwreck.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.SHIPWRECK} modelHeightOffset={0.5} />} />
+        <Route path="/model-test/port" element={<ModelTestScene modelPath="/models/port.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.PORT} modelHeightOffset={1.0} />} />
+        <Route path="/model-test/lighthouse" element={<ModelTestScene modelPath="/models/lighthouse.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.LIGHTHOUSE} modelHeightOffset={4.0} />} />
+        
+        {/* New Island Types */}
+        <Route path="/model-test/volcanic" element={<ModelTestScene modelPath="/models/volcanic_island.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.VOLCANIC} modelHeightOffset={7.0} />} />
+        <Route path="/model-test/atoll" element={<ModelTestScene modelPath="/models/atoll_island.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.ATOLL} modelHeightOffset={3.0} />} />
+        <Route path="/model-test/ice" element={<ModelTestScene modelPath="/models/ice_island.glb" modelScale={1.0} modelAdjustment={MODEL_ADJUSTMENT.ICE} modelHeightOffset={5.5} />} />
         
         {/* Main Game Route */}
         <Route path="*" element={
