@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { usePlayer } from "../lib/stores/usePlayer";
-// import { useEnemies } from "../lib/stores/useEnemies"; // Removed enemies
+import { useEnemies } from "../lib/stores/useEnemies"; // Re-added for mini-map
 import { useGameState } from "../lib/stores/useGameState";
+import { environmentCollisions } from "../lib/collision";
 
 // HUD component - displays health, cannon status, mini-map
 const HUD = () => {
@@ -10,7 +11,8 @@ const HUD = () => {
   const cooldownPercent = usePlayer((state) => state.cooldownPercent);
   const playerPosition = usePlayer((state) => state.position);
   const playerRotation = usePlayer((state) => state.rotation);
-  // Enemy state removed
+  // Added back enemy state for the mini-map
+  const enemies = useEnemies((state) => state.enemies);
   const gameState = useGameState((state) => state.gameState);
   
   const [canvasSize, setCanvasSize] = useState({ width: 150, height: 150 });
@@ -37,54 +39,154 @@ const HUD = () => {
     ctx.lineWidth = 2;
     ctx.strokeRect(0, 0, canvas.width, canvas.height);
     
-    // Calculate scale factor for map (1000x1000 game area)
-    const scaleFactor = canvas.width / 1000;
+    // Calculate scale factor for map (800x800 game area visible on minimap)
+    const mapVisibleRange = 400; // Units visible from center in each direction
+    const scaleFactor = canvas.width / (mapVisibleRange * 2);
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     
-    // Draw islands (static positions)
-    const islands = [
-      { x: 80, z: 100 },
-      { x: -120, z: -50 },
-      { x: 150, z: -120 },
-      { x: -60, z: 150 },
-    ];
+    // Get actual environment features from the collision system
+    const environmentFeatures = environmentCollisions.getFeatures();
     
-    ctx.fillStyle = '#8D6E63';
-    islands.forEach(island => {
-      const mapX = centerX + (island.x - playerPosition.x) * scaleFactor;
-      const mapY = centerY + (island.z - playerPosition.z) * scaleFactor;
+    // Draw environment features with type-specific colors
+    environmentFeatures.forEach(feature => {
+      // Calculate position on mini-map relative to player
+      const mapX = centerX + (feature.x - playerPosition.x) * scaleFactor;
+      const mapY = centerY + (feature.z - playerPosition.z) * scaleFactor;
       
+      // Skip if outside the mini-map bounds (with some margin)
+      if (
+        mapX < -5 || mapX > canvas.width + 5 || 
+        mapY < -5 || mapY > canvas.height + 5
+      ) {
+        return;
+      }
+      
+      // Choose color and size based on feature type
+      let color = '#8D6E63'; // Default brown
+      let size = 3; // Default size
+      
+      switch (feature.type) {
+        case 'tropical':
+          color = '#8BC34A'; // Green
+          size = 4;
+          break;
+        case 'mountain':
+          color = '#795548'; // Brown
+          size = 5;
+          break;
+        case 'rocks':
+          color = '#9E9E9E'; // Gray
+          size = 3;
+          break;
+        case 'shipwreck':
+          color = '#607D8B'; // Blue-gray
+          size = 3;
+          break;
+        case 'port':
+          color = '#FFB300'; // Amber
+          size = 4;
+          break;
+        case 'lighthouse':
+          color = '#FFFFFF'; // White
+          size = 3;
+          break;
+        case 'volcanic':
+          color = '#F44336'; // Red
+          size = 4;
+          break;
+        case 'atoll':
+          color = '#00BCD4'; // Cyan
+          size = 4;
+          break;
+        case 'ice':
+          color = '#B3E5FC'; // Light blue
+          size = 4;
+          break;
+      }
+      
+      // Adjust size based on feature scale
+      size = size * Math.sqrt(feature.scale);
+      
+      // Draw the feature
+      ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(mapX, mapY, 5, 0, Math.PI * 2);
+      ctx.arc(mapX, mapY, size, 0, Math.PI * 2);
       ctx.fill();
     });
     
-    // Draw enemies section removed
+    // Draw enemy ships
+    enemies.forEach(enemy => {
+      // Calculate position on mini-map relative to player
+      const mapX = centerX + (enemy.position.x - playerPosition.x) * scaleFactor;
+      const mapY = centerY + (enemy.position.z - playerPosition.z) * scaleFactor;
+      
+      // Skip if outside mini-map bounds
+      if (
+        mapX < 0 || mapX > canvas.width || 
+        mapY < 0 || mapY > canvas.height
+      ) {
+        return;
+      }
+      
+      // Draw enemy ship as a red triangle
+      ctx.fillStyle = '#F44336'; // Red
+      ctx.beginPath();
+      
+      // Calculate the direction in which the triangle should point
+      const angle = enemy.rotation.y;
+      const shipSize = 5;
+      
+      // Calculate the three points of the triangle
+      const tipX = mapX + Math.sin(angle) * shipSize;
+      const tipY = mapY + Math.cos(angle) * shipSize;
+      
+      const leftX = mapX + Math.sin(angle - 2.5) * shipSize;
+      const leftY = mapY + Math.cos(angle - 2.5) * shipSize;
+      
+      const rightX = mapX + Math.sin(angle + 2.5) * shipSize;
+      const rightY = mapY + Math.cos(angle + 2.5) * shipSize;
+      
+      // Draw the triangle
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(leftX, leftY);
+      ctx.lineTo(rightX, rightY);
+      ctx.closePath();
+      ctx.fill();
+    });
     
-    // Draw player
-    ctx.fillStyle = '#4CAF50';
+    // Draw player ship as a green triangle
+    ctx.fillStyle = '#4CAF50'; // Green
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 4, 0, Math.PI * 2);
+    
+    // Draw player as triangle pointing in correct direction
+    const playerSize = 5;
+    const playerAngle = playerRotation.y;
+    
+    // Calculate the three points of the triangle
+    const pTipX = centerX + Math.sin(playerAngle) * playerSize;
+    const pTipY = centerY + Math.cos(playerAngle) * playerSize;
+    
+    const pLeftX = centerX + Math.sin(playerAngle - 2.5) * playerSize;
+    const pLeftY = centerY + Math.cos(playerAngle - 2.5) * playerSize;
+    
+    const pRightX = centerX + Math.sin(playerAngle + 2.5) * playerSize;
+    const pRightY = centerY + Math.cos(playerAngle + 2.5) * playerSize;
+    
+    // Draw the triangle
+    ctx.moveTo(pTipX, pTipY);
+    ctx.lineTo(pLeftX, pLeftY);
+    ctx.lineTo(pRightX, pRightY);
+    ctx.closePath();
     ctx.fill();
     
-    // Draw player direction
-    const dirLength = 10;
-    const dirX = centerX + Math.sin(playerRotation.y) * dirLength;
-    const dirY = centerY + Math.cos(playerRotation.y) * dirLength;
-    
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.lineTo(dirX, dirY);
-    ctx.stroke();
-    
-  }, [playerPosition, playerRotation]);
+  }, [playerPosition, playerRotation, enemies]);
 
   // Handle window resize
   useEffect(() => {
     const handleResize = () => {
-      const width = Math.min(150, window.innerWidth / 5);
+      // Make the mini-map slightly larger for better visibility
+      const width = Math.min(180, window.innerWidth / 4.5);
       setCanvasSize({
         width,
         height: width
