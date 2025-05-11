@@ -65,15 +65,18 @@ const Cannonball = ({
   // Check if this cannonball has an upward arc in its initial direction
   const hasUpwardComponent = direction.y > 0;
   
-  // Initialize position without logging
+  // Initialize the cannonball properties
   useEffect(() => {
+    // Initialize the adjusted lifespan
+    lifeRef.current = adjustedLifespan;
+    
     if (ballRef.current) {
       // Set initial position directly to avoid being parented to the ship
       ballRef.current.position.copy(localPosition);
       
       // No logging for better performance
     }
-  }, [localPosition]);
+  }, [localPosition, adjustedLifespan]);
   
   // Get enemy damage function
   const damageEnemy = useEnemies((state) => state.damageEnemy);

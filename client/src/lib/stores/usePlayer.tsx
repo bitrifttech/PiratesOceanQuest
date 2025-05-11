@@ -151,10 +151,26 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   // Take damage
   takeDamage: (amount) => {
     const { health } = get();
+    let damageAmount = amount;
+    
+    // Check for shield power-up
+    const powerUpState = usePowerUps.getState();
+    if (powerUpState.hasPowerUp('shield')) {
+      const damageReduction = powerUpState.getPowerUpValue('shield') || 1;
+      damageAmount = Math.floor(amount * damageReduction);
+      
+      if (damageAmount < amount) {
+        console.log(`[POWER-UP] Shield active: Reduced damage from ${amount} to ${damageAmount}`);
+      }
+    }
     
     // Re-enabled damage system to support ship collisions
-    const newHealth = Math.max(0, health - amount);
+    const newHealth = Math.max(0, health - damageAmount);
     set({ health: newHealth });
+    
+    if (damageAmount > 0) {
+      console.log(`[PLAYER] Took ${damageAmount} damage. Health: ${newHealth}/${get().maxHealth}`);
+    }
     
     // Trigger crew reaction in ship events store if available
     try {

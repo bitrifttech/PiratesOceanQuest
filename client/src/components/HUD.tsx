@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies"; // Re-added for mini-map
 import { useGameState } from "../lib/stores/useGameState";
+import { usePowerUps, PowerUpType, ActivePowerUp } from "../lib/stores/usePowerUps";
 import { environmentCollisions } from "../lib/collision";
 
 // HUD component - displays health, cannon status, mini-map
