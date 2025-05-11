@@ -35,23 +35,24 @@ export class EnemyManager {
   }
   
   /**
-   * Spawns a test enemy ship directly in front of the player
+   * Spawns a test enemy ship at a safe distance from the player
    * Used for debugging ship orientation and movement
    */
   static spawnTestEnemyShip(): void {
     // Clear existing enemies
     useEnemies.getState().resetEnemies();
     
-    // Position directly in front of where player starts (at origin)
-    // This puts the enemy ship 15 units in front of the player
+    // Position at a safe distance from where player starts (at origin)
+    // This puts the enemy ship 60 units away from the player instead of 15
+    // to give the player time to orient themselves before combat
     // Use a constant height of 0 instead of POSITION.SHIP_HEIGHT because
     // the CustomModel in EnemyShip will add the proper height offset
-    const testPosition = new THREE.Vector3(0, 0, -15);
+    const testPosition = new THREE.Vector3(40, 0, -40);
     
-    // Set rotation to face the player (at origin)
-    const testRotation = new THREE.Euler(0, Math.PI, 0); // Face the player
+    // Set rotation to face general direction but not directly at player
+    const testRotation = new THREE.Euler(0, Math.PI * 0.75, 0);
     
-    // Add the test enemy to the store
+    // Add the test enemy to the store with peaceful start indicator
     useEnemies.setState({
       enemies: [{
         id: 'test-enemy-ship',
@@ -59,11 +60,12 @@ export class EnemyManager {
         rotation: testRotation,
         velocity: new THREE.Vector3(0, 0, 0),
         health: 100,
-        maxHealth: 100
+        maxHealth: 100,
+        peacefulStartTimer: 10 // 10 second grace period before attacking
       }]
     });
     
-    console.log(`[ENEMY] Spawned test enemy ship at (0.0, 0.0, -15.0), facing player`);
+    console.log(`[ENEMY] Spawned test enemy ship at safe distance (40.0, 0.0, -40.0), with 10s peaceful start period`);
   }
   
   /**

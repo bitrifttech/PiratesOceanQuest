@@ -12,6 +12,7 @@ interface Enemy {
   velocity: THREE.Vector3;
   health: number;
   maxHealth: number;
+  peacefulStartTimer?: number; // Optional timer for grace period before attacking
 }
 
 interface EnemiesState {
