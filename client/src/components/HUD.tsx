@@ -134,7 +134,8 @@ const HUD = () => {
       ctx.beginPath();
       
       // Calculate the direction in which the triangle should point
-      const angle = enemy.rotation.y;
+      // Apply same adjustment as player ship for consistency
+      const angle = enemy.rotation.y - Math.PI;
       const shipSize = 5;
       
       // Calculate the three points of the triangle
@@ -161,7 +162,10 @@ const HUD = () => {
     
     // Draw player as triangle pointing in correct direction
     const playerSize = 5;
-    const playerAngle = playerRotation.y;
+    // Fix: Invert the angle as the ship model faces -Z by default
+    // The ship model faces in negative Z direction, but for the mini-map
+    // we need to invert this to match the actual visual orientation
+    const playerAngle = playerRotation.y - Math.PI; // Rotate 180 degrees to point in the right direction
     
     // Calculate the three points of the triangle
     const pTipX = centerX + Math.sin(playerAngle) * playerSize;
