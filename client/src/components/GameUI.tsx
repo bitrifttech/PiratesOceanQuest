@@ -22,9 +22,14 @@ const GameUI = () => {
   const waveHeight = useGameState((state) => state.waveHeight);
   const waveSpeed = useGameState((state) => state.waveSpeed);
   const shipScale = useGameState((state) => state.shipScale); // Add ship scale
+  const waterVisible = useGameState((state) => state.waterVisible);
+  const oneShotKill = useGameState((state) => state.oneShotKill);
+  
   const setShipHeight = useGameState((state) => state.setShipHeight);
   const setWaveParameters = useGameState((state) => state.setWaveParameters);
   const setShipScale = useGameState((state) => state.setShipScale); // Add ship scale setter
+  const toggleWaterVisibility = useGameState((state) => state.toggleWaterVisibility);
+  const toggleOneShotKill = useGameState((state) => state.toggleOneShotKill);
   
   // Player state
   const playerHealth = usePlayer((state) => state.health);
@@ -236,10 +241,14 @@ const GameUI = () => {
             onUpdateShipHeight={setShipHeight}
             onUpdateWaterParams={setWaveParameters}
             onUpdateShipScale={setShipScale}
+            onToggleWaterVisibility={toggleWaterVisibility}
+            onToggleOneShotKill={toggleOneShotKill}
             initialShipHeight={shipHeight}
             initialWaveHeight={waveHeight}
             initialWaveSpeed={waveSpeed}
             initialShipScale={shipScale}
+            initialWaterVisible={waterVisible}
+            initialOneShotKill={oneShotKill}
           />
         </div>
       )}
