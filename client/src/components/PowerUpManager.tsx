@@ -74,14 +74,21 @@ const PowerUpManager: React.FC<PowerUpManagerProps> = () => {
     });
   };
   
-  // Make spawn function available globally
+  // Make spawn function available globally - immediately on component mount
   useEffect(() => {
+    console.log("[POWER-UP] Setting up global spawn function");
+    
     // Add to window for global access
     (window as any).spawnPowerUp = spawnPowerUp;
     
+    // Also directly assign to PowerUpSystem for immediate access
+    PowerUpSystem._internalSpawnFunction = spawnPowerUp;
+    
     // Cleanup
     return () => {
+      console.log("[POWER-UP] Cleaning up global spawn function");
       delete (window as any).spawnPowerUp;
+      PowerUpSystem._internalSpawnFunction = null;
     };
   }, []);
   
@@ -103,12 +110,29 @@ const PowerUpManager: React.FC<PowerUpManagerProps> = () => {
 
 export default PowerUpManager;
 
+// Define the type for our PowerUpSystem to avoid TypeScript errors
+interface PowerUpSystemType {
+  _internalSpawnFunction: ((position: THREE.Vector3, type?: PowerUpType) => string | null) | null;
+  spawn: (position: THREE.Vector3, type?: PowerUpType) => string | null;
+}
+
 // Export singleton instance for direct access from other components
-export const PowerUpSystem = {
+export const PowerUpSystem: PowerUpSystemType = {
+  _internalSpawnFunction: null,
   spawn: (position: THREE.Vector3, type?: PowerUpType) => {
+    // First try to use the direct function reference (reliable)
+    if (PowerUpSystem._internalSpawnFunction) {
+      console.log("[POWER-UP] Using direct function reference to spawn power-up");
+      return PowerUpSystem._internalSpawnFunction(position, type);
+    }
+    
+    // Fallback to window method (less reliable)
     if (typeof window !== 'undefined' && (window as any).spawnPowerUp) {
+      console.log("[POWER-UP] Using window.spawnPowerUp to spawn power-up");
       return (window as any).spawnPowerUp(position, type);
     }
+    
+    console.error("[POWER-UP] Failed to spawn power-up: No spawn function available");
     return null;
   }
 };
