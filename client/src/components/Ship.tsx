@@ -452,16 +452,34 @@ const Ship = () => {
     
     // Check key states and apply acceleration
     if (keys.forward) {
+      // Check for speed boost power-up
+      const speedMultiplier = usePowerUps.getState().hasPowerUp('speed_boost') ? 
+                             usePowerUps.getState().getPowerUpValue('speed_boost') || 1 : 1;
+      
       // Apply acceleration in the direction the ship is facing (W key moves forward)
-      // Increased by 50% from 6 to 9
-      const forwardForce = direction.clone().multiplyScalar(9 * delta);
+      // Base speed increased by 50% from 6 to 9, then multiplied by speed boost
+      const forwardForce = direction.clone().multiplyScalar(9 * speedMultiplier * delta);
       acceleration.add(forwardForce);
+      
+      // If speed boost is active, add visual effect
+      if (speedMultiplier > 1) {
+        if (boostEffectTimer <= 0) {
+          console.log(`[POWER-UP] Speed boost active: ${speedMultiplier.toFixed(1)}x speed`);
+          boostEffectTimer = 2; // Show message every 2 seconds
+        } else {
+          boostEffectTimer -= delta;
+        }
+      }
     }
     
     if (keys.backward) {
+      // Check for speed boost power-up (also applies to backward movement)
+      const speedMultiplier = usePowerUps.getState().hasPowerUp('speed_boost') ? 
+                             usePowerUps.getState().getPowerUpValue('speed_boost') || 1 : 1;
+      
       // Apply acceleration in the opposite direction (S key moves backward)
-      // Increased by 50% from 3 to 4.5
-      const backwardForce = direction.clone().multiplyScalar(-4.5 * delta);
+      // Base speed increased by 50% from 3 to 4.5, then multiplied by speed boost
+      const backwardForce = direction.clone().multiplyScalar(-4.5 * speedMultiplier * delta);
       acceleration.add(backwardForce);
     }
     
@@ -648,6 +666,9 @@ const Ship = () => {
 
   // Track model loading through a ref to avoid state issues
   const shipModelLoadedRef = useRef(false);
+  
+  // Timer for power-up effect messages
+  const boostEffectTimer = useRef(0);
 
   return (
     <>
