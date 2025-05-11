@@ -16,6 +16,7 @@ interface CannonballProps {
   speed?: number;
   onHit?: () => void;
   lifespan?: number; // seconds before auto-removal
+  sourceId?: string; // ID of the entity that fired this cannonball (for avoiding self-damage)
 }
 
 /**
@@ -28,7 +29,8 @@ const Cannonball = ({
   direction,
   speed = 30,
   onHit,
-  lifespan = 2.0
+  lifespan = 2.0,
+  sourceId
 }: CannonballProps) => {
   // References
   const ballRef = useRef<THREE.Mesh>(null);
@@ -124,6 +126,11 @@ const Cannonball = ({
     // If we didn't hit the environment, check for collisions with enemy ships
     // Check each enemy for collisions
     for (const enemy of enemies) {
+      // Skip if this enemy is the source of the cannonball (prevent self-damage)
+      if (sourceId && enemy.id === sourceId) {
+        continue;
+      }
+      
       // Calculate distance to enemy
       const distance = cannonballPosition.distanceTo(enemy.position);
       

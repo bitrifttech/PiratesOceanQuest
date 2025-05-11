@@ -307,6 +307,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
           direction={toPlayerDirection}
           speed={25} // Slightly slower than player cannons
           lifespan={3.0}
+          sourceId={id} // Add the enemy ship ID to prevent self-damage
           onHit={() => {
             // Remove this cannonball from the array when it hits something
             setCannonballs(prev => prev.filter(ball => ball.key !== cannonballId));
