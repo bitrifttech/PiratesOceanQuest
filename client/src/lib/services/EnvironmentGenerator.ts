@@ -7,7 +7,6 @@ import { EnvironmentFeature, EnvironmentFeatureType } from "../../components/Env
 export class EnvironmentGenerator {
   /**
    * Checks if two features would overlap in the game world
-   * Used both directly as isOverlapping and as a helper method for featuresOverlap
    */
   static isOverlapping(
     feature1: { x: number; z: number; type: EnvironmentFeatureType; scale: number },
@@ -70,13 +69,12 @@ export class EnvironmentGenerator {
 
   /**
    * Helper method to check if two environment features would overlap
-   * Used in the various feature placement methods
    */
   static featuresOverlap(
     feature1: EnvironmentFeature,
     feature2: EnvironmentFeature
   ): boolean {
-    return this.isOverlapping(
+    return EnvironmentGenerator.isOverlapping(
       { x: feature1.x, z: feature1.z, type: feature1.type, scale: feature1.scale },
       { x: feature2.x, z: feature2.z, type: feature2.type, scale: feature2.scale }
     );
@@ -105,43 +103,45 @@ export class EnvironmentGenerator {
     // Jitter scale to add variety (±10%)
     const scale = baseScale * (0.9 + Math.random() * 0.2);
     
-    // Try to find a non-overlapping position
+    // Generate rotation
+    const rotation: [number, number, number] = [
+      0, 
+      rotationFactor * Math.PI * 2, 
+      0
+    ];
+    
+    // Try multiple locations to place this feature
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       // Generate random position within bounds
       const x = minX + Math.random() * (maxX - minX);
       const z = minZ + Math.random() * (maxZ - minZ);
       
-      // Check distance from player start
-      const dxPlayer = x - playerStartX;
-      const dzPlayer = z - playerStartZ;
-      const distanceFromPlayer = Math.sqrt(dxPlayer * dxPlayer + dzPlayer * dzPlayer);
+      // Check if too close to player start
+      const dxToPlayer = x - playerStartX;
+      const dzToPlayer = z - playerStartZ;
+      const distanceToPlayer = Math.sqrt(dxToPlayer * dxToPlayer + dzToPlayer * dzToPlayer);
       
-      // If too close to player start, try again
-      if (distanceFromPlayer < playerProtectionRadius) {
-        continue;
+      if (distanceToPlayer < playerProtectionRadius) {
+        continue; // Too close to player, try again
       }
       
-      // Create candidate feature
-      const candidate = { 
-        id, 
-        type, 
-        x, 
-        z, 
-        scale, 
-        rotation: [0, Math.PI * rotationFactor, 0] as [number, number, number] 
+      // Create a candidate feature
+      const candidate: EnvironmentFeature = {
+        id,
+        type,
+        x,
+        z,
+        scale,
+        rotation
       };
       
-      // Check if it overlaps with any existing feature
-      let overlapping = false;
-      for (const existingFeature of existingFeatures) {
-        if (this.isOverlapping(candidate, existingFeature)) {
-          overlapping = true;
-          break;
-        }
-      }
+      // Check for overlaps with existing features
+      const hasOverlap = existingFeatures.some(existing => 
+        EnvironmentGenerator.featuresOverlap(candidate, existing)
+      );
       
-      // If not overlapping, return the feature
-      if (!overlapping) {
+      // If no overlap, we found a good spot
+      if (!hasOverlap) {
         console.log(`[ENV GEN] Successfully placed ${id} at (${x.toFixed(1)}, ${z.toFixed(1)}) with scale ${scale.toFixed(2)}`);
         return candidate;
       }
@@ -197,7 +197,7 @@ export class EnvironmentGenerator {
       };
       
       // Check for overlap with existing features
-      const overlaps = features.some(existing => this.featuresOverlap(feature, existing));
+      const overlaps = features.some(existing => EnvironmentGenerator.featuresOverlap(feature, existing));
       
       if (!overlaps) {
         arenaFeatures.push(feature);
@@ -247,7 +247,7 @@ export class EnvironmentGenerator {
       };
       
       // Check for overlap with existing features
-      const overlaps = features.some(existing => this.featuresOverlap(feature, existing));
+      const overlaps = features.some(existing => EnvironmentGenerator.featuresOverlap(feature, existing));
       
       if (!overlaps) {
         archipelagoFeatures.push(feature);
@@ -325,25 +325,25 @@ export class EnvironmentGenerator {
       };
       
       // Add the shipwreck if it doesn't overlap
-      if (!features.some(existing => this.featuresOverlap(shipwreck, existing))) {
+      if (!features.some(existing => EnvironmentGenerator.featuresOverlap(shipwreck, existing))) {
         routeFeatures.push(shipwreck);
       }
     }
     
     // Add the ports and lighthouses if they don't overlap
-    if (!features.some(existing => this.featuresOverlap(startPort, existing))) {
+    if (!features.some(existing => EnvironmentGenerator.featuresOverlap(startPort, existing))) {
       routeFeatures.push(startPort);
     }
     
-    if (!features.some(existing => this.featuresOverlap(endPort, existing))) {
+    if (!features.some(existing => EnvironmentGenerator.featuresOverlap(endPort, existing))) {
       routeFeatures.push(endPort);
     }
     
-    if (!features.some(existing => this.featuresOverlap(startLighthouse, existing))) {
+    if (!features.some(existing => EnvironmentGenerator.featuresOverlap(startLighthouse, existing))) {
       routeFeatures.push(startLighthouse);
     }
     
-    if (!features.some(existing => this.featuresOverlap(endLighthouse, existing))) {
+    if (!features.some(existing => EnvironmentGenerator.featuresOverlap(endLighthouse, existing))) {
       routeFeatures.push(endLighthouse);
     }
     
@@ -377,7 +377,7 @@ export class EnvironmentGenerator {
       const openingDirection = Math.atan2(-arenaZ, -arenaX); // Point toward center
       const arenaRadius = 30 + Math.random() * 10; // Arena size
       
-      const arenaFeatures = this.createBattleArena(
+      const arenaFeatures = EnvironmentGenerator.createBattleArena(
         arenaX, arenaZ, arenaRadius, openingDirection, [...features]
       );
       
@@ -406,7 +406,7 @@ export class EnvironmentGenerator {
       const islandCount = 3 + Math.floor(Math.random() * 3); // 3-5 islands
       const baseScale = 1.3 + Math.random() * 0.5; // Base scale for the islands
       
-      const archipelagoFeatures = this.createArchipelago(
+      const archipelagoFeatures = EnvironmentGenerator.createArchipelago(
         archipelagoX, archipelagoZ, 50, islandType, islandCount, baseScale, [...features]
       );
       
@@ -430,7 +430,7 @@ export class EnvironmentGenerator {
       const endX = Math.cos(endAngle) * endDistance;
       const endZ = Math.sin(endAngle) * endDistance;
       
-      const routeFeatures = this.createShippingRoute(
+      const routeFeatures = EnvironmentGenerator.createShippingRoute(
         startX, startZ, endX, endZ, [...features]
       );
       
@@ -519,7 +519,7 @@ export class EnvironmentGenerator {
           };
           
           // Check for overlaps with existing features
-          const overlaps = features.some(existing => this.featuresOverlap(feature, existing));
+          const overlaps = features.some(existing => EnvironmentGenerator.featuresOverlap(feature, existing));
           
           if (!overlaps) {
             features.push(feature);
