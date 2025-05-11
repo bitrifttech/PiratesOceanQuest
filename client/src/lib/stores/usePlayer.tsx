@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import * as THREE from "three";
 import { useUpgrades } from "./useUpgrades";
+import { usePowerUps } from "./usePowerUps";
 
 interface PlayerState {
   // Ship properties
@@ -95,8 +96,24 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   fireCannon: () => {
     if (get().cannonReady) {
       const { cannonLevel } = useUpgrades.getState();
-      // Cooldown time reduces with cannon level
-      const cooldownTime = Math.max(1, 3 - (cannonLevel * 0.2));
+      // Base cooldown time reduces with cannon level
+      let cooldownTime = Math.max(1, 3 - (cannonLevel * 0.2));
+      
+      // Check for rapid fire power-up
+      const powerUpState = usePowerUps.getState();
+      if (powerUpState.hasPowerUp('rapid_fire')) {
+        const rapidFireMultiplier = powerUpState.getPowerUpValue('rapid_fire') || 1;
+        cooldownTime *= rapidFireMultiplier; // e.g., 0.3 = 70% cooldown reduction
+        console.log(`[POWER-UP] Rapid fire active: ${(1 - rapidFireMultiplier) * 100}% faster cannons`);
+      }
+      
+      // Apply triple shot if active
+      if (powerUpState.hasPowerUp('triple_shot')) {
+        console.log(`[POWER-UP] Triple shot active!`);
+        // The actual triple shot logic is in the Ship component
+        // We just track shot consumption here
+        powerUpState.consumeShot('triple_shot');
+      }
       
       set({
         cannonReady: false,

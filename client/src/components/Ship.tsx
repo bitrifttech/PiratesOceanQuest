@@ -238,6 +238,9 @@ const Ship = () => {
       // Create positions for exactly 3 cannons on each side (6 total)
       const selectedPositions: CannonPosition[] = [];
       
+      // Check for triple shot power-up 
+      const hasTripleShot = usePowerUps.getState().hasPowerUp('triple_shot');
+      
       // Fixed positions at front, middle, and back for right side
       // These represent indices in the cannonPositions array (front, middle, back)
       const rightSideIndices = [
@@ -246,12 +249,17 @@ const Ship = () => {
         cannonPositions.length - 1          // Back of ship
       ];
       
+      // If triple shot is active, add more firing positions
+      if (hasTripleShot) {
+        // Add two more positions between front-middle and middle-back for a total of 5 positions
+        rightSideIndices.push(
+          Math.floor(cannonPositions.length / 4),     // Between front and middle
+          Math.floor(cannonPositions.length * 0.75)   // Between middle and back
+        );
+      }
+      
       // Fixed positions for left side (same positions as right)
-      const leftSideIndices = [
-        0,                                  // Front of ship
-        Math.floor(cannonPositions.length / 2), // Middle of ship
-        cannonPositions.length - 1          // Back of ship
-      ];
+      const leftSideIndices = [...rightSideIndices]; // Copy right side indices
       
       // Add right side positions
       rightSideIndices.forEach(index => {

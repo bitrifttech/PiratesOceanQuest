@@ -41,9 +41,26 @@ const Cannonball = ({
   // Store the initial position and velocity locally to prevent them from being affected by the parent ship
   const [localPosition] = useState<THREE.Vector3>(position.clone());
   
+  // Check for long_range power-up for player cannonballs
+  let adjustedSpeed = speed;
+  let adjustedLifespan = lifespan;
+  
+  // Only apply power-ups for player cannonballs (not enemy cannonballs)
+  if (!sourceId || !sourceId.includes('enemy')) {
+    const powerUpsState = usePowerUps.getState();
+    
+    // Apply long range boost if active
+    if (powerUpsState.hasPowerUp('long_range')) {
+      const rangeMultiplier = powerUpsState.getPowerUpValue('long_range') || 1;
+      adjustedSpeed = speed * rangeMultiplier;
+      adjustedLifespan = lifespan * rangeMultiplier;
+      console.log(`[POWER-UP] Long range active: ${rangeMultiplier.toFixed(1)}x range and speed`);
+    }
+  }
+  
   // Create velocity with the upward component already included from the direction
   // This preserves any upward angle set by the ship's cannons
-  const [velocity] = useState<THREE.Vector3>(direction.clone().normalize().multiplyScalar(speed));
+  const [velocity] = useState<THREE.Vector3>(direction.clone().normalize().multiplyScalar(adjustedSpeed));
 
   // Check if this cannonball has an upward arc in its initial direction
   const hasUpwardComponent = direction.y > 0;
