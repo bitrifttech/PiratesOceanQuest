@@ -711,19 +711,7 @@ const Ship = () => {
           ))}
         </group>
         
-        {/* Health indicator (only shown when damaged) - positioned above ship */}
-        {health < 100 && (
-          <mesh position={[0, 8, 0]} rotation={[0, 0, 0]}>
-            <boxGeometry args={[10, 0.4, 2]} />
-            <meshStandardMaterial 
-              color={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
-              emissive={health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336"}
-              emissiveIntensity={0.8}
-              transparent={true}
-              opacity={0.8}
-            />
-          </mesh>
-        )}
+        {/* Health indicator above ship removed - health now only shown in HUD */}
         
         {/* Crew System disabled */}
       </group>
