@@ -16,11 +16,6 @@ const Ocean: React.FC<OceanProps> = () => {
   // Check if water should be visible from game state
   const waterVisible = useGameState((state) => state.waterVisible);
   
-  // If water is not visible, don't render anything
-  if (!waterVisible) {
-    return null;
-  }
-  
   // Calculate the size to cover a large area
   const oceanSize = 1000;
   
@@ -246,6 +241,11 @@ const Ocean: React.FC<OceanProps> = () => {
     }
   });
   
+  // Return empty fragment if water isn't visible
+  if (!waterVisible) {
+    return <></>;
+  }
+
   return (
     <>
       {/* Main water surface */}
