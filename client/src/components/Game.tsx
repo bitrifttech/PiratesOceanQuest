@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, memo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Environment as ThreeEnvironment, OrbitControls, Text, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
@@ -24,6 +24,46 @@ import { CollisionService } from "../lib/services/CollisionService";
 import { collisionHandler } from "../lib/services/CollisionHandler";
 
 // Direction indicators removed - no longer needed after fixing ship orientation
+
+// DirectPowerUpCollector component to handle collection logic
+// We separate this to avoid React hooks conditional calling issues
+const DirectPowerUpCollector = memo(() => {
+  const playerPosition = usePlayer((state) => state.position);
+  const directPowerUps = useEnemies((state) => state.directPowerUps);
+  const removeDirectPowerUp = useEnemies((state) => state.removeDirectPowerUp);
+
+  useFrame(() => {
+    if (!playerPosition || directPowerUps.length === 0) return;
+    
+    // Check each power-up for collection
+    directPowerUps.forEach(powerUp => {
+      // Calculate distance to player
+      const dx = playerPosition.x - powerUp.position.x;
+      const dz = playerPosition.z - powerUp.position.z;
+      const distanceSquared = dx * dx + dz * dz;
+      
+      // If player is within 5 units, collect the power-up
+      if (distanceSquared < 25) { // 5 squared
+        console.log(`[DIRECT POWER-UP] Player collected power-up: ${powerUp.id} (${powerUp.type})`);
+        
+        // Add power-up effect to player
+        const { addPowerUp } = usePowerUps.getState();
+        if (addPowerUp) {
+          addPowerUp(powerUp.type as PowerUpType);
+          
+          // Play sound effect
+          const { playSound } = useAudio.getState();
+          playSound('powerUp');
+        }
+        
+        // Remove from the state
+        removeDirectPowerUp(powerUp.id);
+      }
+    });
+  });
+  
+  return null; // This component doesn't render anything
+});
 
 // Main game component that sets up the 3D scene
 const Game = () => {
@@ -244,6 +284,9 @@ const Game = () => {
         <meshStandardMaterial color="#00ff00" emissive="#00ff00" emissiveIntensity={0.5} />
       </mesh>
       
+      {/* Direct Power-Ups Collection Logic */}
+      <DirectPowerUpCollector />
+      
       {/* Render all direct power-ups from the global state */}
       {directPowerUps.map((powerUp) => {
         // Determine color based on power-up type
@@ -292,40 +335,9 @@ const Game = () => {
         ];
         
         // Calculate time-based animation
-        const bobOffset = Math.sin(Date.now() * 0.003) * 0.3;
-        const spinOffset = Date.now() * 0.001;
-        
-        // Check if player is nearby to collect
-        const onFrame = () => {
-          if (playerPosition) {
-            // Calculate distance to player
-            const dx = playerPosition.x - powerUp.position.x;
-            const dz = playerPosition.z - powerUp.position.z;
-            const distanceSquared = dx * dx + dz * dz;
-            
-            // If player is within 5 units, collect the power-up
-            if (distanceSquared < 25) { // 5 squared
-              // Apply power-up effect - needs to be wired to your power-up system
-              console.log(`[DIRECT POWER-UP] Player collected power-up: ${powerUp.id} (${powerUp.type})`);
-              
-              // Add power-up effect
-              const { addPowerUp } = usePowerUps.getState();
-              if (addPowerUp) {
-                addPowerUp(powerUp.type as PowerUpType);
+        const bobOffset = Math.sin((Date.now() + parseInt(powerUp.id.split('-')[1])) * 0.003) * 0.3;
+        const spinOffset = (Date.now() + parseInt(powerUp.id.split('-')[1])) * 0.001;
                 
-                // Play sound effect
-                const { playSound } = useAudio.getState();
-                playSound('powerUp');
-              }
-              
-              // Remove from the state
-              removeDirectPowerUp(powerUp.id);
-            }
-          }
-        };
-        
-        useFrame(onFrame);
-        
         return (
           <group key={powerUp.id} position={position} rotation={[0, spinOffset, 0]}>
             <mesh position={[0, bobOffset, 0]} userData={{ isPowerUp: true, id: powerUp.id, type: powerUp.type }}>
