@@ -15,16 +15,28 @@ interface Enemy {
   peacefulStartTimer?: number; // Optional timer for grace period before attacking
 }
 
+// Define a power-up for our direct approach
+interface DirectPowerUp {
+  id: string;
+  position: THREE.Vector3;
+  type: string;
+  createdAt: number;
+}
+
 interface EnemiesState {
   enemies: Enemy[];
+  directPowerUps: DirectPowerUp[]; // New state for direct power-ups
   spawnEnemies: (count: number) => void;
   moveEnemy: (id: string, position: THREE.Vector3, rotation: THREE.Euler) => void;
   damageEnemy: (id: string, amount: number) => void;
   resetEnemies: () => void;
+  addDirectPowerUp: (id: string, position: THREE.Vector3, type: string) => void; // New function
+  removeDirectPowerUp: (id: string) => void; // New function to remove collected power-ups
 }
 
 export const useEnemies = create<EnemiesState>((set, get) => ({
   enemies: [],
+  directPowerUps: [], // Initialize power-ups array
   
   // Spawn new enemies
   spawnEnemies: (count) => {
@@ -115,61 +127,28 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
       console.log(`[ENEMY] Ship ${id} DESTROYED! Attempting to spawn power-up at position:`, 
         JSON.stringify(enemy.position.toArray()));
       
-      // Spawn a power-up prize at the enemy's position
+      // DIRECT APPROACH: Add a direct power-up to the game state
       try {
         // Store the enemy position for debugging
         const enemyPosition = enemy.position.clone();
+        enemyPosition.y = 1; // Ensure it's just above water level
         
-        // Log detailed position info
-        console.log('[POWER-UP DEBUG] Attempting to spawn at enemy position:', {
-          x: enemyPosition.x,
-          y: enemyPosition.y,
-          z: enemyPosition.z,
-          enemyId: id,
-          rawPosition: enemy.position,
-          positionIsVector3: enemyPosition instanceof THREE.Vector3,
-          positionJSON: JSON.stringify(enemyPosition.toArray())
-        });
+        console.log(`[DIRECT POWER-UP] Creating direct power-up at position: (${enemyPosition.x.toFixed(2)}, ${enemyPosition.y.toFixed(2)}, ${enemyPosition.z.toFixed(2)})`);
         
-        // Import dynamically to avoid circular dependency
-        console.log("[POWER-UP DEBUG] Importing PowerUpSystem...");
-        const { PowerUpSystem } = require('../../components/PowerUpManager');
+        // Add the power-up to the global state using a custom approach
+        const { addDirectPowerUp } = get();
         
-        console.log("[POWER-UP DEBUG] PowerUpSystem details:", {
-          imported: !!PowerUpSystem,
-          spawnAvailable: !!(PowerUpSystem && PowerUpSystem.spawn),
-          powerUpSystemObject: JSON.stringify(PowerUpSystem)
-        });
-        
-        if (PowerUpSystem && PowerUpSystem.spawn) {
-          // Explicitly log before spawn
-          console.log(`[POWER-UP DEBUG] About to call PowerUpSystem.spawn with position: (${enemyPosition.x.toFixed(2)}, ${enemyPosition.y.toFixed(2)}, ${enemyPosition.z.toFixed(2)})`);
+        if (addDirectPowerUp) {
+          const powerUpId = `direct-powerup-${Date.now()}`;
+          const powerUpTypes = ['health_boost', 'speed_boost', 'double_damage', 'rapid_fire', 'shield', 'triple_shot', 'long_range'];
+          const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
           
-          // Spawn a random power-up at the enemy's position
-          const powerUpId = PowerUpSystem.spawn(enemyPosition);
-          
-          // Log spawn result
-          console.log(`[POWER-UP DEBUG] Spawn result:`, {
-            success: !!powerUpId,
-            powerUpId: powerUpId,
-            position: `(${enemyPosition.x.toFixed(2)}, ${enemyPosition.y.toFixed(2)}, ${enemyPosition.z.toFixed(2)})`
-          });
-          
-          if (powerUpId) {
-            console.log(`[POWER-UP] Successfully spawned prize (id: ${powerUpId}) at defeated enemy ship position (${enemyPosition.x.toFixed(1)}, ${enemyPosition.z.toFixed(1)})`);
-          } else {
-            console.error("[POWER-UP ERROR] Failed to spawn power-up: spawn function returned null");
-          }
-        } else {
-          console.error("[POWER-UP ERROR] PowerUpSystem.spawn function not available", {
-            PowerUpSystemExists: !!PowerUpSystem,
-            spawnFunctionExists: !!(PowerUpSystem && PowerUpSystem.spawn)
-          });
+          addDirectPowerUp(powerUpId, enemyPosition, randomType);
+          console.log(`[DIRECT POWER-UP] Successfully created direct power-up (id: ${powerUpId}) of type ${randomType}`);
         }
       } catch (error) {
-        console.error("[POWER-UP ERROR] Failed to spawn power-up:", error);
-        // Log stack trace for better debugging
-        console.error("[POWER-UP ERROR] Stack trace:", error instanceof Error ? error.stack : "No stack trace available");
+        console.error("[DIRECT POWER-UP ERROR] Failed to create direct power-up:", error);
+        console.error("[DIRECT POWER-UP ERROR] Stack trace:", error instanceof Error ? error.stack : "No stack trace available");
       }
       
       // Log the enemy defeat
