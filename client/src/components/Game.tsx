@@ -272,18 +272,6 @@ const Game = () => {
       {/* Power-up system to handle prizes from defeated enemy ships */}
       <PowerUpManager />
       
-      {/* Test power-up at world origin (0,0,0) */}
-      <mesh position={[0, 1, 0]} userData={{ isPowerUp: true, type: 'health_boost' }}>
-        <sphereGeometry args={[1, 16, 16]} />
-        <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={0.5} />
-      </mesh>
-      
-      {/* Test power-up near player start position */}
-      <mesh position={[15, 1, 15]} userData={{ isPowerUp: true, type: 'speed_boost' }}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#00ff00" emissive="#00ff00" emissiveIntensity={0.5} />
-      </mesh>
-      
       {/* Direct Power-Ups Collection Logic */}
       <DirectPowerUpCollector />
       
