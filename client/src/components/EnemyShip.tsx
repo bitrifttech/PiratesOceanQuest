@@ -335,6 +335,17 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
     positionRef.current = currentPos;
     rotationRef.current = currentRot;
     
+    // Update position and rotation in the store with detailed logging every 5 seconds
+    if (Math.random() < 0.005) {
+      console.log(`[ENEMY SHIP ${id} POSITION] Current detailed position:`, {
+        positionRef: currentPos.toArray(),
+        rotationRef: currentRot.toArray(),
+        isVector3: currentPos instanceof THREE.Vector3,
+        meshPosition: shipRef.current ? shipRef.current.position.toArray() : 'shipRef not available',
+        worldPosition: shipRef.current ? new THREE.Vector3().setFromMatrixPosition(shipRef.current.matrixWorld).toArray() : 'worldPosition not available'
+      });
+    }
+    
     // Update position and rotation in the store
     moveEnemy(id, currentPos.clone(), currentRot.clone());
     

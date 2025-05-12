@@ -117,28 +117,59 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
       
       // Spawn a power-up prize at the enemy's position
       try {
+        // Store the enemy position for debugging
+        const enemyPosition = enemy.position.clone();
+        
+        // Log detailed position info
+        console.log('[POWER-UP DEBUG] Attempting to spawn at enemy position:', {
+          x: enemyPosition.x,
+          y: enemyPosition.y,
+          z: enemyPosition.z,
+          enemyId: id,
+          rawPosition: enemy.position,
+          positionIsVector3: enemyPosition instanceof THREE.Vector3,
+          positionJSON: JSON.stringify(enemyPosition.toArray())
+        });
+        
         // Import dynamically to avoid circular dependency
-        console.log("[POWER-UP] Importing PowerUpSystem...");
+        console.log("[POWER-UP DEBUG] Importing PowerUpSystem...");
         const { PowerUpSystem } = require('../../components/PowerUpManager');
         
-        console.log("[POWER-UP] PowerUpSystem imported:", !!PowerUpSystem);
-        console.log("[POWER-UP] PowerUpSystem.spawn available:", !!(PowerUpSystem && PowerUpSystem.spawn));
+        console.log("[POWER-UP DEBUG] PowerUpSystem details:", {
+          imported: !!PowerUpSystem,
+          spawnAvailable: !!(PowerUpSystem && PowerUpSystem.spawn),
+          powerUpSystemObject: JSON.stringify(PowerUpSystem)
+        });
         
         if (PowerUpSystem && PowerUpSystem.spawn) {
+          // Explicitly log before spawn
+          console.log(`[POWER-UP DEBUG] About to call PowerUpSystem.spawn with position: (${enemyPosition.x.toFixed(2)}, ${enemyPosition.y.toFixed(2)}, ${enemyPosition.z.toFixed(2)})`);
+          
           // Spawn a random power-up at the enemy's position
-          const enemyPosition = enemy.position.clone();
           const powerUpId = PowerUpSystem.spawn(enemyPosition);
+          
+          // Log spawn result
+          console.log(`[POWER-UP DEBUG] Spawn result:`, {
+            success: !!powerUpId,
+            powerUpId: powerUpId,
+            position: `(${enemyPosition.x.toFixed(2)}, ${enemyPosition.y.toFixed(2)}, ${enemyPosition.z.toFixed(2)})`
+          });
           
           if (powerUpId) {
             console.log(`[POWER-UP] Successfully spawned prize (id: ${powerUpId}) at defeated enemy ship position (${enemyPosition.x.toFixed(1)}, ${enemyPosition.z.toFixed(1)})`);
           } else {
-            console.error("[POWER-UP] Failed to spawn power-up: spawn function returned null");
+            console.error("[POWER-UP ERROR] Failed to spawn power-up: spawn function returned null");
           }
         } else {
-          console.error("[POWER-UP] PowerUpSystem.spawn function not available");
+          console.error("[POWER-UP ERROR] PowerUpSystem.spawn function not available", {
+            PowerUpSystemExists: !!PowerUpSystem,
+            spawnFunctionExists: !!(PowerUpSystem && PowerUpSystem.spawn)
+          });
         }
       } catch (error) {
-        console.error("[POWER-UP] Failed to spawn power-up:", error);
+        console.error("[POWER-UP ERROR] Failed to spawn power-up:", error);
+        // Log stack trace for better debugging
+        console.error("[POWER-UP ERROR] Stack trace:", error instanceof Error ? error.stack : "No stack trace available");
       }
       
       // Log the enemy defeat

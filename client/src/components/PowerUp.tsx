@@ -34,6 +34,27 @@ const PowerUp: React.FC<PowerUpProps> = ({ position, type, id, onCollect }) => {
   // Audio service for sound effects
   const playSound = useAudio((state) => state.playSound);
   
+  // Log when power-up is created
+  useEffect(() => {
+    console.log(`[POWER-UP RENDER] Initialized power-up:`, {
+      id,
+      type,
+      position: `(${position.x.toFixed(2)}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)})`,
+      color,
+      lifetime: 30
+    });
+    
+    // Check if we're at water level
+    const waterLevel = 0;
+    if (Math.abs(position.y - waterLevel) > 0.5) {
+      console.warn(`[POWER-UP RENDER WARNING] Power-up ${id} is not at water level: y=${position.y}`);
+    }
+    
+    return () => {
+      console.log(`[POWER-UP RENDER] Power-up ${id} unmounted`);
+    };
+  }, [id, type, position, color]);
+  
   // Animation and collision detection
   useFrame((state, delta) => {
     if (!meshRef.current || !playerPosition) return;
@@ -43,7 +64,8 @@ const PowerUp: React.FC<PowerUpProps> = ({ position, type, id, onCollect }) => {
     
     // Make the power-up bob up and down
     bobHeight.current += delta * 2;
-    meshRef.current.position.y = Math.sin(bobHeight.current) * 0.3 + 0.5; // Bob from 0.2 to 0.8
+    const newY = Math.sin(bobHeight.current) * 0.3 + 0.5; // Bob from 0.2 to 0.8
+    meshRef.current.position.y = newY;
     
     // Rotate the power-up
     meshRef.current.rotation.y += delta * rotationSpeed.current;
@@ -56,7 +78,14 @@ const PowerUp: React.FC<PowerUpProps> = ({ position, type, id, onCollect }) => {
     
     // Check for collection (player collision)
     const distanceToPlayer = playerPosition.distanceTo(position);
+    
+    // Log collection attempts occasionally (not every frame to avoid spam)
+    if (lifetime % 5 < 0.1) {
+      console.log(`[POWER-UP COLLECTION] Power-up ${id} (${type}) distance to player: ${distanceToPlayer.toFixed(2)}`);
+    }
+    
     if (distanceToPlayer < 5) { // Collection radius of 5 units
+      console.log(`[POWER-UP COLLECTION] Player collecting power-up ${id} (${type}) at distance ${distanceToPlayer.toFixed(2)}`);
       playSound('powerUp');
       onCollect(id);
     }
@@ -65,6 +94,7 @@ const PowerUp: React.FC<PowerUpProps> = ({ position, type, id, onCollect }) => {
   // Remove when lifetime expires
   useEffect(() => {
     if (lifetime <= 0) {
+      console.log(`[POWER-UP LIFETIME] Power-up ${id} expired after 30 seconds`);
       onCollect(id);
     }
   }, [lifetime, id, onCollect]);
