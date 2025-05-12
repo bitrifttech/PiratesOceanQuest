@@ -112,13 +112,21 @@ const PowerUpManager: React.FC<PowerUpManagerProps> = () => {
         hash: position.toArray().join(',')
       } : 'null position',
       type: type || 'not specified (will use random)',
-      powerUpCount: powerUps.length
+      powerUpCount: powerUps.length,
+      callStack: new Error().stack // Log the call stack to see where this is being called from
     });
     
     // Safety check for valid position
     if (!position || !(position instanceof THREE.Vector3)) {
       console.error('[POWER-UP SPAWN ERROR] Invalid position provided:', position);
       return null;
+    }
+    
+    // HACK: Force default position if position is far out (> 500 units from origin)
+    // This is for debugging only - to see if position is the issue
+    if (Math.abs(position.x) > 500 || Math.abs(position.z) > 500) {
+      console.warn('[POWER-UP SPAWN WARNING] Position is too far from origin, using default position');
+      position = new THREE.Vector3(0, 0, 0);
     }
     
     const getRandomPowerUpType = usePowerUps.getState().getRandomPowerUpType;
@@ -149,6 +157,9 @@ const PowerUpManager: React.FC<PowerUpManagerProps> = () => {
       offsetZ: randomOffset.z
     });
     
+    // IMPORTANT: Always ensure y is 0 (water level)
+    finalPosition.y = 0;
+    
     const newPowerUp: PowerUpInstance = {
       id,
       position: finalPosition,
@@ -169,6 +180,29 @@ const PowerUpManager: React.FC<PowerUpManagerProps> = () => {
       });
       return newState;
     });
+    
+    // Force spawn a test power-up with a fixed position if there are none 
+    // Only do this once to avoid spamming
+    if (powerUps.length === 0 && powerUpIdCounter < 2) {
+      console.log('[POWER-UP SPAWN TEST] Spawning a test power-up at origin for debugging');
+      
+      // Create a test power-up at the origin (should always be visible)
+      const testId = `powerup-test-${Date.now()}`;
+      const testPosition = new THREE.Vector3(0, 0, 0);
+      const testType = 'health_boost'; // Always spawn health for visibility
+      
+      // Add the test power-up directly to state
+      setPowerUps(prev => [
+        ...prev, 
+        { 
+          id: testId, 
+          position: testPosition, 
+          type: testType 
+        }
+      ]);
+      
+      console.log(`[POWER-UP SPAWN TEST] Added test power-up at origin (id: ${testId})`);
+    }
     
     console.log(`[POWER-UP SPAWN] Successfully spawned ${powerUpType} (id: ${id}) at position ${finalPosition.x.toFixed(1)}, ${finalPosition.z.toFixed(1)}`);
     
