@@ -15,7 +15,7 @@ import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies"; // Re-enabled enemies
 import { useGameState } from "../lib/stores/useGameState";
 import { useAudio } from "../lib/stores/useAudio";
-import { usePowerUps } from "../lib/stores/usePowerUps"; // Power-up state management
+import { usePowerUps, PowerUpType } from "../lib/stores/usePowerUps"; // Power-up state management
 
 // Import services
 import { EnemyManager } from "../lib/services/EnemyManager";
@@ -36,8 +36,10 @@ const Game = () => {
   const playerRotation = usePlayer((state) => state.rotation);
   const initializePlayer = usePlayer((state) => state.initialize);
   
-  // Enemy state
+  // Enemy state and direct power-ups
   const enemies = useEnemies((state) => state.enemies);
+  const directPowerUps = useEnemies((state) => state.directPowerUps);
+  const removeDirectPowerUp = useEnemies((state) => state.removeDirectPowerUp);
   const spawnEnemies = useEnemies((state) => state.spawnEnemies);
   
   // Sound effects
@@ -241,6 +243,110 @@ const Game = () => {
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="#00ff00" emissive="#00ff00" emissiveIntensity={0.5} />
       </mesh>
+      
+      {/* Render all direct power-ups from the global state */}
+      {directPowerUps.map((powerUp) => {
+        // Determine color based on power-up type
+        let color = '#ffffff';
+        let geometry = null;
+        
+        switch (powerUp.type) {
+          case 'health_boost':
+            color = '#ff0000';
+            geometry = <sphereGeometry args={[0.8, 16, 16]} />;
+            break;
+          case 'speed_boost':
+            color = '#00ff00';
+            geometry = <coneGeometry args={[0.7, 1.4, 16]} />;
+            break;
+          case 'double_damage':
+            color = '#ff7700';
+            geometry = <boxGeometry args={[1, 1, 1]} />;
+            break;
+          case 'rapid_fire':
+            color = '#00ffff';
+            geometry = <cylinderGeometry args={[0.4, 0.6, 1.2, 16]} />;
+            break;
+          case 'shield':
+            color = '#0000ff';
+            geometry = <torusGeometry args={[0.6, 0.2, 16, 32]} />;
+            break;
+          case 'triple_shot':
+            color = '#ff00ff';
+            geometry = <dodecahedronGeometry args={[0.7, 0]} />;
+            break;
+          case 'long_range':
+            color = '#ffff00';
+            geometry = <octahedronGeometry args={[0.7, 0]} />;
+            break;
+          default:
+            color = '#ffffff';
+            geometry = <sphereGeometry args={[0.6, 12, 12]} />;
+        }
+        
+        // The position from the stored power-up as Three.js compatible array
+        const position: [number, number, number] = [
+          powerUp.position.x,
+          powerUp.position.y, // Should already be at 1
+          powerUp.position.z
+        ];
+        
+        // Calculate time-based animation
+        const bobOffset = Math.sin(Date.now() * 0.003) * 0.3;
+        const spinOffset = Date.now() * 0.001;
+        
+        // Check if player is nearby to collect
+        const onFrame = () => {
+          if (playerPosition) {
+            // Calculate distance to player
+            const dx = playerPosition.x - powerUp.position.x;
+            const dz = playerPosition.z - powerUp.position.z;
+            const distanceSquared = dx * dx + dz * dz;
+            
+            // If player is within 5 units, collect the power-up
+            if (distanceSquared < 25) { // 5 squared
+              // Apply power-up effect - needs to be wired to your power-up system
+              console.log(`[DIRECT POWER-UP] Player collected power-up: ${powerUp.id} (${powerUp.type})`);
+              
+              // Add power-up effect
+              const { addPowerUp } = usePowerUps.getState();
+              if (addPowerUp) {
+                addPowerUp(powerUp.type as PowerUpType);
+                
+                // Play sound effect
+                const { playSound } = useAudio.getState();
+                playSound('powerUp');
+              }
+              
+              // Remove from the state
+              removeDirectPowerUp(powerUp.id);
+            }
+          }
+        };
+        
+        useFrame(onFrame);
+        
+        return (
+          <group key={powerUp.id} position={position} rotation={[0, spinOffset, 0]}>
+            <mesh position={[0, bobOffset, 0]} userData={{ isPowerUp: true, id: powerUp.id, type: powerUp.type }}>
+              {geometry}
+              <meshStandardMaterial 
+                color={color} 
+                emissive={color} 
+                emissiveIntensity={0.7} 
+                metalness={0.8}
+                roughness={0.2}
+              />
+            </mesh>
+            <pointLight 
+              color={color} 
+              intensity={0.8} 
+              distance={5} 
+              position={[0, bobOffset, 0]}
+            />
+          </group>
+        );
+      })}
       
       {/* Enemy ships */}
       {enemies.map((enemy) => (

@@ -185,8 +185,37 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
   
   // Reset all enemies (for new game)
   resetEnemies: () => {
-    set({ enemies: [] });
+    set({ 
+      enemies: [],
+      directPowerUps: [] // Also clear any power-ups
+    });
     
     // Don't spawn enemies automatically - logging removed
+  },
+  
+  // Add a new direct power-up
+  addDirectPowerUp: (id, position, type) => {
+    console.log(`[DIRECT POWER-UP] Adding power-up to state: id=${id}, type=${type}, position=(${position.x.toFixed(2)}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)})`);
+    
+    set((state) => ({
+      directPowerUps: [
+        ...state.directPowerUps,
+        {
+          id,
+          position,
+          type,
+          createdAt: Date.now()
+        }
+      ]
+    }));
+  },
+
+  // Remove a direct power-up (when collected or expired)
+  removeDirectPowerUp: (id) => {
+    console.log(`[DIRECT POWER-UP] Removing power-up from state: id=${id}`);
+    
+    set((state) => ({
+      directPowerUps: state.directPowerUps.filter(powerUp => powerUp.id !== id)
+    }));
   },
 }));
