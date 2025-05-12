@@ -46,12 +46,12 @@ const DirectPowerUpCollector = memo(() => {
       if (distanceSquared < 25) { // 5 squared
         console.log(`[DIRECT POWER-UP] Player collected power-up: ${powerUp.id} (${powerUp.type})`);
         
-        // Add power-up effect to player
-        const { addPowerUp } = usePowerUps.getState();
-        if (addPowerUp) {
-          addPowerUp(powerUp.type as PowerUpType);
+        // Add power-up to inventory (doesn't activate immediately)
+        const { collectPowerUp } = usePowerUps.getState();
+        if (collectPowerUp) {
+          collectPowerUp(powerUp.type as PowerUpType);
           
-          // Play sound effect
+          // Play sound effect for collection
           const { playSound } = useAudio.getState();
           playSound('powerUp');
         }
@@ -165,6 +165,35 @@ const Game = () => {
       setGameOver();
     }
   }, [playerHealth, setGameOver]);
+  
+  // Effect to handle keyboard shortcuts for power-up activation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // 'e' key to activate all power-ups in inventory
+      if (event.code === 'KeyE') {
+        const { activateAllPowerUps, inventoryPowerUps } = usePowerUps.getState();
+        
+        if (inventoryPowerUps.length > 0) {
+          console.log('[POWER-UP] Activating all power-ups via E key');
+          
+          // Play activation sound
+          const { playSound } = useAudio.getState();
+          playSound('powerUp');
+          
+          // Activate all power-ups in inventory
+          activateAllPowerUps();
+        } else {
+          console.log('[POWER-UP] No power-ups in inventory to activate');
+        }
+      }
+    };
+    
+    // Add and remove event listener
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   // Reference to the OrbitControls
   const orbitControlsRef = useRef<any>(null);
