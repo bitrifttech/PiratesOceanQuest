@@ -33,6 +33,13 @@ interface PowerUpDefinition {
   healthBonus: number;  // All power-ups give some health when collected
 }
 
+// Interface for inventory power-ups (not yet activated)
+export interface InventoryPowerUp {
+  type: PowerUpType;
+  id: string;
+  collectTime: number;
+}
+
 interface PowerUpsState {
   // Available power-up definitions
   powerUpDefinitions: PowerUpDefinition[];
@@ -40,8 +47,14 @@ interface PowerUpsState {
   // Currently active power-ups
   activePowerUps: ActivePowerUp[];
   
+  // Inventory of collected but not yet activated power-ups
+  inventoryPowerUps: InventoryPowerUp[];
+  
   // Actions
-  addPowerUp: (type: PowerUpType) => void;
+  addPowerUp: (type: PowerUpType) => void;      // Legacy method for internal use
+  collectPowerUp: (type: PowerUpType) => void;  // Add to inventory
+  activatePowerUp: (id: string) => void;        // Activate from inventory
+  activateAllPowerUps: () => void;              // Activate all inventory items
   removePowerUp: (type: PowerUpType) => void;
   updatePowerUps: (delta: number) => void;
   consumeShot: (type: PowerUpType) => void;
@@ -140,8 +153,114 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
   // Currently active power-ups
   activePowerUps: [],
   
-  // Add a new power-up
-  addPowerUp: (type) => {
+  // Inventory of collected but not yet activated power-ups
+  inventoryPowerUps: [],
+  
+  // Collect a power-up (add to inventory)
+  collectPowerUp: (type: PowerUpType) => {
+    const { powerUpDefinitions, inventoryPowerUps } = get();
+    
+    // Find the power-up definition
+    const definition = powerUpDefinitions.find(p => p.type === type);
+    if (!definition) {
+      console.error(`[POWER-UP] Unknown power-up type: ${type}`);
+      return;
+    }
+    
+    // Add to inventory with unique ID
+    const id = `powerup-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    
+    set({
+      inventoryPowerUps: [
+        ...inventoryPowerUps,
+        {
+          type,
+          id,
+          collectTime: Date.now()
+        }
+      ]
+    });
+    
+    // Get user player state to add health (only small amount on collection)
+    try {
+      const { heal } = require('./usePlayer').usePlayer.getState();
+      if (heal) {
+        // Give a small health bonus when collecting (1/3 of the normal amount)
+        const smallHealthBonus = Math.ceil(definition.healthBonus / 3);
+        heal(smallHealthBonus);
+        console.log(`[POWER-UP] Small health bonus on collection: +${smallHealthBonus}`);
+      }
+    } catch (error) {
+      console.error("[POWER-UP] Failed to apply small health bonus:", error);
+    }
+    
+    console.log(`[POWER-UP] Collected ${definition.name} and added to inventory (id: ${id})`);
+  },
+  
+  // Activate a power-up from inventory
+  activatePowerUp: (id) => {
+    const { inventoryPowerUps, powerUpDefinitions } = get();
+    
+    // Find the power-up in inventory
+    const inventoryIndex = inventoryPowerUps.findIndex(p => p.id === id);
+    if (inventoryIndex === -1) {
+      console.error(`[POWER-UP] Cannot activate power-up with ID ${id}: not found in inventory`);
+      return;
+    }
+    
+    // Get the power-up from inventory
+    const inventoryPowerUp = inventoryPowerUps[inventoryIndex];
+    
+    // Find definition
+    const definition = powerUpDefinitions.find(p => p.type === inventoryPowerUp.type);
+    if (!definition) {
+      console.error(`[POWER-UP] Unknown power-up type: ${inventoryPowerUp.type}`);
+      return;
+    }
+    
+    // Remove from inventory
+    const updatedInventory = [...inventoryPowerUps];
+    updatedInventory.splice(inventoryIndex, 1);
+    set({ inventoryPowerUps: updatedInventory });
+    
+    // Add the remaining health bonus (2/3 of the total)
+    try {
+      const { heal } = require('./usePlayer').usePlayer.getState();
+      if (heal) {
+        const remainingHealthBonus = Math.floor(definition.healthBonus * 2 / 3);
+        heal(remainingHealthBonus);
+        console.log(`[POWER-UP] Remaining health bonus on activation: +${remainingHealthBonus}`);
+      }
+    } catch (error) {
+      console.error("[POWER-UP] Failed to apply remaining health bonus:", error);
+    }
+    
+    // Now activate using the legacy activation logic
+    const { addPowerUp } = get();
+    addPowerUp(inventoryPowerUp.type);
+  },
+  
+  // Activate all power-ups in inventory
+  activateAllPowerUps: () => {
+    const { inventoryPowerUps } = get();
+    
+    if (inventoryPowerUps.length === 0) {
+      console.log('[POWER-UP] No power-ups in inventory to activate');
+      return;
+    }
+    
+    console.log(`[POWER-UP] Activating all ${inventoryPowerUps.length} power-ups in inventory`);
+    
+    // Get IDs to avoid modifying during iteration
+    const ids = inventoryPowerUps.map(p => p.id);
+    
+    // Activate each power-up
+    const { activatePowerUp } = get();
+    ids.forEach(id => activatePowerUp(id));
+  },
+  
+  // Legacy: Add a new power-up directly (now used internally by activatePowerUp)
+  addPowerUp: (type: PowerUpType) => {
     const { powerUpDefinitions, activePowerUps } = get();
     
     // Find the power-up definition
