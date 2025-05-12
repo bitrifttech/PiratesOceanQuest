@@ -18,6 +18,41 @@ interface PowerUpManagerProps {
 // Counter for generating unique IDs
 let powerUpIdCounter = 0;
 
+// Global mutable reference for the spawn function
+let globalSpawnFunction: ((position: THREE.Vector3, type?: PowerUpType) => string | null) | null = null;
+
+// Simple interface for the power-up system
+interface PowerUpSystemType {
+  spawn: (position: THREE.Vector3, type?: PowerUpType) => string | null;
+}
+
+// Export singleton instance for direct access from other components
+export const PowerUpSystem: PowerUpSystemType = {
+  spawn: (position: THREE.Vector3, type?: PowerUpType) => {
+    // Try using the direct function reference first
+    if (globalSpawnFunction) {
+      console.log("[POWER-UP] Using stored function to spawn power-up");
+      return globalSpawnFunction(position, type);
+    }
+    
+    // Try window globals as fallback
+    if (typeof window !== 'undefined') {
+      if ((window as any)._powerUpSpawnFunction) {
+        console.log("[POWER-UP] Using window._powerUpSpawnFunction");
+        return (window as any)._powerUpSpawnFunction(position, type);
+      }
+      
+      if ((window as any).spawnPowerUp) {
+        console.log("[POWER-UP] Using window.spawnPowerUp");
+        return (window as any).spawnPowerUp(position, type);
+      }
+    }
+    
+    console.error("[POWER-UP] No spawn function available!");
+    return null;
+  }
+};
+
 // Component for managing power-ups in the game world
 const PowerUpManager: React.FC<PowerUpManagerProps> = () => {
   // State for tracking power-ups in the scene
@@ -78,15 +113,19 @@ const PowerUpManager: React.FC<PowerUpManagerProps> = () => {
   useEffect(() => {
     console.log("[POWER-UP] Setting up global spawn function");
     
+    // Store in global variable
+    globalSpawnFunction = spawnPowerUp;
+    
     // Add to window for global access
     (window as any).spawnPowerUp = spawnPowerUp;
-    
-    // Export the function directly using the global object
     (window as any)._powerUpSpawnFunction = spawnPowerUp;
+    
+    console.log("[POWER-UP] Registered spawn function successfully");
     
     // Cleanup
     return () => {
       console.log("[POWER-UP] Cleaning up global spawn function");
+      globalSpawnFunction = null;
       delete (window as any).spawnPowerUp;
       delete (window as any)._powerUpSpawnFunction;
     };
@@ -109,32 +148,3 @@ const PowerUpManager: React.FC<PowerUpManagerProps> = () => {
 };
 
 export default PowerUpManager;
-
-// Simple interface for the power-up system
-interface PowerUpSystemType {
-  spawn: (position: THREE.Vector3, type?: PowerUpType) => string | null;
-}
-
-// Export singleton instance for direct access from other components
-export const PowerUpSystem: PowerUpSystemType = {
-  spawn: (position: THREE.Vector3, type?: PowerUpType) => {
-    // Try direct access from window
-    if (typeof window !== 'undefined') {
-      // Try the specialized function first
-      if ((window as any)._powerUpSpawnFunction) {
-        console.log("[POWER-UP] Using _powerUpSpawnFunction to spawn power-up");
-        return (window as any)._powerUpSpawnFunction(position, type);
-      }
-      
-      // Fallback to standard function
-      if ((window as any).spawnPowerUp) {
-        console.log("[POWER-UP] Using window.spawnPowerUp to spawn power-up");
-        return (window as any).spawnPowerUp(position, type);
-      }
-    }
-    
-    // Log error if no function is available
-    console.error("[POWER-UP] Failed to spawn power-up: No spawn function available");
-    return null;
-  }
-};
