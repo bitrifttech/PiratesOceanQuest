@@ -334,9 +334,11 @@ const Game = () => {
           powerUp.position.z
         ];
         
-        // Calculate time-based animation
-        const bobOffset = Math.sin((Date.now() + parseInt(powerUp.id.split('-')[1])) * 0.003) * 0.3;
-        const spinOffset = (Date.now() + parseInt(powerUp.id.split('-')[1])) * 0.001;
+        // Calculate time-based animation with unique variations
+        // Use hash code of the ID as an offset to create different animations for each power-up
+        const idHash = powerUp.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+        const bobOffset = Math.sin((Date.now() + idHash) * 0.003) * 0.3;
+        const spinOffset = (Date.now() + idHash) * 0.001;
                 
         return (
           <group key={powerUp.id} position={position} rotation={[0, spinOffset, 0]}>

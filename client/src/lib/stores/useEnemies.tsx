@@ -135,17 +135,25 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
         
         console.log(`[DIRECT POWER-UP] Creating direct power-up at position: (${enemyPosition.x.toFixed(2)}, ${enemyPosition.y.toFixed(2)}, ${enemyPosition.z.toFixed(2)})`);
         
-        // Add the power-up to the global state using a custom approach
-        const { addDirectPowerUp } = get();
+        // Generate power-up ID and type
+        const powerUpId = `direct-powerup-${Date.now()}`;
+        const powerUpTypes = ['health_boost', 'speed_boost', 'double_damage', 'rapid_fire', 'shield', 'triple_shot', 'long_range'];
+        const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
         
-        if (addDirectPowerUp) {
-          const powerUpId = `direct-powerup-${Date.now()}`;
-          const powerUpTypes = ['health_boost', 'speed_boost', 'double_damage', 'rapid_fire', 'shield', 'triple_shot', 'long_range'];
-          const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
-          
-          addDirectPowerUp(powerUpId, enemyPosition, randomType);
-          console.log(`[DIRECT POWER-UP] Successfully created direct power-up (id: ${powerUpId}) of type ${randomType}`);
-        }
+        // Add the power-up directly to the state instead of through a function call
+        set((state) => ({
+          directPowerUps: [
+            ...state.directPowerUps,
+            {
+              id: powerUpId,
+              position: enemyPosition,
+              type: randomType,
+              createdAt: Date.now()
+            }
+          ]
+        }));
+        
+        console.log(`[DIRECT POWER-UP] Successfully created direct power-up (id: ${powerUpId}) of type ${randomType}`);
       } catch (error) {
         console.error("[DIRECT POWER-UP ERROR] Failed to create direct power-up:", error);
         console.error("[DIRECT POWER-UP ERROR] Stack trace:", error instanceof Error ? error.stack : "No stack trace available");
