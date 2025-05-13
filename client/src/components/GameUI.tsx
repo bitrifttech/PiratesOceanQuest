@@ -108,8 +108,8 @@ const GameUI = () => {
   };
   
   return (
-    <div className="absolute inset-0 pointer-events-none">
-      {/* HUD */}
+    <div className="absolute inset-0">
+      {/* HUD - fixed positioning allows it to escape parent container's pointer events */}
       <HUD />
       
       {/* Controls button */}
