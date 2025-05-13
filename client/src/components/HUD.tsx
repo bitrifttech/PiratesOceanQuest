@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies"; // Re-added for mini-map
 import { useGameState } from "../lib/stores/useGameState";
+import { useAudio } from "../lib/stores/useAudio"; // Added for playing sounds
 import { usePowerUps, PowerUpType, ActivePowerUp, InventoryPowerUp } from "../lib/stores/usePowerUps";
 import { environmentCollisions } from "../lib/collision";
 
@@ -215,7 +216,7 @@ const HUD = () => {
   const healthColor = health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336";
   
   return (
-    <div className="absolute bottom-5 left-5 right-5 flex justify-between items-end">
+    <div className="fixed bottom-5 left-5 right-5 flex flex-wrap justify-between items-end gap-4 z-50">
       {/* Left side - health display */}
       <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700 pointer-events-none">
         <div className="text-white mb-2 font-['Pirata_One'] text-xl">Ship Health</div>
