@@ -464,13 +464,13 @@ const HUD = () => {
       })()}
       
       {/* Right side - mini-map */}
-      <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700 pointer-events-none">
+      <div className="bg-gray-900 p-3 rounded-lg border-2 border-yellow-500 shadow-lg">
         <div className="text-white mb-2 font-['Pirata_One'] text-xl">Map</div>
         <canvas 
           id="mini-map" 
           width={canvasSize.width} 
           height={canvasSize.height}
-          className="border border-gray-600 rounded"
+          className="border-2 border-yellow-500 rounded"
         />
       </div>
     </div>
