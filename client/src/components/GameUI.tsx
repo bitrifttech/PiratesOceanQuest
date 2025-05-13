@@ -107,59 +107,49 @@ const GameUI = () => {
     setShowVictory(false);
   };
   
-  // Log the render of GameUI for debugging
-  console.log('[GameUI] Rendering GameUI component');
-  
   return (
-    <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 100 }}>
-      {/* Game HUD - most important, highest z-index */}
-      <div className="absolute inset-0 overflow-hidden" style={{ zIndex: 1000 }}>
-        <div className="absolute bottom-5 left-5 right-5">
-          <div style={{ 
-            background: 'rgba(0,0,0,0.7)',
-            border: '3px solid gold',
-            borderRadius: '8px',
-            boxShadow: '0 0 10px rgba(0,0,0,0.5)'
-          }}>
-            <HUD />
-          </div>
-        </div>
-      </div>
+    <div className="absolute inset-0 pointer-events-none">
+      {/* HUD */}
+      <HUD />
       
-      {/* Controls button at top */}
-      <div className="absolute top-5 right-5 pointer-events-auto flex flex-col space-y-2" style={{ zIndex: 900 }}>
+      {/* Controls button */}
+      <div className="absolute top-5 right-5 pointer-events-auto flex flex-col space-y-2">
         <div className="flex space-x-2">
           <button
-            className="bg-gray-800 bg-opacity-90 hover:bg-opacity-100 text-white px-4 py-2 rounded-lg border border-yellow-500"
+            className="bg-gray-800 bg-opacity-70 hover:bg-opacity-90 text-white px-4 py-2 rounded-lg"
             onClick={() => setShowControls(!showControls)}
           >
             Controls
           </button>
           
           <button
-            className="bg-gray-800 bg-opacity-90 hover:bg-opacity-100 text-white px-4 py-2 rounded-lg border border-yellow-500"
+            className="bg-gray-800 bg-opacity-70 hover:bg-opacity-90 text-white px-4 py-2 rounded-lg"
             onClick={() => setShowDebug(!showDebug)}
           >
             Debug
           </button>
           
           <button
-            className="bg-gray-800 bg-opacity-90 hover:bg-opacity-100 text-white px-4 py-2 rounded-lg border border-yellow-500"
+            className="bg-gray-800 bg-opacity-70 hover:bg-opacity-90 text-white px-4 py-2 rounded-lg"
             onClick={toggleMute}
           >
-            {isMuted ? "🔇" : "🔊"}
+            {isMuted ? (
+              <i className="fas fa-volume-mute"></i>
+            ) : (
+              <i className="fas fa-volume-up"></i>
+            )}
           </button>
         </div>
         
-        <div className="px-2 py-1 bg-gray-900 bg-opacity-90 text-white text-sm rounded-lg border border-yellow-500">
+        <div className="px-2 py-1 bg-gray-900 bg-opacity-70 text-white text-sm rounded-lg">
           Click and drag to rotate camera view
         </div>
       </div>
       
       {/* Controls overlay */}
       {showControls && (
-        <div className="absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center pointer-events-auto" style={{ zIndex: 1100 }}>
-          <div className="bg-gray-800 p-6 rounded-lg max-w-md border-2 border-yellow-500">
+        <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center pointer-events-auto">
+          <div className="bg-gray-800 p-6 rounded-lg max-w-md">
             <h2 className="text-2xl text-[#FFD700] font-['Pirata_One'] mb-4">Game Controls</h2>
             
             <div className="grid grid-cols-2 gap-4 text-white">
@@ -177,13 +167,10 @@ const GameUI = () => {
               
               <div>SPACEBAR</div>
               <div>Fire Cannons</div>
-              
-              <div>E</div>
-              <div>Activate All Power-ups</div>
             </div>
             
             <button
-              className="mt-6 bg-[#0A1C3B] text-white px-4 py-2 rounded-lg hover:bg-[#152d5b] border border-yellow-500"
+              className="mt-6 bg-[#0A1C3B] text-white px-4 py-2 rounded-lg hover:bg-[#152d5b]"
               onClick={() => setShowControls(false)}
             >
               Close
@@ -194,7 +181,7 @@ const GameUI = () => {
       
       {/* Game Over overlay */}
       {showGameOver && (
-        <div className="absolute inset-0 bg-black bg-opacity-90 flex items-center justify-center pointer-events-auto" style={{ zIndex: 1100 }}>
+        <div className="absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center pointer-events-auto">
           <div className="bg-gray-900 p-8 rounded-lg max-w-md text-center border-2 border-red-800">
             <h2 className="text-4xl text-red-500 font-['Pirata_One'] mb-4">Ship Destroyed!</h2>
             
@@ -215,9 +202,41 @@ const GameUI = () => {
         </div>
       )}
       
+      {/* Victory overlay - disabled as requested */}
+      {false && showVictory && (
+        <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center pointer-events-auto">
+          <div className="bg-gray-900 p-8 rounded-lg max-w-md text-center border-2 border-[#FFD700]">
+            <h2 className="text-4xl text-[#FFD700] font-['Pirata_One'] mb-4">Victory!</h2>
+            
+            <p className="text-gray-300 mb-4">You've successfully completed your voyage!</p>
+            
+            <div className="mb-6 bg-gray-800 p-4 rounded-lg">
+              <div className="text-[#FFD700] text-lg">Loot Collected</div>
+              <div className="text-white text-2xl">{loot} Gold</div>
+            </div>
+            
+            <div className="flex space-x-4">
+              <button
+                className="bg-[#8B4513] text-white px-4 py-2 rounded-lg hover:bg-[#a05a2c] flex-1"
+                onClick={handleUpgrades}
+              >
+                Upgrades
+              </button>
+              
+              <button
+                className="bg-[#0A1C3B] text-white px-4 py-2 rounded-lg hover:bg-[#152d5b] flex-1"
+                onClick={handleContinue}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Debug Controls Overlay */}
       {showDebug && (
-        <div className="absolute top-20 right-5 pointer-events-auto" style={{ zIndex: 900 }}>
+        <div className="absolute pointer-events-auto" style={{ zIndex: 1000 }}>
           <DebugControls
             onUpdateShipHeight={setShipHeight}
             onUpdateWaterParams={setWaveParameters}

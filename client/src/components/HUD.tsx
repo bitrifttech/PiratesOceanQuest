@@ -1,16 +1,12 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies"; // Re-added for mini-map
 import { useGameState } from "../lib/stores/useGameState";
-import { useAudio } from "../lib/stores/useAudio"; // Added for playing sounds
 import { usePowerUps, PowerUpType, ActivePowerUp, InventoryPowerUp } from "../lib/stores/usePowerUps";
 import { environmentCollisions } from "../lib/collision";
 
 // HUD component - displays health, cannon status, mini-map, and active power-ups
 const HUD = () => {
-  // Create a ref for the HUD container
-  const hudRef = useRef<HTMLDivElement>(null);
-  
   const health = usePlayer((state) => state.health);
   const cannonReady = usePlayer((state) => state.cannonReady);
   const cooldownPercent = usePlayer((state) => state.cooldownPercent);
@@ -24,9 +20,6 @@ const HUD = () => {
   const activePowerUps = usePowerUps((state) => state.activePowerUps);
   const inventoryPowerUps = usePowerUps((state) => state.inventoryPowerUps);
   const activateAllPowerUps = usePowerUps((state) => state.activateAllPowerUps);
-  
-  // Track render count for debugging
-  const renderCount = useRef(0);
   
   const [canvasSize, setCanvasSize] = useState({ width: 150, height: 150 });
   
@@ -218,123 +211,13 @@ const HUD = () => {
     };
   }, []);
   
-  // Add logging to verify HUD rendering
-  useEffect(() => {
-    // Log when HUD mounts
-    console.log('[HUD] Component mounted');
-    renderCount.current++;
-    console.log('[HUD] Render count:', renderCount.current);
-    
-    // Log HUD element dimensions and position
-    const logHUDStatus = () => {
-      if (hudRef.current) {
-        const rect = hudRef.current.getBoundingClientRect();
-        console.log('[HUD] Element dimensions:', {
-          width: rect.width,
-          height: rect.height,
-          top: rect.top,
-          left: rect.left,
-          bottom: rect.bottom,
-          right: rect.right,
-          visible: document.visibilityState
-        });
-        
-        // Check computed styles
-        const styles = window.getComputedStyle(hudRef.current);
-        console.log('[HUD] Critical styles:', {
-          display: styles.display,
-          position: styles.position,
-          zIndex: styles.zIndex,
-          opacity: styles.opacity,
-          visibility: styles.visibility,
-          transform: styles.transform,
-          overflow: styles.overflow,
-          pointerEvents: styles.pointerEvents
-        });
-        
-        // Check if any element is overlapping the HUD
-        const overlappingElements = document.elementsFromPoint(rect.left + rect.width/2, rect.bottom - 10);
-        console.log('[HUD] Overlapping elements:', overlappingElements.map(el => 
-          el.tagName + (el.className ? '.' + el.className.split(' ').join('.') : '') + 
-          (el.id ? '#' + el.id : '')
-        ));
-        
-        // Check if HUD is in a stacking context (z-index not working)
-        let parentEl = hudRef.current.parentElement;
-        const stackingParents = [];
-        while (parentEl) {
-          const parentStyle = window.getComputedStyle(parentEl);
-          if (parentStyle.position !== 'static' || 
-              parentStyle.zIndex !== 'auto' ||
-              parentStyle.transform !== 'none' ||
-              parentStyle.filter !== 'none' ||
-              parentStyle.perspective !== 'none') {
-            stackingParents.push({
-              tag: parentEl.tagName,
-              className: parentEl.className,
-              position: parentStyle.position,
-              zIndex: parentStyle.zIndex,
-              transform: parentStyle.transform
-            });
-          }
-          parentEl = parentEl.parentElement;
-        }
-        console.log('[HUD] Stacking context parents:', stackingParents);
-      } else {
-        console.warn('[HUD] Ref not connected to DOM element!');
-        
-        // Fallback check with document query
-        const hudElement = document.querySelector('.game-hud-container');
-        if (hudElement) {
-          console.log('[HUD] Element found with querySelector but not ref!');
-        } else {
-          console.warn('[HUD] Element not found in DOM at all!');
-        }
-      }
-      
-      // Check the mini-map canvas
-      const miniMapCanvas = document.getElementById('mini-map') as HTMLCanvasElement;
-      if (miniMapCanvas) {
-        console.log('[HUD] Mini-map canvas exists:', { 
-          width: miniMapCanvas.width, 
-          height: miniMapCanvas.height 
-        });
-      } else {
-        console.warn('[HUD] Mini-map canvas missing!');
-      }
-      
-      // Check if camera/canvas exists
-      const canvas = document.querySelector('canvas');
-      if (canvas) {
-        console.log('[HUD] Canvas exists, size:', {
-          width: canvas.clientWidth,
-          height: canvas.clientHeight
-        });
-      } else {
-        console.warn('[HUD] No canvas found in the document!');
-      }
-    };
-    
-    // Log status after a slight delay to ensure rendering
-    setTimeout(logHUDStatus, 500);
-    // And again after 2 seconds to catch any timing issues
-    setTimeout(logHUDStatus, 2000);
-    
-    return () => {
-      console.log('[HUD] Component unmounted');
-    };
-  }, []);
-  
   // Calculate health color
   const healthColor = health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336";
   
-  // Print out debug info in component body
-  console.log('[HUD] Rendering component, health:', health);
-  
   return (
-    <div ref={hudRef} className="absolute bottom-5 left-5 right-5 flex justify-between items-end game-hud-container" style={{ zIndex: 1000 }}>
+    <div className="absolute bottom-5 left-5 right-5 flex justify-between items-end">
       {/* Left side - health display */}
-      <div className="bg-gray-900 p-3 rounded-lg border-2 border-yellow-500 shadow-lg">
+      <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700 pointer-events-none">
         <div className="text-white mb-2 font-['Pirata_One'] text-xl">Ship Health</div>
         <div className="w-48 h-6 bg-gray-700 rounded-full overflow-hidden">
           <div 
@@ -349,9 +232,9 @@ const HUD = () => {
       </div>
       
       {/* Center - Reload status and test controls */}
-      <div className="bg-gray-900 p-3 rounded-lg border-2 border-yellow-500 shadow-lg">
+      <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700">
         <div className="text-white mb-2 font-['Pirata_One'] text-xl">Cannons</div>
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center pointer-events-none">
           {cannonReady ? (
             <div className="text-green-500 text-lg font-bold">READY</div>
           ) : (
@@ -359,14 +242,14 @@ const HUD = () => {
               <div className="w-32 h-4 bg-gray-700 rounded-full overflow-hidden mr-2">
                 <div 
                   className="h-full bg-yellow-500"
-                  style={{ width: `${cooldownPercent * 100}%` }}
+                  style={{ width: `${cooldownPercent}%` }}
                 />
               </div>
               <div className="text-yellow-500">Reloading</div>
             </>
           )}
         </div>
-        <div className="text-white mt-2 text-sm">SPACEBAR to fire</div>
+        <div className="text-white mt-2 text-sm pointer-events-none">SPACEBAR to fire</div>
         
         {/* Enemy ship test controls removed */}
       </div>
@@ -436,7 +319,7 @@ const HUD = () => {
                     // Activate all power-ups
                     activateAllPowerUps();
                   }}
-                  className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-1 px-2 rounded transition-colors duration-200 pointer-events-auto"
+                  className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-1 px-2 rounded transition-colors duration-200"
                 >
                   Activate All (E)
                 </button>
@@ -464,13 +347,13 @@ const HUD = () => {
       })()}
       
       {/* Right side - mini-map */}
-      <div className="bg-gray-900 p-3 rounded-lg border-2 border-yellow-500 shadow-lg">
+      <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700 pointer-events-none">
         <div className="text-white mb-2 font-['Pirata_One'] text-xl">Map</div>
         <canvas 
           id="mini-map" 
           width={canvasSize.width} 
           height={canvasSize.height}
-          className="border-2 border-yellow-500 rounded"
+          className="border border-gray-600 rounded"
         />
       </div>
     </div>
