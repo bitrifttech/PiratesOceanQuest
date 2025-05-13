@@ -332,9 +332,9 @@ const HUD = () => {
   console.log('[HUD] Rendering component, health:', health);
   
   return (
-    <div ref={hudRef} className="absolute bottom-5 left-5 right-5 flex justify-between items-end game-hud-container" style={{ zIndex: 100 }}>
+    <div ref={hudRef} className="absolute bottom-5 left-5 right-5 flex justify-between items-end game-hud-container" style={{ zIndex: 1000 }}>
       {/* Left side - health display */}
-      <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700 pointer-events-none">
+      <div className="bg-gray-900 p-3 rounded-lg border-2 border-yellow-500 shadow-lg">
         <div className="text-white mb-2 font-['Pirata_One'] text-xl">Ship Health</div>
         <div className="w-48 h-6 bg-gray-700 rounded-full overflow-hidden">
           <div 
@@ -349,9 +349,9 @@ const HUD = () => {
       </div>
       
       {/* Center - Reload status and test controls */}
-      <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700">
+      <div className="bg-gray-900 p-3 rounded-lg border-2 border-yellow-500 shadow-lg">
         <div className="text-white mb-2 font-['Pirata_One'] text-xl">Cannons</div>
-        <div className="flex items-center justify-center pointer-events-none">
+        <div className="flex items-center justify-center">
           {cannonReady ? (
             <div className="text-green-500 text-lg font-bold">READY</div>
           ) : (
@@ -359,14 +359,14 @@ const HUD = () => {
               <div className="w-32 h-4 bg-gray-700 rounded-full overflow-hidden mr-2">
                 <div 
                   className="h-full bg-yellow-500"
-                  style={{ width: `${cooldownPercent}%` }}
+                  style={{ width: `${cooldownPercent * 100}%` }}
                 />
               </div>
               <div className="text-yellow-500">Reloading</div>
             </>
           )}
         </div>
-        <div className="text-white mt-2 text-sm pointer-events-none">SPACEBAR to fire</div>
+        <div className="text-white mt-2 text-sm">SPACEBAR to fire</div>
         
         {/* Enemy ship test controls removed */}
       </div>
