@@ -107,10 +107,15 @@ const GameUI = () => {
     setShowVictory(false);
   };
   
+  // Log the render of GameUI for debugging
+  console.log('[GameUI] Rendering GameUI component');
+  
   return (
-    <div className="absolute inset-0 pointer-events-none">
+    <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 50 }}>
       {/* HUD */}
-      <HUD />
+      <div className="absolute inset-x-0 bottom-0" style={{ zIndex: 100 }}>
+        <HUD />
+      </div>
       
       {/* Controls button */}
       <div className="absolute top-5 right-5 pointer-events-auto flex flex-col space-y-2">
