@@ -216,9 +216,9 @@ const HUD = () => {
   const healthColor = health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336";
   
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-5 flex flex-wrap justify-between items-end gap-4">
+    <div className="absolute bottom-5 left-5 right-5 flex justify-between items-end">
       {/* Left side - health display */}
-      <div className="bg-gray-900 bg-opacity-80 p-3 rounded-lg border border-gray-700 shadow-lg">
+      <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700 pointer-events-none">
         <div className="text-white mb-2 font-['Pirata_One'] text-xl">Ship Health</div>
         <div className="w-48 h-6 bg-gray-700 rounded-full overflow-hidden">
           <div 
@@ -233,9 +233,9 @@ const HUD = () => {
       </div>
       
       {/* Center - Reload status and test controls */}
-      <div className="bg-gray-900 bg-opacity-80 p-3 rounded-lg border border-gray-700 shadow-lg">
+      <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700">
         <div className="text-white mb-2 font-['Pirata_One'] text-xl">Cannons</div>
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center pointer-events-none">
           {cannonReady ? (
             <div className="text-green-500 text-lg font-bold">READY</div>
           ) : (
@@ -250,7 +250,9 @@ const HUD = () => {
             </>
           )}
         </div>
-        <div className="text-white mt-2 text-sm">SPACEBAR to fire</div>
+        <div className="text-white mt-2 text-sm pointer-events-none">SPACEBAR to fire</div>
+        
+        {/* Enemy ship test controls removed */}
       </div>
       
       {/* Helper functions for power-ups */}
@@ -299,7 +301,7 @@ const HUD = () => {
           <>
             {/* Inventory power-ups */}
             {inventoryPowerUps.length > 0 && (
-              <div className="bg-gray-900 bg-opacity-80 p-3 rounded-lg border border-gray-700 shadow-lg">
+              <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700">
                 <div className="text-white mb-2 font-['Pirata_One'] text-xl">Inventory</div>
                 <div className="flex flex-col gap-2 mb-3">
                   {inventoryPowerUps.map((powerUp) => (
@@ -318,7 +320,7 @@ const HUD = () => {
                     // Activate all power-ups
                     activateAllPowerUps();
                   }}
-                  className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-1 px-2 rounded transition-colors duration-200"
+                  className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-1 px-2 rounded transition-colors duration-200 pointer-events-auto"
                 >
                   Activate All (E)
                 </button>
@@ -328,7 +330,7 @@ const HUD = () => {
             
             {/* Active power-ups */}
             {activePowerUps.length > 0 && (
-              <div className="bg-gray-900 bg-opacity-80 p-3 rounded-lg border border-gray-700 shadow-lg">
+              <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700 pointer-events-none">
                 <div className="text-white mb-2 font-['Pirata_One'] text-xl">Active Power-ups</div>
                 <div className="flex flex-col gap-2">
                   {activePowerUps.map((powerUp, index) => (
@@ -346,7 +348,7 @@ const HUD = () => {
       })()}
       
       {/* Right side - mini-map */}
-      <div className="bg-gray-900 bg-opacity-80 p-3 rounded-lg border border-gray-700 shadow-lg">
+      <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700 pointer-events-none">
         <div className="text-white mb-2 font-['Pirata_One'] text-xl">Map</div>
         <canvas 
           id="mini-map" 
