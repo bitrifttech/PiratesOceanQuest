@@ -71,7 +71,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       key={cannonballId}
       position={position}
       direction={direction}
-      speed={50}
+      speed={35}
       lifespan={6.0}
       sourceId={id}
       onHit={() => {
