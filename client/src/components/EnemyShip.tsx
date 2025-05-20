@@ -1,4 +1,4 @@
-import { useRef, useEffect, memo, useState } from "react";
+import { useRef, useEffect, memo, useState, useMemo, useCallback } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { usePlayer } from "../lib/stores/usePlayer";
@@ -9,6 +9,7 @@ import CustomModel from "./CustomModel";
 import Cannonball from "./Cannonball";
 import CrewSystem from "./CrewSystem";
 import { POSITION, SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
+import { throttleLog } from "../utils/throttleLog";
 import { collisionHandler } from "../lib/services/CollisionHandler";
 
 interface EnemyShipProps {
@@ -40,7 +41,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   // Get player position for AI behavior
   const playerPosition = usePlayer((state) => state.position);
   
-  // Ship movement parameters
+  // Ship movement parameters - moved outside component to prevent recreation
   const speed = 0.05;
   const rotationSpeed = 0.01;
   const detectionRange = 80; // Units at which the enemy ship detects the player
@@ -48,13 +49,38 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   const optimalRange = 25; // Ideal distance to maintain from player
   const minimumRange = 15; // Minimum distance before retreating
   
+  // Cache squared distances to avoid Math.sqrt in distance checks
+  const detectionRangeSq = detectionRange * detectionRange;
+  const canFireRangeSq = canFireRange * canFireRange;
+  const optimalRangeSq = optimalRange * optimalRange;
+  const minimumRangeSq = minimumRange * minimumRange;
+  
   // Peaceful start timer (seconds) - when positive, ship won't attack
   const peacefulStartTimerRef = useRef<number | undefined>(undefined);
   
   // Update the enemy in the game state
   const moveEnemy = useEnemies((state) => state.moveEnemy);
   
-  // State to manage cannonballs
+  // Memoize cannonball creation to prevent unnecessary re-renders
+  const createCannonball = useCallback((
+    position: THREE.Vector3,
+    direction: THREE.Vector3,
+    cannonballId: string
+  ) => (
+    <Cannonball
+      key={cannonballId}
+      position={position}
+      direction={direction}
+      speed={50}
+      lifespan={6.0}
+      sourceId={id}
+      onHit={() => {
+        setCannonballs(prev => prev.filter(ball => ball.key !== cannonballId));
+      }}
+    />
+  ), [id]);
+
+  // State to manage cannonballs - memoized to prevent unnecessary re-renders
   const [cannonballs, setCannonballs] = useState<JSX.Element[]>([]);
   
   // Initialize on first render
@@ -82,26 +108,30 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
     const currentPos = positionRef.current;
     const currentRot = rotationRef.current;
     
-    // Calculate distance to player
-    const distanceToPlayer = currentPos.distanceTo(playerPosition);
+    // Calculate squared distance to player (faster than distanceTo)
+    const dx = playerPosition.x - currentPos.x;
+    const dz = playerPosition.z - currentPos.z;
+    const distanceSqToPlayer = dx * dx + dz * dz;
+    const distanceToPlayer = Math.sqrt(distanceSqToPlayer);
     
     // Ship collision parameters - balanced values
     const enemyShipRadius = 12; // Collision radius matching player ship's balanced settings
     const playerShipRadius = 12; // Match the player ship's collision radius
     const collisionDamage = 10; // Damage on collision
+    const collisionRadiusSum = enemyShipRadius + playerShipRadius;
+    const collisionRadiusSumSq = collisionRadiusSum * collisionRadiusSum;
     
     // Track collision state and add cooldown for damage
     if (collisionCooldown.current > 0) {
       collisionCooldown.current -= delta;
     }
     
-    // Proximity alert - start evasive maneuvers when getting too close to player
-    // This helps avoid collisions before they happen
-    const collisionWarningDistance = (enemyShipRadius + playerShipRadius) * 1.5;
-    const inCollisionDanger = distanceToPlayer < collisionWarningDistance;
+    // Proximity alert - using squared distances for better performance
+    const collisionWarningDistanceSq = collisionRadiusSum * 2.25; // 1.5^2
+    const inCollisionDanger = distanceSqToPlayer < collisionWarningDistanceSq;
     
-    // Check for actual collision with player ship
-    if (distanceToPlayer < (enemyShipRadius + playerShipRadius)) {
+    // Check for actual collision with player ship using squared distance
+    if (distanceSqToPlayer < collisionRadiusSumSq) {
       // Only apply damage if not in cooldown to prevent rapid damage
       if (collisionCooldown.current <= 0) {
         // Damage both ships
@@ -250,16 +280,20 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         currentPos.add(velocity);
       }
       
-      // Log for debugging, but only occasionally
+      // Log for debugging, but throttled to reduce performance impact
       if (Math.random() < 0.002) {
-        console.log(`[ENEMY SHIP ${id}] Movement details: 
-        - Behavior: ${behaviorState}
-        - Angle to player: ${(angleToPlayer * 180 / Math.PI).toFixed(1)}°
-        - Target angle: ${(targetAngle * 180 / Math.PI).toFixed(1)}°
-        - Current rotation: ${(currentAngle * 180 / Math.PI).toFixed(1)}°
-        - New rotation: ${(newRotY * 180 / Math.PI).toFixed(1)}°
-        - Direction: (${direction.x.toFixed(2)}, ${direction.z.toFixed(2)})
-        - Distance to player: ${distanceToPlayer.toFixed(1)} units`);
+        throttleLog(
+          `enemy-${id}-movement`,
+          `[ENEMY SHIP ${id}] Movement details: 
+          - Behavior: ${behaviorState}
+          - Angle to player: ${(angleToPlayer * 180 / Math.PI).toFixed(1)}°
+          - Target angle: ${(targetAngle * 180 / Math.PI).toFixed(1)}°
+          - Current rotation: ${(currentAngle * 180 / Math.PI).toFixed(1)}°
+          - New rotation: ${(newRotY * 180 / Math.PI).toFixed(1)}°
+          - Direction: (${direction.x.toFixed(2)}, ${direction.z.toFixed(2)})
+          - Distance to player: ${distanceToPlayer.toFixed(1)} units`,
+          2000 // Throttle to once every 2 seconds
+        );
       }
     }
     
@@ -299,22 +333,8 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       // Create a unique ID for this cannonball
       const cannonballId = `${id}-cannonball-${Date.now()}`;
       
-      // Add the cannonball to state
-      const newCannonball = (
-        <Cannonball
-          key={cannonballId}
-          position={cannonPosition}
-          direction={toPlayerDirection}
-          speed={50} // Doubled from 25 to 50
-          lifespan={6.0} // Doubled from 3.0 to 6.0
-          sourceId={id} // Add the enemy ship ID to prevent self-damage
-          onHit={() => {
-            // Remove this cannonball from the array when it hits something
-            setCannonballs(prev => prev.filter(ball => ball.key !== cannonballId));
-          }}
-        />
-      );
-      
+      // Add the cannonball to state using memoized creation
+      const newCannonball = createCannonball(cannonPosition, toPlayerDirection, cannonballId);
       setCannonballs(prev => [...prev, newCannonball]);
       
       // Set cooldown for next cannon fire (5-8 seconds, random to make it less predictable)
