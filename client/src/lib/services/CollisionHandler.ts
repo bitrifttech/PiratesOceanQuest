@@ -19,7 +19,6 @@ class CollisionHandler {
    */
   setFeatures(features: EnvironmentFeature[]): void {
     this.features = features;
-    console.log(`[COLLISION] Set ${features.length} environment features for collision detection`);
   }
   
   /**

@@ -9,7 +9,6 @@ import CustomModel from "./CustomModel";
 import Cannonball from "./Cannonball";
 import CrewSystem from "./CrewSystem";
 import { POSITION, SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
-import { throttleLog } from "../utils/throttleLog";
 import { collisionHandler } from "../lib/services/CollisionHandler";
 
 interface EnemyShipProps {
@@ -150,7 +149,6 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         // Set collision cooldown to avoid rapid damage
         collisionCooldown.current = 1.5; // 1.5 second cooldown
         
-        console.log(`[COLLISION] Ship-to-ship collision! Both ships take ${collisionDamage} damage`);
       }
       
       // Apply stronger bounce effect - push ships away from each other
@@ -163,8 +161,6 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       // Apply bounce to enemy position
       currentPos.add(bounceDirection);
       
-      // Log evasive action
-      console.log(`[ENEMY SHIP ${id}] Collision detected! Taking evasive action.`);
     }
     
     // Improved AI behavior with tactical movement
@@ -178,22 +174,17 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       // Decide whether to approach, maintain distance, or retreat
       let targetAngle = angleToPlayer;
       let movementSpeed = speed;
-      let behaviorState = "approach"; // Default behavior
       
       // If too close to player or in collision warning, turn around and retreat
       if (distanceToPlayer < minimumRange || inCollisionDanger) {
         // Reverse the direction to move away
         targetAngle = angleToPlayer + Math.PI; // Turn 180° away
         movementSpeed = speed * 1.5; // Move away faster
-        behaviorState = "retreat";
         
-        // Log collision avoidance when first triggered
+        // Trigger crew near collision animation when collision danger detected
         if (inCollisionDanger && Math.random() < 0.05) {
-          // Trigger crew near collision animation
           const { enemyNearCollision } = useShipEvents.getState();
           enemyNearCollision(id);
-          
-          console.log(`[ENEMY SHIP ${id}] Collision warning! Taking evasive action.`);
         }
       } 
       // Otherwise, if within optimal firing range, circle the player
@@ -205,14 +196,12 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
           targetAngle = angleToPlayer - Math.PI / 2;
         }
         movementSpeed = speed * 0.8; // Slower circular movement
-        behaviorState = "circle";
       }
       // If beyond optimal range but within detection, approach cautiously
       else {
         // Approach normally
         targetAngle = angleToPlayer;
         movementSpeed = speed * 0.9; // Slightly slower approach
-        behaviorState = "approach";
       }
       
       // Gradually rotate toward the target angle with smooth turning
@@ -259,8 +248,6 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       
       if (collision) {
         // We have a collision, use the safe position provided by collision handler
-        console.log(`[ENEMY SHIP ${id}] Collided with environment. Adjusting position.`);
-        
         // Trigger crew reaction for near collision
         const { enemyNearCollision } = useShipEvents.getState();
         enemyNearCollision(id);
@@ -280,30 +267,13 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         currentPos.add(velocity);
       }
       
-      // Log for debugging, but throttled to reduce performance impact
-      if (Math.random() < 0.002) {
-        throttleLog(
-          `enemy-${id}-movement`,
-          `[ENEMY SHIP ${id}] Movement details: 
-          - Behavior: ${behaviorState}
-          - Angle to player: ${(angleToPlayer * 180 / Math.PI).toFixed(1)}°
-          - Target angle: ${(targetAngle * 180 / Math.PI).toFixed(1)}°
-          - Current rotation: ${(currentAngle * 180 / Math.PI).toFixed(1)}°
-          - New rotation: ${(newRotY * 180 / Math.PI).toFixed(1)}°
-          - Direction: (${direction.x.toFixed(2)}, ${direction.z.toFixed(2)})
-          - Distance to player: ${distanceToPlayer.toFixed(1)} units`,
-          2000 // Throttle to once every 2 seconds
-        );
-      }
     }
     
     // Update peaceful start timer if it exists
     if (peacefulStartTimerRef.current !== undefined && peacefulStartTimerRef.current > 0) {
       peacefulStartTimerRef.current -= delta;
       
-      // Log when peaceful timer expires
       if (peacefulStartTimerRef.current <= 0) {
-        console.log(`[ENEMY SHIP ${id}] Peaceful start period ended - now hostile!`);
         peacefulStartTimerRef.current = 0; // Set to exactly zero to avoid negative values
       }
     }
@@ -339,8 +309,6 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       
       // Set cooldown for next cannon fire (5-8 seconds, random to make it less predictable)
       cannonCooldownRef.current = 5 + Math.random() * 3;
-      
-      console.log(`[ENEMY SHIP ${id}] Fired cannon at player!`);
     }
     
     // Update cannon cooldown
@@ -354,17 +322,6 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
     // Update refs
     positionRef.current = currentPos;
     rotationRef.current = currentRot;
-    
-    // Update position and rotation in the store with detailed logging every 5 seconds
-    if (Math.random() < 0.005) {
-      console.log(`[ENEMY SHIP ${id} POSITION] Current detailed position:`, {
-        positionRef: currentPos.toArray(),
-        rotationRef: currentRot.toArray(),
-        isVector3: currentPos instanceof THREE.Vector3,
-        meshPosition: shipRef.current ? shipRef.current.position.toArray() : 'shipRef not available',
-        worldPosition: shipRef.current ? new THREE.Vector3().setFromMatrixPosition(shipRef.current.matrixWorld).toArray() : 'worldPosition not available'
-      });
-    }
     
     // Update position and rotation in the store
     moveEnemy(id, currentPos.clone(), currentRot.clone());

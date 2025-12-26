@@ -122,8 +122,6 @@ const CustomModel = ({
         setFallbackVisible(false);
       }, 100);
       
-      console.log(`Model initialized: ${path}`);
-      
       // Execute callback
       if (onLoad) onLoad();
     } catch (err) {
@@ -163,14 +161,8 @@ const CustomModel = ({
         // Store initial Y for bobbing
         initialY.current = finalYPosition;
         
-        // Log once for debugging
-        if (!debugLogged.current) {
-          console.log(`Model ${path} positioned at (${xPosition}, ${finalYPosition}, ${zPosition})`);
-          console.log(`- Model bottom: ${modelBottom.toFixed(2)}, offset: ${baselineOffset.toFixed(2)}`);
-          debugLogged.current = true;
-        }
-        
         // Mark as positioned
+        debugLogged.current = true;
         positioned.current = true;
       } catch (err) {
         console.error(`Failed to position model ${path}:`, err);
@@ -184,17 +176,6 @@ const CustomModel = ({
   // Calculate final scale
   const finalScale = scale * (modelAdjustment || 1.0);
   
-  // Log scale parameters for debugging
-  useEffect(() => {
-    if (path.includes('pirate_ship')) {
-      console.log(`[MODEL DEBUG] ${path} scale calculation:`);
-      console.log(`- Input scale: ${scale}`);
-      console.log(`- Model adjustment: ${modelAdjustment || 1.0}`);
-      console.log(`- Final scale: ${finalScale}`);
-      console.log(`- Model offset: ${modelHeightOffset}`);
-      console.log(`- Component ID: ${instanceId.current}`);
-    }
-  }, [path, scale, modelAdjustment, finalScale, modelHeightOffset]);
   
   // Skip bobbing for now - uncomment if needed later
   /*

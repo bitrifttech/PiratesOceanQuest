@@ -1,0 +1,94 @@
+---
+description: General Clean Code rules (Uncle Bob inspired)
+alwaysApply: true
+---
+
+# Clean Code-Oriented Rules
+
+These rules are inspired by the principles in *Clean Code* (Robert C. Martin).
+
+## Functions and Methods
+
+- Functions should:
+  - Do **one thing** and do it well.
+  - Be small and focused; avoid long procedures.
+  - Operate at a single conceptual level of abstraction.
+- Avoid side effects where possible; if side effects are necessary, make them obvious.
+- Avoid long argument lists. Prefer:
+  - No arguments, one, or two; three is the upper limit.
+  - Group related data into value objects or parameter objects.
+
+## Naming
+
+- Choose **intention-revealing names**:
+  - A reader should understand what the thing is or does from its name.
+- Avoid:
+  - Misleading names.
+  - Meaningless names (e.g., `data`, `tmp`, `stuff`).
+  - Over-abbreviations (unless heavily conventional in the domain).
+- Use consistent vocabulary across the codebase for the same concepts.
+
+## Comments
+
+- Prefer **self-documenting code** over comments.
+- Use comments only when:
+  - Explaining *why* a decision was made.
+  - Documenting a non-obvious business rule or constraint.
+- Do **not**:
+  - Comment obvious code.
+  - Leave outdated or misleading comments.
+
+## Formatting and Structure
+
+- Maintain consistent formatting (indentation, spacing, line length).
+- Group related functions and fields together.
+- Keep files from becoming too large; split cohesive modules as needed.
+- Avoid horizontal and vertical clutter:
+  - Remove dead code and commented-out code.
+  - Keep import/include sections clean and ordered.
+
+## Error Handling
+
+- Use exceptions or error types instead of magic return codes.
+- Do not ignore exceptions silently.
+- Make error-handling logic clear and explicit.
+- Avoid mixing error handling and business logic within the same function; separate them when possible.
+
+## Objects, Classes, and Modules
+
+- Classes and modules should have a **single responsibility**:
+  - A single, clear reason to change.
+- Prefer composition over inheritance when building behavior.
+- Encapsulate implementation details; expose minimal public APIs.
+- Keep cohesion high: methods in a class should operate on a common set of data.
+
+## Dependencies and Boundaries
+
+- Minimize knowledge of external libraries and frameworks in your core logic.
+- Isolate third-party dependencies behind adapters or wrapper modules.
+- Ensure that changing or upgrading a library doesn’t require large refactors in the core of the system.
+
+## Tests
+
+- Tests should be:
+  - Fast, independent, repeatable, and reliable.
+  - Clear and expressive in describing the behavior under test.
+- Use tests to:
+  - Specify behavior.
+  - Enable safe refactoring.
+- Avoid over-mocking; mock only where necessary to isolate behavior or external boundaries.
+
+## Code Smells to Watch For
+
+When generating or reviewing code, look out for:
+
+- Long functions or classes.
+- Duplicate logic across modules.
+- Inconsistent naming conventions.
+- Deeply nested conditionals (multiple levels of `if`/`else`).
+- Large parameter lists.
+- Hidden side effects.
+- Feature envy (one class heavily using another class’s internals).
+- Data clumps (the same set of parameters repeatedly occurring together).
+
+When these appear, suggest and perform refactorings to restore clarity and simplicity.

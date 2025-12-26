@@ -1,0 +1,118 @@
+---
+description: Clean Architecture layering and dependency rules
+alwaysApply: true
+---
+
+# Clean Architecture-Oriented Rules
+
+These rules are inspired by the principles in *Clean Architecture* (Robert C. Martin).
+
+## Architectural Layers
+
+When designing features, try to separate code into these conceptual layers:
+
+1. **Entities / Domain Model**
+   - Core business rules and concepts.
+   - Independent of frameworks, UI, and databases.
+
+2. **Use Cases / Application Services**
+   - Orchestrate the application-specific business rules.
+   - Define input/output models for operations.
+   - Coordinate entities and repositories.
+
+3. **Interface Adapters**
+   - Controllers, presenters, view models, mappers.
+   - Translate between external formats (HTTP, UI, DB schemas) and internal models.
+
+4. **Frameworks and Drivers**
+   - Web frameworks, ORMs, external APIs, UI frameworks, messaging systems, etc.
+   - Infrastructure-level concerns and details.
+
+Not every project needs four physically separate layers, but **always keep the conceptual separation**.
+
+## The Dependency Rule
+
+- Source code dependencies should point **inward**, from outer layers to inner layers.
+- Inner layers (domain, use cases):
+  - Must not depend on outer layers (web, DB, frameworks).
+  - Can define interfaces/ports that outer layers implement (adapters).
+- When generating code:
+  - Place interfaces that represent boundaries in inner layers.
+  - Place implementations (e.g., DB repositories, HTTP controllers) in outer layers.
+
+## Use Cases
+
+- Each use case should be modeled as a focused service, function, or class with a clear input and output.
+- Keep use-case logic free of:
+  - HTTP concerns.
+  - UI concerns.
+  - Database and ORM specifics.
+- Use cases should depend only on:
+  - Domain entities.
+  - Repository or gateway interfaces.
+  - Simple request/response models.
+
+## Entities / Domain Model
+
+- Entities should:
+  - Represent core business concepts and rules.
+  - Encapsulate invariants and validation where appropriate.
+- Entities should not:
+  - Know about persistence.
+  - Depend on frameworks.
+  - Contain UI or transport-specific details.
+
+## Persistence and Infrastructure
+
+- Treat the database as a **detail**:
+  - Domain and use-case layers define repository interfaces.
+  - Outer layers provide database-specific implementations.
+- Avoid leaking ORM-specific types into entities or use cases.
+- Infrastructure modules:
+  - Should be easy to replace (e.g., swap SQL for NoSQL, or one message broker for another).
+
+## UI / Presentation
+
+- UI code (web pages, components, mobile views) should:
+  - Be thin and focused on presentation and user interaction.
+  - Delegate real work to use cases via an application boundary.
+- Avoid putting business rules or complex decision logic in controllers or components.
+
+## Cross-Cutting Concerns
+
+- Handle concerns like logging, authentication, authorization, and monitoring in a way that:
+  - Does not pollute business rules.
+  - Preserves testability of core logic.
+- Use middleware, decorators, or similar patterns at the edges to keep the core clean.
+
+## Testing Strategy
+
+- Test inner layers (entities, use cases) purely, without frameworks.
+- Use mocks or fakes for outer-layer dependencies when testing use cases.
+- Use integration tests for:
+  - Infrastructure (DB, messaging).
+  - End-to-end flows through adapters and frameworks.
+
+## When Generating New Features
+
+When asked to implement a feature:
+
+1. **Describe the architecture briefly**:
+   - Which entities and use cases are involved.
+   - How controllers or handlers will call use cases.
+   - How repositories or gateways will be structured.
+
+2. **Design APIs and interfaces from the inside out**:
+   - Start with domain and use cases.
+   - Only then design the controllers, routes, or UI that call them.
+   - Finally, implement infrastructure (DB, external services).
+
+3. **Keep boundaries explicit**:
+   - Clearly separate code into “core” (entities/use cases) vs “adapters/infrastructure”.
+   - Avoid letting framework-specific concepts slip into core code.
+
+4. **Document dependencies**
+   - When producing code snippets, note which layer each component belongs to.
+   - Call out where dependency inversion is being used (e.g., repositories implemented in outer layers).
+
+Whenever you sense that code is becoming tightly coupled to frameworks or infrastructure, propose a cleaner layered structure instead.

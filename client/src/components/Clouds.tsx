@@ -48,7 +48,7 @@ const Cloud = ({
   // Individual cloud drift motion - optimize by using time scale
   // Only update every few frames for better performance
   const timeScale = useRef(Math.random() * Math.PI); // Randomize starting phase
-  const frameSkip = useRef(Math.floor(Math.random() * 4) + 2); // Skip 2-5 frames
+  const frameSkip = useRef(Math.floor(Math.random() * 6) + 4); // Skip 4-9 frames (more aggressive skip)
   const frameCounter = useRef(0);
   
   useFrame((state) => {
@@ -88,7 +88,7 @@ const Cloud = ({
     // Create cluster of spheres to form a cloud
     const result = [];
     const cloudSize = size;
-    const density = 6 + Math.floor(pseudoRandom(seed + 1) * 8); // 6-14 puffs per cloud
+    const density = 4 + Math.floor(pseudoRandom(seed + 1) * 5); // 4-8 puffs per cloud (reduced from 6-14)
     
     for (let i = 0; i < density; i++) {
       const sphereSize = 0.5 + pseudoRandom(seed + i) * 1.5;
@@ -109,7 +109,7 @@ const Cloud = ({
   
   // Optimize lighting - only add lights to a subset of clouds
   // This saves performance while still creating the lighting effect
-  const hasLight = dynamicLighting && Math.random() < 0.3; // Only 30% of clouds get lights
+  const hasLight = dynamicLighting && Math.random() < 0.15; // Only 15% of clouds get lights (reduced from 30%)
   
   const light = hasLight ? (
     <pointLight
@@ -131,8 +131,8 @@ const Cloud = ({
     >
       {spheres.map((sphere, index) => (
         <mesh key={index} position={sphere.position as [number, number, number]}>
-          {/* Reduce geometry complexity from 8,8 to 6,6 segments */}
-          <sphereGeometry args={[sphere.size, 6, 6]} />
+          {/* Reduce geometry complexity to 4,4 segments for better performance */}
+          <sphereGeometry args={[sphere.size, 4, 4]} />
           {/* Use basic material instead of standard for better performance */}
           <meshBasicMaterial 
             color={color}

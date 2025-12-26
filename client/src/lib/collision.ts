@@ -42,7 +42,6 @@ export function getFeatureRadius(type: EnvironmentFeatureType, scale: number): n
   }
   // Scale the radius based on the feature's scale
   const scaledRadius = baseRadius * scale;
-  console.log(`[COLLISION RADIUS] ${type} with scale ${scale.toFixed(2)} has radius ${scaledRadius.toFixed(2)}`);
   return scaledRadius;
 }
 
@@ -113,10 +112,6 @@ export function calculateCollisionResponse(
   pushVector.x += (Math.random() - 0.5) * 2;
   pushVector.z += (Math.random() - 0.5) * 2;
   
-  // Log collision for debugging
-  console.log(`[COLLISION] Ship collided with ${feature.type} at (${feature.x.toFixed(1)}, ${feature.z.toFixed(1)})`);
-  console.log(`[COLLISION] EXTREME PUSH applied: ${pushDistance.toFixed(2)} units × 3 in direction (${direction.x.toFixed(2)}, ${direction.z.toFixed(2)})`);
-  
   // Return the adjusted position with a much stronger push to guarantee no getting stuck
   return new THREE.Vector3(
     position.x + pushVector.x,
@@ -158,8 +153,6 @@ export function calculateSafePosition(
     position.y,
     feature.z + direction.z * safeDistance
   );
-  
-  console.log(`[COLLISION] EMERGENCY SAFE POSITION calculated: (${safePosition.x.toFixed(1)}, ${safePosition.z.toFixed(1)})`);
   
   return safePosition;
 }

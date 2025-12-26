@@ -36,102 +36,75 @@ const WaterSplashEffect: React.FC<WaterSplashEffectProps> = ({
   const startTime = useRef(Date.now());
   const [particles, setParticles] = useState<JSX.Element[]>([]);
   
-  // Generate water particles on first render
+  // Generate water particles on first render (optimized for performance)
   useEffect(() => {
-    const particleCount = 25;
+    const particleCount = 12; // Reduced from 25 for better performance
     const newParticles = [];
     
     // Create spray of water droplets in upward direction with outward spread
     for (let i = 0; i < particleCount; i++) {
       // Random direction with strong upward bias
-      const angle = Math.random() * Math.PI * 2; // Random angle around circle
-      const radius = Math.random() * 0.8; // Random radius (controls spread)
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.random() * 0.8;
       
-      // Direction with strong upward bias
       const direction = new THREE.Vector3(
-        Math.cos(angle) * radius,  // X component with spread
-        0.8 + Math.random() * 0.7, // Strong upward bias (0.8-1.5)
-        Math.sin(angle) * radius   // Z component with spread
+        Math.cos(angle) * radius,
+        0.8 + Math.random() * 0.7,
+        Math.sin(angle) * radius
       ).normalize();
       
-      // Random speed with more variation for natural look
       const speed = 2 + Math.random() * 4;
-      
-      // Random size for water droplets
       const particleSize = (Math.random() * 0.3 + 0.2) * size / 3;
       
-      // Water droplet colors (blue to white)
-      const colors = [
-        new THREE.Color(0x3498db), // Blue
-        new THREE.Color(0x2980b9), // Darker blue
-        new THREE.Color(0x7fc7ff), // Light blue
-        new THREE.Color(0xffffff), // White (foam)
-      ];
-      const color = colors[Math.floor(Math.random() * colors.length)];
+      // Simplified color selection
+      const colors = [0x3498db, 0x2980b9, 0x7fc7ff, 0xffffff];
+      const color = new THREE.Color(colors[Math.floor(Math.random() * colors.length)]);
       
-      // Initial y position (slightly varied for more natural look)
       const initialY = 0.1 + Math.random() * 0.1;
       
       newParticles.push(
         <mesh 
           key={`splash-${i}`}
           position={[0, initialY, 0]}
-          userData={{ 
-            direction,
-            speed,
-            initialScale: particleSize,
-            initialY
-          }}
+          userData={{ direction, speed, initialScale: particleSize, initialY }}
         >
-          <sphereGeometry args={[particleSize, 8, 8]} />
-          <meshStandardMaterial 
-            color={color} 
-            transparent={true} 
-            opacity={0.8} 
-          />
+          <sphereGeometry args={[particleSize, 4, 4]} />
+          <meshBasicMaterial color={color} transparent={true} opacity={0.8} />
         </mesh>
       );
     }
     
-    // Add circular ripple effect on water surface
-    for (let i = 0; i < 3; i++) {
-      const scale = (i + 1) * 0.8; // Scale for each ripple ring
-      const delay = i * 0.15; // Delay the start of each ripple
+    // Add circular ripple effect on water surface (reduced to 2 ripples)
+    for (let i = 0; i < 2; i++) {
+      const scale = (i + 1) * 0.8;
+      const delay = i * 0.15;
       
       newParticles.push(
         <mesh 
           key={`ripple-${i}`}
-          position={[0, 0.05, 0]} // Just above water surface
-          rotation={[-Math.PI / 2, 0, 0]} // Flat on water
+          position={[0, 0.05, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
           userData={{ 
             isRipple: true,
-            initialScale: 0.2, // Start small
-            maxScale: scale * 3, // Grow to this size
-            delay, // Delay before starting
-            duration: duration * 0.8 // Ripples are shorter than splash
+            initialScale: 0.2,
+            maxScale: scale * 3,
+            delay,
+            duration: duration * 0.8
           }}
-          scale={[0.001, 0.001, 0.001]} // Start invisible
+          scale={[0.001, 0.001, 0.001]}
         >
-          <ringGeometry args={[0.8, 1.0, 16]} />
-          <meshStandardMaterial 
-            color={new THREE.Color(0xffffff)} 
-            transparent={true} 
-            opacity={0.7} 
-            side={THREE.DoubleSide}
-          />
+          <ringGeometry args={[0.8, 1.0, 8]} />
+          <meshBasicMaterial color={0xffffff} transparent={true} opacity={0.7} side={THREE.DoubleSide} />
         </mesh>
       );
     }
     
-    // Add some foam particles around impact area
-    for (let i = 0; i < 10; i++) {
+    // Add some foam particles around impact area (reduced from 10 to 5)
+    for (let i = 0; i < 5; i++) {
       const angle = Math.random() * Math.PI * 2;
       const radius = Math.random() * 1.5;
-      
       const xPos = Math.cos(angle) * radius;
       const zPos = Math.sin(angle) * radius;
-      
-      // Random foam scale
       const foamScale = (Math.random() * 0.6 + 0.4) * size / 2;
       
       newParticles.push(
@@ -139,18 +112,10 @@ const WaterSplashEffect: React.FC<WaterSplashEffectProps> = ({
           key={`foam-${i}`}
           position={[xPos, 0.1, zPos]}
           rotation={[-Math.PI / 2, 0, Math.random() * Math.PI * 2]}
-          userData={{ 
-            isFoam: true,
-            initialScale: foamScale,
-            lifespan: 0.4 + Math.random() * 0.6 // Random lifespan
-          }}
+          userData={{ isFoam: true, initialScale: foamScale, lifespan: 0.4 + Math.random() * 0.6 }}
         >
-          <circleGeometry args={[0.3, 8]} />
-          <meshStandardMaterial 
-            color={new THREE.Color(0xffffff)} 
-            transparent={true} 
-            opacity={0.5} 
-          />
+          <circleGeometry args={[0.3, 6]} />
+          <meshBasicMaterial color={0xffffff} transparent={true} opacity={0.5} />
         </mesh>
       );
     }
@@ -160,19 +125,11 @@ const WaterSplashEffect: React.FC<WaterSplashEffectProps> = ({
       <mesh 
         key="water-column"
         position={[0, 0.1, 0]}
-        userData={{ 
-          isColumn: true,
-          initialHeight: 0.1,
-          maxHeight: size * 0.8
-        }}
+        userData={{ isColumn: true, initialHeight: 0.1, maxHeight: size * 0.8 }}
         scale={[0.5, 0.1, 0.5]}
       >
-        <cylinderGeometry args={[0.3, 0.8, 1, 12]} />
-        <meshStandardMaterial 
-          color={new THREE.Color(0x2980b9)}
-          transparent={true} 
-          opacity={0.8} 
-        />
+        <cylinderGeometry args={[0.3, 0.8, 1, 8]} />
+        <meshBasicMaterial color={0x2980b9} transparent={true} opacity={0.8} />
       </mesh>
     );
     

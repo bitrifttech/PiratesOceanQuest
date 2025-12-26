@@ -1,0 +1,88 @@
+---
+description: TypeScript-specific Clean Code and Clean Architecture rules
+alwaysApply: false
+---
+# TypeScript-Specific Rules
+
+These rules refine the global Clean Code / Clean Architecture rules for TypeScript projects.
+
+## General Style
+
+- **Always use TypeScript**, not plain JavaScript, in new code.
+- Enable strict mode:
+  - `"strict": true` in `tsconfig.json`.
+  - Prefer non-nullable types; avoid untyped `any`.
+
+- Prefer:
+  - `const` over `let`, and avoid `var`.
+  - Expression-level code (map/filter/reduce) where it stays readable.
+
+## Types and Interfaces
+
+- Write **explicit types** for:
+  - Public function parameters and return types.
+  - Public class methods.
+  - External-facing APIs (DTOs, request/response objects).
+
+- Prefer:
+  - `type` or `interface` for data shapes, with consistent usage across the project.
+  - Narrow types instead of `any` or broad unions when possible.
+
+- Avoid:
+  - Overuse of `any` or `unknown`; treat them as last-resort escape hatches.
+  - Deeply nested types that are impossible to read—extract into named types.
+
+## Functions and Modules
+
+- Keep functions **small and intention-revealing**:
+  - Avoid functions that both mutate state and perform complex calculations.
+  - Use pure functions for business logic when possible.
+
+- Use **ES modules**:
+  - One main concept per file (class, group of related functions, or a module).
+  - Avoid “god modules” with unrelated exports.
+
+## Classes and Composition
+
+- Use classes where you need shared behavior and state, but:
+  - Prefer composition over inheritance.
+  - Keep classes focused on a single responsibility.
+
+- For non-OO code, prefer:
+  - Namespaced or grouped functions in modules.
+  - Factory functions for encapsulation when classes aren’t needed.
+
+## Error Handling
+
+- Do not silently swallow errors with empty `catch` blocks.
+- For async code:
+  - Use `try/catch` around `await` where the failure matters.
+  - Provide clear error messages and typed error objects when possible.
+
+## Clean Architecture Mapping
+
+In TypeScript backend or server-heavy projects:
+
+- **Domain layer**:
+  - Types, entities (classes or plain objects), value objects, domain services.
+  - Pure, framework-agnostic logic.
+
+- **Application/use case layer**:
+  - Use case classes or functions that orchestrate domain behavior.
+  - Use TypeScript interfaces for repositories/gateways.
+
+- **Adapters/infrastructure**:
+  - Implement repository interfaces using DB/HTTP/email/etc.
+  - Keep framework-specific code here (Express, Fastify, Nest, etc.).
+
+- **Presentation layer**:
+  - HTTP controllers, handlers, GraphQL resolvers, CLI commands, UI-specific TypeScript.
+
+## Testing
+
+- Use a consistent testing framework (e.g., Jest, Vitest, Playwright for e2e).
+- Favor:
+  - Unit tests for domain and use cases.
+  - Integration tests for adapters and routes.
+- Avoid:
+  - Over-mocking everything; mock only boundaries.

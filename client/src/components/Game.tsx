@@ -272,13 +272,13 @@ const Game = () => {
         position={[100, 100, 50]} 
         intensity={1} 
         castShadow 
-        shadow-mapSize={[2048, 2048]} 
+        shadow-mapSize={[1024, 1024]} 
       />
       
-      {/* Enhanced sky with procedural clouds */}
+      {/* Enhanced sky with procedural clouds - optimized count */}
       <SkyWithClouds
-        cloudCount={35}
-        cloudDensity={8}
+        cloudCount={18}
+        cloudDensity={6}
         cloudHeight={60}
         dayNightCycle={true}
         cycleSpeed={0.05}

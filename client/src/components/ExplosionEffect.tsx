@@ -36,89 +36,57 @@ const ExplosionEffect: React.FC<ExplosionEffectProps> = ({
   const startTime = useRef(Date.now());
   const [particles, setParticles] = useState<JSX.Element[]>([]);
   
-  // Generate particles on first render
+  // Generate particles on first render (optimized for performance)
   useEffect(() => {
-    const particleCount = 20;
+    const particleCount = 10; // Reduced from 20 for better performance
     const newParticles = [];
     
     // Create a burst of particles in random directions
     for (let i = 0; i < particleCount; i++) {
-      // Random direction
       const direction = new THREE.Vector3(
         (Math.random() - 0.5) * 2,
-        Math.random() * 2, // More upward bias
+        Math.random() * 2,
         (Math.random() - 0.5) * 2
       ).normalize();
       
-      // Random speed
       const speed = 2 + Math.random() * 3;
-      
-      // Random size
       const particleSize = (Math.random() * 0.5 + 0.5) * size / 3;
       
-      // Random color (orange/red/yellow for fire)
-      const colors = [
-        new THREE.Color(0xff4500), // Orange-red
-        new THREE.Color(0xff8c00), // Dark orange
-        new THREE.Color(0xffcc00), // Gold
-        new THREE.Color(0xff0000), // Red
-      ];
-      const color = colors[Math.floor(Math.random() * colors.length)];
+      // Simplified color selection
+      const colors = [0xff4500, 0xff8c00, 0xffcc00, 0xff0000];
+      const color = new THREE.Color(colors[Math.floor(Math.random() * colors.length)]);
       
       newParticles.push(
         <mesh 
           key={`particle-${i}`}
           position={[0, 0, 0]}
-          userData={{ 
-            direction,
-            speed,
-            initialScale: particleSize
-          }}
+          userData={{ direction, speed, initialScale: particleSize }}
         >
-          <sphereGeometry args={[particleSize, 8, 8]} />
-          <meshStandardMaterial 
-            color={color} 
-            emissive={color} 
-            emissiveIntensity={2}
-            transparent={true} 
-            opacity={1} 
-          />
+          <sphereGeometry args={[particleSize, 4, 4]} />
+          <meshBasicMaterial color={color} transparent={true} opacity={1} />
         </mesh>
       );
     }
     
-    // Add some smoke particles (dark gray)
-    for (let i = 0; i < 10; i++) {
-      // Random direction with upward bias
+    // Add some smoke particles (reduced from 10 to 5)
+    for (let i = 0; i < 5; i++) {
       const direction = new THREE.Vector3(
         (Math.random() - 0.5) * 1.5,
-        Math.random() * 1.5 + 0.5, // More upward bias
+        Math.random() * 1.5 + 0.5,
         (Math.random() - 0.5) * 1.5
       ).normalize();
       
-      // Random speed (slower than fire)
       const speed = 1 + Math.random() * 2;
-      
-      // Random size (larger than fire)
       const particleSize = (Math.random() * 0.7 + 0.8) * size / 2;
       
       newParticles.push(
         <mesh 
           key={`smoke-${i}`}
           position={[0, 0, 0]}
-          userData={{ 
-            direction,
-            speed,
-            initialScale: particleSize,
-            isSmoke: true
-          }}
+          userData={{ direction, speed, initialScale: particleSize, isSmoke: true }}
         >
-          <sphereGeometry args={[particleSize, 8, 8]} />
-          <meshStandardMaterial 
-            color={new THREE.Color(0x444444)} 
-            transparent={true} 
-            opacity={0.5} 
-          />
+          <sphereGeometry args={[particleSize, 4, 4]} />
+          <meshBasicMaterial color={0x444444} transparent={true} opacity={0.5} />
         </mesh>
       );
     }

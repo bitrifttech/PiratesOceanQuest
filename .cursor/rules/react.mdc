@@ -1,0 +1,125 @@
+---
+description: React-specific Clean Code and Clean Architecture rules
+alwaysApply: false
+---
+# React-Specific Rules
+
+These rules refine the global Clean Code / Clean Architecture rules for React applications.
+
+## Components
+
+- Keep components **small and focused**:
+  - Single responsibility: one component should do one thing well.
+  - Prefer functional components over class components.
+  - Extract complex logic into custom hooks or utility functions.
+
+- Use **container/presentation separation**:
+  - Container components: handle data fetching, state management, business logic.
+  - Presentational components: receive props, render UI, handle user interactions.
+  - Keep presentational components pure when possible (same props → same output).
+
+- Component naming:
+  - Use PascalCase for component names.
+  - Name files to match component names (e.g., `AppraisalForm.tsx` for `AppraisalForm`).
+  - Use descriptive, intention-revealing names.
+
+## Props and Types
+
+- Always define **explicit prop types**:
+  - Use TypeScript interfaces or types for component props.
+  - Name prop interfaces descriptively (e.g., `AppraisalFormProps`, not just `Props`).
+  - Avoid `any` in prop types.
+
+- Props should be:
+  - Minimal: only pass what's needed.
+  - Well-structured: group related data into objects when appropriate.
+  - Immutable: don't mutate props directly.
+
+## Hooks
+
+- Custom hooks should:
+  - Have clear, single responsibilities.
+  - Be named with `use` prefix (e.g., `useAppraisalForm`, `useAppraisalData`).
+  - Encapsulate reusable logic, not just state.
+  - Return well-structured objects, not tuples when returning multiple values.
+
+- Hook composition:
+  - Compose complex hooks from simpler ones.
+  - Keep hooks focused: one hook for data fetching, another for form state, etc.
+  - Avoid "god hooks" that do everything.
+
+- Standard hooks:
+  - Use `useState` for local component state.
+  - Use `useEffect` sparingly; prefer declarative data fetching (React Query).
+  - Clean up subscriptions and timers in `useEffect` cleanup functions.
+  - Use `useMemo` and `useCallback` only when performance is actually needed.
+
+## React Router
+
+- Route organization:
+  - Keep route definitions in a central location (e.g., `App.tsx` or `routes.tsx`).
+  - Use `BrowserRouter` at the app root.
+  - Use `Routes` and `Route` components for declarative routing.
+
+- Navigation:
+  - Use `useNavigate` hook for programmatic navigation.
+  - Use `Link` component for declarative navigation.
+  - Avoid hardcoding URLs; use constants or route helpers.
+
+- Route protection:
+  - Implement authentication checks in layout components or route wrappers.
+  - Redirect unauthenticated users appropriately.
+  - Keep auth logic separate from route definitions.
+
+## State Management
+
+- Prefer local state (`useState`) for:
+  - UI-only state (modals, dropdowns, form inputs).
+  - Truly local component concerns.
+
+- Use React Query for:
+  - Server state and data fetching.
+  - Caching and synchronization.
+
+- Avoid:
+  - Prop drilling: use Context or state management library when needed.
+  - Mixing server state with local state unnecessarily.
+  - Storing derived state when it can be computed.
+
+## Clean Architecture Mapping
+
+- **Presentation layer** (`src/components`, `src/pages`):
+  - React components, hooks, UI logic.
+  - Should depend on application layer (use cases, services) via hooks.
+  - No direct database or infrastructure imports.
+
+- **Application layer** (`src/app`, `src/hooks`):
+  - Custom hooks that orchestrate business logic.
+  - Should call use cases or services, not infrastructure directly.
+
+- Components should:
+  - Call hooks/services, not raw API calls or database queries.
+  - Transform data for display, not for business logic.
+  - Handle user interactions and delegate to hooks/services.
+
+## Performance
+
+- Optimize only when needed:
+  - Use `React.memo` for expensive components that re-render frequently.
+  - Use `useMemo`/`useCallback` when profiling shows they're needed.
+  - Avoid premature optimization.
+
+- Code splitting:
+  - Use React.lazy for route-based code splitting.
+  - Split large components when bundle size becomes an issue.
+
+## Testing
+
+- Test components with React Testing Library:
+  - Test behavior, not implementation.
+  - Query by accessible roles and labels.
+  - Avoid testing internal state or implementation details.
+
+- Test hooks in isolation:
+  - Use `@testing-library/react-hooks` or render hooks in test components.
+  - Mock dependencies appropriately.

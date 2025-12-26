@@ -79,7 +79,6 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
       // Clone the model once
       model.current = originalModel.clone();
       setLoaded(true);
-      console.log(`[ENV] Model ${id} loaded from ${modelPath}`);
     }
   }, [originalModel, id, modelPath]);
   
@@ -125,60 +124,34 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
     // Skip if already positioned or not loaded
     if (positioned || !featureRef.current || !model.current || !loaded) return;
     
-    // Log this positioning event
-    console.log(`[ENV] Positioning ${id} (${type}) at (${x}, ?, ${z})`);
-    
     try {
       // Calculate bounding box to determine bottom of model
       const boundingBox = new THREE.Box3().setFromObject(model.current);
       const modelBottom = boundingBox.min.y;
       
-      // Debug log
-      console.log(`[ENV] Model ${id} bounding box: min=${JSON.stringify({x: boundingBox.min.x, y: boundingBox.min.y, z: boundingBox.min.z})}, max=${JSON.stringify({x: boundingBox.max.x, y: boundingBox.max.y, z: boundingBox.max.z})}`);
-      console.log(`[ENV] Model bottom: ${modelBottom}`);
-      
-      // Calculate the offset needed to place bottom exactly at grid level (0)
-      // For most models, we need to account for the actual dimensions to place on grid
-      
-      // Models might have different coordinate spaces, so we need a reliable way to
-      // determine the true bottom for proper alignment with the grid
-      
-      // Get model height
-      const modelHeight = boundingBox.max.y - boundingBox.min.y;
-      console.log(`[ENV] Model ${id} height: ${modelHeight}`);
-      
       // Calculate the offset needed to place bottom at grid level
-      const baselineOffset = -modelBottom; // This moves the model up so its bottom is at y=0
+      const baselineOffset = -modelBottom;
       
       // Calculate final Y position - we want bottom of model at exactly grid level
-      // For environment objects, we want them placed directly on the water/grid
-      const yPosition = 0; // The grid is at y=0
+      const yPosition = 0;
       
-      // Set the position once, but use a group to handle the vertical offset
+      // Set the position once
       featureRef.current.position.set(x, yPosition, z);
       
-      // Create a nested group for vertical adjustment within the positioned group
+      // Apply the vertical adjustment to the model itself
       if (model.current) {
-        // Apply the vertical adjustment to the model itself
         model.current.position.y = baselineOffset;
-        console.log(`[ENV] Applied vertical adjustment of ${baselineOffset} to model ${id}`);
       }
       
       // Set rotation
       featureRef.current.rotation.set(rotation[0], rotation[1], rotation[2]);
       
-      // Log success with detailed positioning information
-      console.log(`[ENV] Successfully positioned ${id} at (${x}, ${yPosition}, ${z}) with model offset ${baselineOffset}`);
-      
       // Mark as positioned
       setPositioned(true);
     } catch (error) {
-      console.error(`[ENV] Error positioning ${id}:`, error);
-      
       // Fallback positioning at grid level
       if (featureRef.current) {
         featureRef.current.position.set(x, 0, z);
-        console.log(`[ENV] Fallback positioned ${id} at (${x}, 0, ${z})`);
         setPositioned(true);
       }
     }
@@ -215,7 +188,6 @@ const Environment = ({ features }: { features: EnvironmentFeature[] }) => {
       // Toggle collision boundaries with "B" key (for development purposes only)
       if (event.key === 'b' || event.key === 'B') {
         setShowCollisionBoundaries(prev => !prev);
-        console.log(`[COLLISION DEBUG] ${!showCollisionBoundaries ? 'Showing' : 'Hiding'} collision boundaries`);
       }
     };
 
@@ -223,37 +195,16 @@ const Environment = ({ features }: { features: EnvironmentFeature[] }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showCollisionBoundaries]);
   
-  // Log once on mount and register features with collision system
+  // Register features with collision system on mount
   useEffect(() => {
-    console.log(`[ENV] Environment initialized with ${features.length} features`, features);
-    
     // Register features with the collision system
     environmentCollisions.setFeatures(features);
-    
-    // Add crash protection and debug info
-    if (!features || features.length === 0) {
-      console.warn('[ENV] No features provided to Environment component!');
-    } else {
-      // Check validity of features
-      features.forEach((feature, index) => {
-        console.log(`[ENV] Feature ${index}: ${feature.id} type=${feature.type} at x=${feature.x}, z=${feature.z}`);
-        
-        // Check for invalid rotation values
-        if (!feature.rotation || feature.rotation.length !== 3) {
-          console.error(`[ENV] Invalid rotation for feature ${feature.id}:`, feature.rotation);
-        }
-      });
-    }
   }, [features.length, features]);
   
   // Render nothing if no features
   if (!features || features.length === 0) {
-    console.warn('[ENV-RENDER] No features to render!');
     return null;
   }
-  
-  console.log('[ENV-RENDER] Rendering environment features');
-  console.log('[COLLISION DEBUG] Press B to toggle collision boundary visualization');
   
   return (
     <group name="environment">

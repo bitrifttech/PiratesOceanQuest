@@ -6,6 +6,62 @@ import { EnvironmentFeature, EnvironmentFeatureType } from "../../components/Env
  */
 export class EnvironmentGenerator {
   /**
+   * Checks if a position is safe for spawning (not inside any environment feature)
+   * Used for validating ship spawn positions
+   */
+  static isPositionSafe(
+    x: number,
+    z: number,
+    entityRadius: number,
+    features: EnvironmentFeature[]
+  ): boolean {
+    // Also check distance from player spawn (0, 0)
+    const playerProtectionRadius = 30;
+    const distanceToPlayerSpawn = Math.sqrt(x * x + z * z);
+    if (distanceToPlayerSpawn < playerProtectionRadius) {
+      return false; // Too close to player spawn
+    }
+
+    for (const feature of features) {
+      // Calculate distance to feature
+      const dx = x - feature.x;
+      const dz = z - feature.z;
+      const distance = Math.sqrt(dx * dx + dz * dz);
+      
+      // Get the radius of the feature based on its type
+      const featureRadius = this.getFeatureRadius(feature.type, feature.scale);
+      
+      // Check if entity would overlap with the feature (with some margin)
+      const safeDistance = featureRadius + entityRadius + 5; // 5 units margin
+      if (distance < safeDistance) {
+        return false; // Position is not safe
+      }
+    }
+    
+    return true; // Position is safe
+  }
+
+  /**
+   * Gets the collision radius for a feature type (mirrors CollisionService)
+   */
+  private static getFeatureRadius(type: EnvironmentFeatureType, scale: number): number {
+    let baseRadius = 0;
+    switch (type) {
+      case 'tropical': baseRadius = 10; break;
+      case 'mountain': baseRadius = 12.5; break;
+      case 'rocks': baseRadius = 5; break;
+      case 'shipwreck': baseRadius = 7.5; break;
+      case 'port': baseRadius = 9; break;
+      case 'lighthouse': baseRadius = 6; break;
+      case 'volcanic': baseRadius = 12; break;
+      case 'atoll': baseRadius = 10; break;
+      case 'ice': baseRadius = 9; break;
+      default: baseRadius = 7.5;
+    }
+    return baseRadius * scale;
+  }
+
+  /**
    * Checks if two features would overlap in the game world
    */
   static isOverlapping(

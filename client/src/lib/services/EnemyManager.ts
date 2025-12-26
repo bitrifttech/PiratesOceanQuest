@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { useEnemies } from "../stores/useEnemies";
 import { POSITION } from "../constants";
+import { collisionHandler } from "./CollisionHandler";
+import { EnvironmentGenerator } from "./EnvironmentGenerator";
 
 /**
  * Service for managing enemy ships in the game
@@ -13,6 +15,16 @@ export class EnemyManager {
   static spawnSingleEnemy(x: number, z: number): void {
     // Clear existing enemies to ensure we only have one
     useEnemies.getState().resetEnemies();
+    
+    // Get environment features to validate spawn position
+    const environmentFeatures = collisionHandler.getFeatures();
+    const enemyShipRadius = 12;
+    
+    // Check if the requested position is valid
+    if (!EnvironmentGenerator.isPositionSafe(x, z, enemyShipRadius, environmentFeatures)) {
+      console.log(`[ENEMY] Cannot spawn at (${x}, ${z}) - position is inside an environment feature`);
+      return;
+    }
     
     // Create a position and rotation
     // Use a Y position of 0 - the CustomModel component will handle the proper height offset
@@ -42,12 +54,37 @@ export class EnemyManager {
     // Clear existing enemies
     useEnemies.getState().resetEnemies();
     
-    // Position at a safe distance from where player starts (at origin)
-    // This puts the enemy ship 60 units away from the player instead of 15
-    // to give the player time to orient themselves before combat
-    // Use a constant height of 0 instead of POSITION.SHIP_HEIGHT because
-    // the CustomModel in EnemyShip will add the proper height offset
-    const testPosition = new THREE.Vector3(40, 0, -40);
+    // Get environment features to validate spawn position
+    const environmentFeatures = collisionHandler.getFeatures();
+    const enemyShipRadius = 12;
+    
+    // Try to find a valid spawn position
+    let testX = 40, testZ = -40;
+    let positionIsValid = EnvironmentGenerator.isPositionSafe(testX, testZ, enemyShipRadius, environmentFeatures);
+    
+    // If default position is inside an island, try to find an alternative
+    if (!positionIsValid) {
+      const angles = [0, Math.PI/4, Math.PI/2, Math.PI*3/4, Math.PI, -Math.PI*3/4, -Math.PI/2, -Math.PI/4];
+      const distance = 60;
+      
+      for (const angle of angles) {
+        testX = Math.sin(angle) * distance;
+        testZ = Math.cos(angle) * distance;
+        
+        if (EnvironmentGenerator.isPositionSafe(testX, testZ, enemyShipRadius, environmentFeatures)) {
+          positionIsValid = true;
+          break;
+        }
+      }
+    }
+    
+    // Only spawn if we found a valid position
+    if (!positionIsValid) {
+      console.log('[ENEMY] Could not find safe spawn position for test enemy');
+      return;
+    }
+    
+    const testPosition = new THREE.Vector3(testX, 0, testZ);
     
     // Set rotation to face general direction but not directly at player
     const testRotation = new THREE.Euler(0, Math.PI * 0.75, 0);
@@ -65,7 +102,7 @@ export class EnemyManager {
       }]
     });
     
-    console.log(`[ENEMY] Spawned test enemy ship at safe distance (40.0, 0.0, -40.0), with 10s peaceful start period`);
+    console.log(`[ENEMY] Spawned test enemy ship at (${testX.toFixed(1)}, 0, ${testZ.toFixed(1)}), with 10s peaceful start period`);
   }
   
   /**

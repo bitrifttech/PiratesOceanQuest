@@ -21,7 +21,11 @@ const Ocean: React.FC<OceanProps> = () => {
   
   // Caustic effect - light patterns that show below water
   const causticRef = useRef<THREE.Mesh>(null);
-  const segmentCount = 128;
+  const segmentCount = 64; // Reduced from 128 for better performance (4x fewer vertices)
+  
+  // Frame skip counter for wave animation optimization
+  const frameSkipCounter = useRef(0);
+  const frameSkipInterval = 2; // Only update waves every 2 frames
   
   // Create caustic material
   const causticMaterial = useMemo(() => {
@@ -165,77 +169,87 @@ const Ocean: React.FC<OceanProps> = () => {
     return geo;
   }, [oceanSize]);
   
-  // Animate the waves and caustics
+  // Animate the waves and caustics (with frame skipping for performance)
   useFrame((_, delta) => {
     if (!meshRef.current) return;
+    
+    // Frame skipping - only update wave vertices every N frames
+    frameSkipCounter.current++;
+    const shouldUpdateWaves = frameSkipCounter.current >= frameSkipInterval;
+    if (shouldUpdateWaves) {
+      frameSkipCounter.current = 0;
+    }
     
     // Get wave parameters from game state
     const { waveHeight, waveSpeed } = useGameState.getState();
     
     timeRef.current += delta * 0.5;
     
-    // Animate the wave displacement with complex wave patterns
-    const positionAttr = meshRef.current.geometry.attributes.position;
-    const vertices = positionAttr.array;
-    
-    // Different time frequencies for more natural motion
-    const time1 = timeRef.current * (waveSpeed * 0.8);
-    const time2 = timeRef.current * (waveSpeed * 1.2);
-    const time3 = timeRef.current * (waveSpeed * 0.5);
-    
-    for (let i = 0; i < vertices.length; i += 3) {
-      const x = vertices[i];
-      const z = vertices[i + 2];
+    // Only update wave geometry on certain frames for performance
+    if (shouldUpdateWaves) {
+      // Animate the wave displacement with complex wave patterns
+      const positionAttr = meshRef.current.geometry.attributes.position;
+      const vertices = positionAttr.array;
       
-      // Create complex wave effect with configurable height and multiple wave patterns
-      vertices[i + 1] = (
-        // Primary wave pattern
-        Math.sin(x / 20 + time1) * Math.cos(z / 20 + time1) * (waveHeight * 3) +
-        // Secondary faster waves
-        Math.sin(x / 10 + z / 15 + time2) * (waveHeight * 1.5) +
-        // Long period slow waves
-        Math.cos(x / 40 - z / 30 + time3) * (waveHeight * 2.5)
-      );
+      // Different time frequencies for more natural motion
+      const time1 = timeRef.current * (waveSpeed * 0.8);
+      const time2 = timeRef.current * (waveSpeed * 1.2);
+      const time3 = timeRef.current * (waveSpeed * 0.5);
       
-      // Apply distance-based amplitude damping for calmer water in center
-      const distanceFromCenter = Math.sqrt(x * x + z * z);
-      const distanceFactor = Math.min(1.0, distanceFromCenter / 100); 
-      vertices[i + 1] *= distanceFactor;
-    }
-    
-    positionAttr.needsUpdate = true;
-    
-    // Animate caustic effect if it exists
-    if (causticRef.current) {
-      const causticPosAttr = causticRef.current.geometry.attributes.position;
-      const causticVertices = causticPosAttr.array;
-      
-      // Faster time frequencies for caustics
-      const causticTime1 = timeRef.current * (waveSpeed * 1.5);
-      const causticTime2 = timeRef.current * (waveSpeed * 2.0);
-      
-      for (let i = 0; i < causticVertices.length; i += 3) {
-        const x = causticVertices[i];
-        const z = causticVertices[i + 2];
+      for (let i = 0; i < vertices.length; i += 3) {
+        const x = vertices[i];
+        const z = vertices[i + 2];
         
-        // Create animated caustic pattern
-        causticVertices[i + 1] = 
-          Math.sin(x / 4 + causticTime1) * Math.cos(z / 4 + causticTime1) * 0.2 +
-          Math.sin(x / 8 - z / 6 + causticTime2) * 0.15;
+        // Create complex wave effect with configurable height and multiple wave patterns
+        vertices[i + 1] = (
+          // Primary wave pattern
+          Math.sin(x / 20 + time1) * Math.cos(z / 20 + time1) * (waveHeight * 3) +
+          // Secondary faster waves
+          Math.sin(x / 10 + z / 15 + time2) * (waveHeight * 1.5) +
+          // Long period slow waves
+          Math.cos(x / 40 - z / 30 + time3) * (waveHeight * 2.5)
+        );
+        
+        // Apply distance-based amplitude damping for calmer water in center
+        const distanceFromCenter = Math.sqrt(x * x + z * z);
+        const distanceFactor = Math.min(1.0, distanceFromCenter / 100); 
+        vertices[i + 1] *= distanceFactor;
       }
       
-      causticPosAttr.needsUpdate = true;
+      positionAttr.needsUpdate = true;
       
-      // Update caustic material for pulsing effect
-      if (causticMaterial) {
-        causticMaterial.emissiveIntensity = 0.3 + Math.sin(timeRef.current * 2) * 0.15;
-        causticMaterial.opacity = 0.3 + Math.sin(timeRef.current * 1.5) * 0.1;
+      // Animate caustic effect if it exists
+      if (causticRef.current) {
+        const causticPosAttr = causticRef.current.geometry.attributes.position;
+        const causticVertices = causticPosAttr.array;
+        
+        // Faster time frequencies for caustics
+        const causticTime1 = timeRef.current * (waveSpeed * 1.5);
+        const causticTime2 = timeRef.current * (waveSpeed * 2.0);
+        
+        for (let i = 0; i < causticVertices.length; i += 3) {
+          const x = causticVertices[i];
+          const z = causticVertices[i + 2];
+          
+          // Create animated caustic pattern
+          causticVertices[i + 1] = 
+            Math.sin(x / 4 + causticTime1) * Math.cos(z / 4 + causticTime1) * 0.2 +
+            Math.sin(x / 8 - z / 6 + causticTime2) * 0.15;
+        }
+        
+        causticPosAttr.needsUpdate = true;
+        
+        // Update caustic material for pulsing effect
+        if (causticMaterial) {
+          causticMaterial.emissiveIntensity = 0.3 + Math.sin(timeRef.current * 2) * 0.15;
+          causticMaterial.opacity = 0.3 + Math.sin(timeRef.current * 1.5) * 0.1;
+        }
       }
     }
     
-    // Apply a subtle color shift based on time for a water shimmering effect
+    // Apply a subtle color shift based on time for a water shimmering effect (every frame is fine)
     if (materialRef.current) {
-      const baseColor = new THREE.Color("#1E65AA"); // Use the updated color
+      const baseColor = new THREE.Color("#1E65AA");
       const shimmerAmount = (Math.sin(timeRef.current * 0.2) * 0.1) + 0.95;
       materialRef.current.color.copy(baseColor).multiplyScalar(shimmerAmount);
     }

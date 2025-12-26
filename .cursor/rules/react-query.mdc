@@ -1,0 +1,116 @@
+---
+description: TanStack React Query-specific Clean Code rules
+alwaysApply: false
+---
+# TanStack React Query Rules
+
+These rules refine data fetching patterns using TanStack React Query (formerly React Query).
+
+## Query Client Setup
+
+- Configure `QueryClient` at the app root:
+  - Set appropriate defaults for `staleTime`, `cacheTime`, and `retry` logic.
+  - Use `QueryClientProvider` to wrap the application.
+  - Create a single `QueryClient` instance (singleton pattern).
+
+## Query Keys
+
+- Use **descriptive, hierarchical query keys**:
+  - Structure: `["resource", id, "sub-resource"]` (e.g., `["appraisals"]`, `["appraisal", id]`, `["documents", appraisalId]`).
+  - Keep keys consistent across the application.
+  - Use arrays, not strings, for composability.
+
+- Query key factories:
+  - Consider creating query key factories for type safety and consistency.
+  - Example: `appraisalKeys = { all: ["appraisals"], byId: (id) => ["appraisals", id] }`.
+
+## Custom Query Hooks
+
+- Encapsulate queries in **custom hooks**:
+  - Name hooks with `use` prefix (e.g., `useAppraisalData`, `useAppraisalsList`).
+  - Keep query logic in hooks, not directly in components.
+  - Return the query object directly or destructure common properties.
+
+- Query hooks should:
+  - Accept parameters for dynamic queries (e.g., `useAppraisalData(id: string)`).
+  - Use `enabled` option to conditionally fetch (e.g., `enabled: !!id`).
+  - Handle errors appropriately (don't swallow them silently).
+
+## Mutations
+
+- Encapsulate mutations in **custom hooks**:
+  - Name hooks with `use` prefix (e.g., `useAppraisalOperations`, `useCreateAppraisal`).
+  - Return mutation objects from hooks.
+
+- Mutation patterns:
+  - Use `onSuccess` to invalidate related queries and show success feedback.
+  - Use `onError` to handle errors and show error feedback.
+  - Use `queryClient.invalidateQueries` to refresh data after mutations.
+  - Consider optimistic updates for better UX when appropriate.
+
+- Mutation hooks should:
+  - Accept necessary parameters via `mutationFn`.
+  - Return typed mutation objects.
+  - Handle loading, error, and success states.
+
+## Data Transformation
+
+- Transform data **at the query level**, not in components:
+  - Map API responses to domain models in `queryFn`.
+  - Keep components clean of data transformation logic.
+  - Use transformers/adapters for complex transformations.
+
+- Example:
+  ```typescript
+  useQuery({
+    queryKey: ["appraisals"],
+    queryFn: async () => {
+      const data = await AppraisalService.fetchAppraisals();
+      return data.map(transformAppraisalData); // Transform here
+    },
+  });
+  ```
+
+## Error Handling
+
+- Handle errors appropriately:
+  - Don't silently swallow errors in `queryFn`.
+  - Use `onError` callbacks in mutations for user feedback.
+  - Consider global error handling via `QueryClient` defaults.
+
+- Error states:
+  - Components should check `isError` and `error` from queries.
+  - Display user-friendly error messages.
+  - Provide retry mechanisms when appropriate.
+
+## Clean Architecture Integration
+
+- Keep React Query in the **presentation/application layer**:
+  - Query hooks live in `src/hooks/` or `src/app/`.
+  - Query functions should call services/use cases, not infrastructure directly.
+  - Services handle the actual API/database calls.
+
+- Separation of concerns:
+  - React Query handles: caching, synchronization, loading states.
+  - Services handle: API calls, data transformation, business logic.
+  - Components handle: rendering, user interactions.
+
+## Performance
+
+- Use appropriate query options:
+  - `staleTime`: How long data is considered fresh.
+  - `cacheTime`: How long unused data stays in cache.
+  - `refetchOnWindowFocus`: Control automatic refetching.
+  - `refetchOnMount`: Control refetching on component mount.
+
+- Avoid over-fetching:
+  - Fetch only what's needed.
+  - Use `select` option to transform/select specific data from cache.
+  - Consider pagination for large datasets.
+
+## Testing
+
+- Mock React Query in tests:
+  - Use `@tanstack/react-query` test utilities or mock providers.
+  - Test query hooks in isolation.
+  - Test mutation success/error scenarios.

@@ -1,0 +1,86 @@
+---
+description: shadcn/ui component library usage rules
+alwaysApply: false
+---
+# shadcn/ui Rules
+
+These rules refine component library usage patterns with shadcn/ui (built on Radix UI).
+
+## Component Usage
+
+- Use shadcn/ui components from `src/components/ui/`:
+  - Import components directly, not from a package.
+  - Components are copied into your codebase, so customize as needed.
+  - Follow shadcn/ui patterns for component composition.
+
+- Component patterns:
+  - Use components as building blocks, compose them for complex UIs.
+  - Prefer shadcn/ui components over custom implementations when available.
+  - Customize components by editing files in `src/components/ui/`.
+
+## Styling
+
+- Use Tailwind CSS with shadcn/ui:
+  - Components are styled with Tailwind utility classes.
+  - Use `cn()` utility for conditional class merging.
+  - Follow Tailwind best practices for responsive design.
+
+- Theme integration:
+  - Use CSS variables for theming (defined in `globals.css`).
+  - Support light/dark mode via theme variables.
+  - Use semantic color tokens (`bg-background`, `text-foreground`, etc.).
+
+## Component Composition
+
+- Compose components appropriately:
+  - Use compound components pattern (e.g., `Dialog`, `DialogTrigger`, `DialogContent`).
+  - Follow shadcn/ui's component API patterns.
+  - Don't break component composition by overriding internal structure unnecessarily.
+
+- Customization:
+  - Extend components via props (e.g., `className`, variant props).
+  - Create wrapper components for common patterns.
+  - Avoid modifying core shadcn/ui components unless necessary.
+
+## Form Components
+
+- Use shadcn/ui Form components with React Hook Form:
+  - Use `<Form>`, `<FormField>`, `<FormItem>`, `<FormLabel>`, `<FormControl>`, `<FormMessage>`.
+  - Integrate with React Hook Form via `Controller` component.
+  - Follow form patterns from `react-hook-form.mdc` rules.
+
+## Accessibility
+
+- Leverage Radix UI's accessibility:
+  - shadcn/ui components are built on Radix UI primitives.
+  - Components include ARIA attributes and keyboard navigation.
+  - Don't remove accessibility features when customizing.
+
+- Additional accessibility:
+  - Add `aria-label` when needed for clarity.
+  - Ensure proper focus management.
+  - Test with screen readers when possible.
+
+## Component Organization
+
+- Keep UI components organized:
+  - Base shadcn/ui components in `src/components/ui/`.
+  - Domain-specific components in `src/components/[domain]/`.
+  - Compose domain components from UI components.
+
+- Naming:
+  - Use PascalCase for component names.
+  - Match file names to component names.
+  - Use descriptive names that indicate purpose.
+
+## Clean Architecture Integration
+
+- Treat shadcn/ui as **presentation layer**:
+  - Components are UI building blocks.
+  - Don't put business logic in UI components.
+  - Keep components focused on rendering and user interaction.
+
+- Component responsibilities:
+  - UI components: rendering, styling, user interactions.
+  - Domain components: compose UI components, call hooks/services.
+  - Keep clear separation between UI and business logic.

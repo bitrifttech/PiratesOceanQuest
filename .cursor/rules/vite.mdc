@@ -1,0 +1,91 @@
+---
+description: Vite + frontend-specific Clean Code and Clean Architecture rules
+alwaysApply: false
+---
+# Vite + TypeScript-Specific Rules
+
+These rules refine the global Clean Code / Clean Architecture rules for projects built with Vite (usually React + TypeScript, but applicable to other frontends).
+
+**Note**: For Lovable web app compatibility, see `lovable.mdc` for required files and entry points that must be preserved.
+
+## General Principles
+
+- Treat Vite as a **build and dev tool**, not an architectural decision:
+  - Keep business logic framework-agnostic where possible.
+  - Organize by domain/feature, not just by file type.
+
+Example structure:
+
+- `src/domain/` – entities, domain logic, pure TS.
+- `src/app/` – use cases, application state management (e.g., services, stores).
+- `src/ui/` – React/Vue/Svelte components and pages.
+- `src/infrastructure/` – HTTP clients, persistence, external services.
+
+## Components and UI
+
+- Keep components:
+  - Small, presentational where possible.
+  - Focused on UI concerns, not complex business logic.
+
+- Use **container/presentation separation**:
+  - Containers: wire up state, data fetching, event handlers.
+  - Presentational components: receive props, render UI.
+
+## State Management
+
+- Prefer simple state management first:
+  - Local component state for truly local concerns.
+  - Context or light state libraries (Zustand, Redux Toolkit, etc.) only where necessary.
+
+- Do not:
+  - Mix domain rules directly in React hooks or components.
+  - Store raw server responses everywhere; map them into domain models where helpful.
+
+## Data Fetching
+
+- For HTTP/API calls:
+  - Use isolated modules in `src/infrastructure/` (e.g., `apiClient.ts`, `userApi.ts`).
+  - Components call **use cases** or **services**, not raw `fetch`/`axios` everywhere.
+
+- Consider query libraries (React Query, etc.) but:
+  - Keep business rules in use cases, not in query configuration objects.
+
+## TypeScript Usage
+
+- Use strict TypeScript:
+  - `"strict": true` in `tsconfig.json`.
+  - No implicit `any`.
+
+- Define:
+  - Clear types for API responses, DTOs, and domain models.
+  - Props interfaces/types for components (`Props` or meaningful names).
+
+- Avoid:
+  - Overusing `any` or `unknown`.
+  - Passing untyped data through the app.
+
+## Testing
+
+- Use Vitest (or Jest) for unit tests:
+  - Test domain and application logic without the UI.
+  - Test critical components with React Testing Library (or equivalent).
+
+- For e2e:
+  - Use Playwright or Cypress for flows through the built app.
+
+## Clean Architecture Mapping in Vite Apps
+
+- **Domain** (`src/domain`):
+  - Pure TS: entities, value objects, rules.
+  - No React/Vue/Svelte or Vite imports.
+
+- **Application** (`src/app`):
+  - Use cases, services, state orchestration.
+  - Types for ports/repositories.
+
+- **Infrastructure** (`src/infrastructure`):
+  - HTTP implementations, local storage, environment-based config.
+
+- **UI** (`src/ui` or `src/components`, `src/pages`):
+  - Components, routing, UI/UX logic.
+  - Only depend on application/use-case APIs and simple DTOs.

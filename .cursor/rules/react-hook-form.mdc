@@ -1,0 +1,124 @@
+---
+description: React Hook Form + Zod validation rules
+alwaysApply: false
+---
+# React Hook Form + Zod Rules
+
+These rules refine form handling patterns using React Hook Form with Zod validation.
+
+## Form Setup
+
+- Use `useForm` hook with Zod resolver:
+  - Import `zodResolver` from `@hookform/resolvers/zod`.
+  - Define Zod schema for form validation.
+  - Pass schema to `useForm` via `resolver` option.
+
+- Form configuration:
+  - Set appropriate `defaultValues` for form initialization.
+  - Use `mode` option to control validation timing (`onChange`, `onBlur`, `onSubmit`).
+  - Prefer `onBlur` or `onSubmit` for better UX.
+
+## Zod Schemas
+
+- Define **clear, reusable schemas**:
+  - Create schemas in separate files (e.g., `schemas/appraisalSchema.ts`).
+  - Use descriptive schema names (e.g., `appraisalFormSchema`, `userProfileSchema`).
+  - Compose complex schemas from simpler ones using `.extend()`, `.merge()`, or `.pick()`.
+
+- Schema best practices:
+  - Use appropriate Zod validators (`.string()`, `.number()`, `.email()`, `.min()`, `.max()`, etc.).
+  - Provide clear error messages via `.refine()` or custom messages.
+  - Use `.optional()` or `.nullable()` appropriately.
+  - Consider `.transform()` for data normalization.
+
+- Type inference:
+  - Use `z.infer<typeof schema>` to derive TypeScript types from schemas.
+  - Export types alongside schemas for reuse.
+
+## Form Components
+
+- Use shadcn/ui Form components:
+  - Wrap form with `<Form>` (FormProvider).
+  - Use `<FormField>` with `Controller` for controlled inputs.
+  - Use `<FormItem>`, `<FormLabel>`, `<FormControl>`, `<FormDescription>`, `<FormMessage>` for structure.
+
+- Form field patterns:
+  - Use `Controller` component for complex inputs (selects, date pickers, etc.).
+  - Use `register()` for simple inputs when possible.
+  - Always connect form fields to form state via `name` prop.
+
+## Custom Form Hooks
+
+- Encapsulate form logic in **custom hooks**:
+  - Name hooks with `use` prefix (e.g., `useAppraisalForm`, `useBasicInfoForm`).
+  - Return form methods, state, and handlers from hooks.
+  - Keep form logic separate from component rendering.
+
+- Hook responsibilities:
+  - Initialize form with `useForm`.
+  - Handle form submission (`onSubmit` handler).
+  - Provide form state (errors, isValid, isDirty, etc.).
+  - Handle side effects (autosave, validation, etc.).
+
+## Form Submission
+
+- Handle submission properly:
+  - Use `handleSubmit` wrapper from `useForm`.
+  - Call mutation or service in `onSubmit` callback.
+  - Handle success/error states appropriately.
+  - Reset form or navigate on success when appropriate.
+
+- Validation:
+  - Let React Hook Form handle validation automatically.
+  - Use Zod schema for all validation rules.
+  - Avoid manual validation in components when possible.
+
+## Error Handling
+
+- Display errors appropriately:
+  - Use `<FormMessage>` component to show field errors.
+  - Access errors via `formState.errors`.
+  - Show form-level errors separately from field errors.
+
+- Error messages:
+  - Ensure Zod schemas provide clear, user-friendly error messages.
+  - Customize error messages via Zod's message parameter.
+  - Consider i18n for error messages if needed.
+
+## Form State Management
+
+- Use form state effectively:
+  - `isDirty`: Track if form has been modified.
+  - `isValid`: Check if form passes validation.
+  - `isSubmitting`: Show loading state during submission.
+  - `errors`: Access field and form errors.
+
+- Derived state:
+  - Compute derived values from form values when needed.
+  - Use `watch()` sparingly (can cause unnecessary re-renders).
+  - Prefer `getValues()` for one-time reads.
+
+## Clean Architecture Integration
+
+- Keep forms in the **presentation layer**:
+  - Form components live in `src/components/`.
+  - Form hooks live in `src/hooks/`.
+  - Schemas can live in `src/schemas/` or alongside related types.
+
+- Separation of concerns:
+  - Forms handle: user input, validation, UI state.
+  - Services/use cases handle: business logic, API calls.
+  - Schemas handle: validation rules, type definitions.
+
+- Forms should:
+  - Call services/use cases on submission, not make direct API calls.
+  - Transform form data to service DTOs when needed.
+  - Handle UI concerns (loading states, error display).
+
+## Testing
+
+- Test forms appropriately:
+  - Test validation rules via Zod schemas (unit tests).
+  - Test form submission flows (integration tests).
+  - Test error display and user feedback.
+  - Use React Testing Library for component tests.

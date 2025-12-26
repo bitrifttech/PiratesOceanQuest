@@ -4,6 +4,8 @@ import { usePlayer } from "./usePlayer";
 import { useGameState } from "./useGameState";
 import { useUpgrades } from "./useUpgrades";
 import { POSITION } from "../constants";
+import { collisionHandler } from "../services/CollisionHandler";
+import { EnvironmentGenerator } from "../services/EnvironmentGenerator";
 
 interface Enemy {
   id: string;
@@ -45,47 +47,66 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
     // Get player position to ensure enemies don't spawn too close
     const playerPosition = usePlayer.getState().position;
     
-    // Use standardized position values from constants.ts that we imported at the top
+    // Get environment features for spawn validation
+    const environmentFeatures = collisionHandler.getFeatures();
+    const enemyShipRadius = 12; // Ship collision radius
     
     for (let i = 0; i < count; i++) {
       // Generate a random position away from the player
-      let spawnX, spawnZ;
+      let spawnX = 0, spawnZ = 0;
+      let positionIsValid = false;
+      let attempts = 0;
+      const maxAttempts = 20;
       
-      if (playerPosition) {
-        // Ensure enemies spawn in view of the player, but at a safe distance
-        // Spawn between 70-90 units away from player in a random direction
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 70 + Math.random() * 20;
+      // Try to find a valid spawn position that doesn't overlap with islands
+      while (!positionIsValid && attempts < maxAttempts) {
+        attempts++;
         
-        spawnX = playerPosition.x + Math.sin(angle) * distance;
-        spawnZ = playerPosition.z + Math.cos(angle) * distance;
-      } else {
-        // Fallback if player position not available
-        spawnX = (Math.random() * 200) - 100;
-        spawnZ = (Math.random() * 200) - 100;
+        if (playerPosition) {
+          // Ensure enemies spawn in view of the player, but at a safe distance
+          // Spawn between 70-90 units away from player in a random direction
+          const angle = Math.random() * Math.PI * 2;
+          const distance = 70 + Math.random() * 20;
+          
+          spawnX = playerPosition.x + Math.sin(angle) * distance;
+          spawnZ = playerPosition.z + Math.cos(angle) * distance;
+        } else {
+          // Fallback if player position not available
+          spawnX = (Math.random() * 200) - 100;
+          spawnZ = (Math.random() * 200) - 100;
+        }
+        
+        // Check if this position is safe (not inside an island)
+        positionIsValid = EnvironmentGenerator.isPositionSafe(
+          spawnX, 
+          spawnZ, 
+          enemyShipRadius, 
+          environmentFeatures
+        );
       }
       
-      const enemy: Enemy = {
-        id: `enemy-${Date.now()}-${i}`,
-        // Use Y position of 0 - the CustomModel component will handle the proper height offset
-        position: new THREE.Vector3(spawnX, 0, spawnZ),
-        // Make enemy ships face the player initially
-        rotation: playerPosition ? 
-          new THREE.Euler(0, Math.atan2(playerPosition.x - spawnX, playerPosition.z - spawnZ), 0) :
-          new THREE.Euler(0, Math.random() * Math.PI * 2, 0),
-        velocity: new THREE.Vector3(0, 0, 0),
-        health: 100,
-        maxHealth: 100,
-      };
-      
-      newEnemies.push(enemy);
+      // Only spawn if we found a valid position
+      if (positionIsValid) {
+        const enemy: Enemy = {
+          id: `enemy-${Date.now()}-${i}`,
+          // Use Y position of 0 - the CustomModel component will handle the proper height offset
+          position: new THREE.Vector3(spawnX, 0, spawnZ),
+          // Make enemy ships face the player initially
+          rotation: playerPosition ? 
+            new THREE.Euler(0, Math.atan2(playerPosition.x - spawnX, playerPosition.z - spawnZ), 0) :
+            new THREE.Euler(0, Math.random() * Math.PI * 2, 0),
+          velocity: new THREE.Vector3(0, 0, 0),
+          health: 100,
+          maxHealth: 100,
+        };
+        
+        newEnemies.push(enemy);
+      }
     }
     
     set((state) => ({
       enemies: [...state.enemies, ...newEnemies],
     }));
-    
-    // Log removed to reduce console spam
   },
   
   // Move an enemy

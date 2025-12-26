@@ -525,36 +525,20 @@ const Ship = () => {
       const collidingFeature = currentPositionCollision || futurePositionCollision;
       
       if (collidingFeature) {
-        // Log detailed collision information
-        console.log(`[COLLISION] Ship colliding with ${collidingFeature.type} at (${collidingFeature.x.toFixed(1)}, ${collidingFeature.z.toFixed(1)})`);
-        
         if (currentPositionCollision) {
           // We're already inside a feature - use safe position calculation to push out
-          console.log(`[COLLISION] Already inside feature - calculating push vector`);
-          
-          // Get push-back position from collision handler
+          // Get push-back position from collision handler with increased safety margin
           newPosition = collisionHandler.calculateSafePosition(
             position,
             collidingFeature,
             shipRadius,
-            safetyMargin
+            safetyMargin + 10 // Increased safety margin to ensure we get out
           );
           
-          // Calculate bounce direction away from the feature center
-          const bounceDirection = new THREE.Vector3()
-            .subVectors(position, new THREE.Vector3(collidingFeature.x, 0, collidingFeature.z))
-            .normalize();
-          
-          // Apply a stronger bounce velocity in that direction
-          const bounceVelocity = bounceDirection.multiplyScalar(5.0);
-          setVelocity(bounceVelocity);
-          
-          console.log(`[COLLISION] Bounce applied with velocity (${bounceVelocity.x.toFixed(2)}, ${bounceVelocity.z.toFixed(2)})`);
+          // Stop all movement to prevent bouncing back into the collision
+          setVelocity(new THREE.Vector3(0, 0, 0));
         } else {
           // Future collision - calculate a safe position to prevent penetration
-          // Use a stronger response to prevent ships from passing through islands
-          console.log(`[COLLISION] Avoiding future collision`);
-          
           // Calculate a deflection position based on approach angle
           const toFeatureDirection = new THREE.Vector3()
             .subVectors(new THREE.Vector3(collidingFeature.x, 0, collidingFeature.z), position)
@@ -576,8 +560,6 @@ const Ship = () => {
           newPosition = position.clone().add(
             deflectionDirection.multiplyScalar(0.5) // Small push away from collision path
           );
-          
-          console.log(`[COLLISION] Deflected with new velocity (${deflectionVelocity.x.toFixed(2)}, ${deflectionVelocity.z.toFixed(2)})`);
         }
       } else {
         // This shouldn't happen, but just in case
@@ -590,25 +572,6 @@ const Ship = () => {
       futurePosition.z = Math.max(-500, Math.min(500, futurePosition.z));
       
       newPosition = futurePosition;
-    }
-    
-    // One last safety check - if we're somehow inside an obstacle after all calculations, push out
-    // This is a redundant check since we already handle currentCollision above,
-    // but it's a good safety measure in case the ship gets stuck
-    const finalCollisionCheck = collisionHandler.checkPointCollision(newPosition, shipRadius);
-    if (finalCollisionCheck) {
-      console.log(`[COLLISION] Emergency correction - ship still inside ${finalCollisionCheck.type}`);
-      
-      // Use the collision handler to calculate a safe position
-      newPosition = collisionHandler.calculateSafePosition(
-        newPosition,
-        finalCollisionCheck,
-        shipRadius,
-        safetyMargin
-      );
-      
-      // Stop all movement to prevent bouncing
-      setVelocity(new THREE.Vector3(0, 0, 0));
     }
     
     // Store the current Y position so we don't override the model's vertical positioning
