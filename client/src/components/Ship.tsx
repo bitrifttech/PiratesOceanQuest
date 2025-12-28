@@ -554,19 +554,31 @@ const Ship = () => {
               safetyMargin + 5
             );
             
+            // Ensure Y is preserved (ships stay on water surface)
+            newPosition.y = position.y;
+            
             // Stop all movement
             setVelocity(new THREE.Vector3(0, 0, 0));
           } else {
             // Future collision - deflect using push direction from BVH
             if (activeCollision.pushDirection) {
-              const deflectionVelocity = activeCollision.pushDirection
+              // Create horizontal-only push direction (zero out Y component)
+              const horizontalPushDirection = activeCollision.pushDirection.clone();
+              horizontalPushDirection.y = 0;
+              horizontalPushDirection.normalize();
+              
+              const deflectionVelocity = horizontalPushDirection
                 .clone()
                 .multiplyScalar(velocity.length() * 0.8);
+              // Ensure deflection velocity has no Y component
+              deflectionVelocity.y = 0;
               setVelocity(deflectionVelocity);
               
               newPosition = position.clone().add(
-                activeCollision.pushDirection.clone().multiplyScalar(0.5)
+                horizontalPushDirection.clone().multiplyScalar(0.5)
               );
+              // Ensure Y is preserved
+              newPosition.y = position.y;
             } else {
               newPosition = position.clone();
             }
@@ -579,6 +591,9 @@ const Ship = () => {
         const collidingFeature = currentPositionCollision || futurePositionCollision;
         
         if (collidingFeature) {
+          // Store original Y to preserve water level
+          const originalY = position.y;
+          
           if (currentPositionCollision) {
             newPosition = collisionHandler.calculateSafePosition(
               position,
@@ -586,6 +601,8 @@ const Ship = () => {
               shipRadius,
               safetyMargin + 10
             );
+            // Ensure Y is preserved
+            newPosition.y = originalY;
             setVelocity(new THREE.Vector3(0, 0, 0));
           } else {
             const toFeatureDirection = new THREE.Vector3()
@@ -605,6 +622,8 @@ const Ship = () => {
             newPosition = position.clone().add(
               deflectionDirection.multiplyScalar(0.5)
             );
+            // Ensure Y is preserved
+            newPosition.y = originalY;
           }
         } else {
           newPosition = position.clone();

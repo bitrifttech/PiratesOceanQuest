@@ -284,18 +284,29 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         const { enemyNearCollision } = useShipEvents.getState();
         enemyNearCollision(id);
         
+        // Store original Y before collision response
+        const originalY = currentPos.y;
+        
         // Update position to safe position
         currentPos.copy(safePosition);
         
         // Reverse direction slightly to move away from obstacle
+        // Zero out Y component to keep ships on water surface
         const bounceDirection = pushDirection 
           ? pushDirection.clone()
           : new THREE.Vector3().subVectors(currentPos, futurePosition).normalize();
+        bounceDirection.y = 0; // Keep bounce horizontal only
+        if (bounceDirection.length() > 0) {
+          bounceDirection.normalize();
+        }
         const bounceFactor = 0.5; // How much to bounce
         
-        // Apply bounce velocity
+        // Apply bounce velocity (horizontal only)
         const bounceVelocity = bounceDirection.multiplyScalar(movementSpeed * delta * 60 * bounceFactor);
         currentPos.add(bounceVelocity);
+        
+        // Restore Y position to keep ship on water surface
+        currentPos.y = originalY;
       } else {
         // No collision, apply normal velocity
         currentPos.add(velocity);
