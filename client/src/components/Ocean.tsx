@@ -38,6 +38,7 @@ const Ocean: React.FC<OceanProps> = () => {
   }, []);
 
   // Shader uniforms (exact from By The Lee Water3D.js lines 282-299)
+  // Modified: Changed waterColor to Caribbean blue instead of By The Lee's dark teal
   const uniforms = useMemo(
     () => ({
       time: { value: 0.0 },
@@ -46,8 +47,8 @@ const Ocean: React.FC<OceanProps> = () => {
       sunColor: { value: new THREE.Color(0xffffff) }, // White sun
       sunDirection: { value: new THREE.Vector3(0.70707, 0.70707, 0.0) }, // 45° angle
       eye: { value: new THREE.Vector3() },
-      waterColor: { value: new THREE.Color(0x001e0f) }, // Dark teal/green
-      reflectionColor: { value: new THREE.Color(0x909090) }, // Gray (simulates clouds)
+      waterColor: { value: new THREE.Color(0x0088cc) }, // Beautiful Caribbean blue
+      reflectionColor: { value: new THREE.Color(0xa0b8cc) }, // Light blue-gray (sky/clouds)
     }),
     [waterNormals]
   );
@@ -170,9 +171,10 @@ const Ocean: React.FC<OceanProps> = () => {
     
     const material = materialRef.current;
     
-    // Slow time update - EXACT from By The Lee (Water3D.js line 571)
-    // "Slow down the water a bit."
-    material.uniforms.time.value += 1.0 / 120.0;
+    // Slow time update - Modified from By The Lee to be even slower
+    // Original By The Lee: 1.0 / 120.0
+    // Caribbean version: 1.0 / 240.0 (half speed for calmer waters)
+    material.uniforms.time.value += 1.0 / 240.0;
     
     // Update camera position (Water3D.js lines 578-579)
     material.uniforms.eye.value.copy(state.camera.position);
