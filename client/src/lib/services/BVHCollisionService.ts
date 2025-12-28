@@ -15,6 +15,10 @@ import { EnvironmentFeatureType } from '../../components/Environment';
 // Import BVH setup to ensure prototypes are extended
 import '../bvh-setup';
 
+// Water level threshold - collisions below this Y coordinate are ignored
+// Ships only collide with above-water parts of islands
+const WATER_LEVEL = 0;
+
 export interface BVHCollisionResult {
   isColliding: boolean;
   featureId?: string;
@@ -105,6 +109,12 @@ export class BVHCollisionService {
         // Transform closest point back to world space
         closestPoint.applyMatrix4(meshWorldMatrix);
         
+        // WATER LEVEL CHECK: Ignore collisions with underwater parts of meshes
+        // Ships should only collide with above-water geometry
+        if (closestPoint.y < WATER_LEVEL) {
+          return { isColliding: false };
+        }
+        
         // Calculate push direction (from mesh surface to sphere center)
         const pushDirection = new THREE.Vector3()
           .subVectors(worldSphere.center, closestPoint)
@@ -128,6 +138,14 @@ export class BVHCollisionService {
       geometry.computeBoundingBox();
       if (geometry.boundingBox) {
         const worldBox = geometry.boundingBox.clone().applyMatrix4(meshWorldMatrix);
+        
+        // WATER LEVEL CHECK: Only consider above-water portion of the bounding box
+        // Clamp the box minimum Y to water level
+        if (worldBox.max.y < WATER_LEVEL) {
+          // Entire box is underwater, no collision possible
+          return { isColliding: false };
+        }
+        worldBox.min.y = Math.max(worldBox.min.y, WATER_LEVEL);
         
         // Expand box by sphere radius for collision check
         const expandedBox = worldBox.clone();

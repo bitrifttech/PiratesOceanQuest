@@ -66,6 +66,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   /**
    * Check for obstacles in a given direction using collision detection
    * Returns distance to obstacle if found, or Infinity if clear
+   * Only considers above-water obstacles (y > 0)
    */
   const checkObstacleInDirection = useCallback((
     origin: THREE.Vector3,
@@ -75,6 +76,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
     // Check multiple points along the ray for collisions
     const steps = 5;
     const stepSize = maxDistance / steps;
+    const WATER_LEVEL = 0; // Only detect obstacles above water
     
     for (let i = 1; i <= steps; i++) {
       const checkPos = origin.clone().add(
@@ -87,17 +89,20 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
           checkPos, 
           SHIP_PHYSICS.ENEMY_COLLISION_RADIUS
         );
+        // BVHCollisionService already filters underwater collisions
         if (collision.isColliding) {
           return { distance: stepSize * i, hit: true };
         }
       } else {
         // Check against collision handler features
+        // Only consider features that have above-water portions
         const features = collisionHandler.getFeatures();
         for (const feature of features) {
           const dx = checkPos.x - feature.x;
           const dz = checkPos.z - feature.z;
           const distSq = dx * dx + dz * dz;
-          const featureRadius = (feature.scale || 1) * 8; // Approximate feature radius
+          // Use smaller radius for above-water collision to account for underwater portions
+          const featureRadius = (feature.scale || 1) * 5; // Reduced from 8 for above-water only
           const combinedRadius = featureRadius + SHIP_PHYSICS.ENEMY_COLLISION_RADIUS;
           if (distSq < combinedRadius * combinedRadius) {
             return { distance: stepSize * i, hit: true };
