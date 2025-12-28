@@ -501,8 +501,9 @@ const Ship = () => {
     setVelocity(newVelocity);
     
     // BALANCED COLLISION HANDLING: Prevent ships from passing through islands but keep reasonable boundaries
-    const shipRadius = 8; // Ship collision radius for BVH mesh-level detection
-    const safetyMargin = 2; // Safety margin for collision response
+    // Ship radius matches visual ship size at scale 4.5 (approximately 3-4 units wide)
+    const shipRadius = 4; // Ship collision radius for BVH mesh-level detection
+    const safetyMargin = 1; // Safety margin for collision response
     
     // Calculate proposed new position with velocity
     const futurePosition = position.clone().add(

@@ -115,12 +115,13 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
     const distanceSqToPlayer = dx * dx + dz * dz;
     const distanceToPlayer = Math.sqrt(distanceSqToPlayer);
     
-    // Ship collision parameters - balanced values
-    const enemyShipRadius = 12; // Collision radius matching player ship's balanced settings
-    const playerShipRadius = 12; // Match the player ship's collision radius
+    // Ship collision parameters - adjusted to match visual ship size
+    // Ships at scale 4.5 are approximately 3-4 units wide visually
+    const enemyShipRadius = 4; // Smaller collision radius to match visual ship size
+    const playerShipRadius = 4; // Match the player ship's collision radius
     const collisionDamage = 10; // Damage on collision
-    const collisionRadiusSum = enemyShipRadius + playerShipRadius;
-    const collisionRadiusSumSq = collisionRadiusSum * collisionRadiusSum;
+    const collisionRadiusSum = enemyShipRadius + playerShipRadius; // = 8 units total
+    const collisionRadiusSumSq = collisionRadiusSum * collisionRadiusSum; // = 64
     
     // Track collision state and add cooldown for damage
     if (collisionCooldown.current > 0) {
@@ -128,7 +129,9 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
     }
     
     // Proximity alert - using squared distances for better performance
-    const collisionWarningDistanceSq = collisionRadiusSum * 2.25; // 1.5^2
+    // Warning at 1.5x collision distance: (collisionRadiusSum * 1.5)^2
+    const warningDistance = collisionRadiusSum * 1.5; // = 12 units
+    const collisionWarningDistanceSq = warningDistance * warningDistance; // = 144
     const inCollisionDanger = distanceSqToPlayer < collisionWarningDistanceSq;
     
     // Check for actual collision with player ship using squared distance
@@ -236,8 +239,8 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       // Calculate the future position to check for collisions
       const futurePosition = currentPos.clone().add(velocity);
       
-      // Ship collision radius - should match the visual size
-      const shipRadius = 8;
+      // Ship collision radius - matches visual ship size at scale 4.5 (approximately 3-4 units wide)
+      const shipRadius = 4;
       
       // Use BVH for precise mesh-level collision detection if meshes are registered
       const useBVH = MeshCollisionRegistry.isInitialized();
@@ -256,7 +259,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
             currentPos,
             collision,
             shipRadius,
-            2 // safetyMargin
+            1 // safetyMargin - smaller for tighter collision response
           );
           pushDirection = collision.pushDirection || null;
         }

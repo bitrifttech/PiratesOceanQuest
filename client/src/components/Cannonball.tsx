@@ -8,6 +8,8 @@ import { usePlayer } from "../lib/stores/usePlayer";
 import { usePowerUps } from "../lib/stores/usePowerUps";
 import { useGameState } from "../lib/stores/useGameState";
 import { environmentCollisions } from "../lib/collision";
+import { MeshCollisionRegistry } from "../lib/services/MeshCollisionRegistry";
+import { BVHCollisionService } from "../lib/services/BVHCollisionService";
 import ExplosionEffect from "./ExplosionEffect";
 import WaterSplashEffect from "./WaterSplashEffect";
 import ShipExplosionEffect from "./ShipExplosionEffect";
@@ -120,17 +122,36 @@ const Cannonball = ({
     const cannonballPosition = ballRef.current.position.clone();
     
     // Check for collisions with environmental features first
-    // Fixed hit radius based on cannonball size
-    const hitRadius = 2.0; // Units
+    // Cannonball collision radius - small for precise hits
+    const cannonballRadius = 0.5; // Small radius for the cannonball itself
     
-    // Check for environment collisions
-    const environmentCollision = environmentCollisions.checkPointCollision(cannonballPosition, hitRadius);
-    if (environmentCollision && !hitDetected.current) {
+    // Use BVH for precise mesh-level collision if available
+    const useBVH = MeshCollisionRegistry.isInitialized();
+    let hasEnvironmentCollision = false;
+    let collisionType = '';
+    
+    if (useBVH) {
+      // Use BVH mesh-level collision for accurate environment hits
+      const bvhCollision = BVHCollisionService.checkSphereCollision(cannonballPosition, cannonballRadius);
+      if (bvhCollision.isColliding) {
+        hasEnvironmentCollision = true;
+        collisionType = bvhCollision.featureType || 'environment';
+      }
+    } else {
+      // Fallback to legacy 2D circle collision
+      const legacyCollision = environmentCollisions.checkPointCollision(cannonballPosition, cannonballRadius);
+      if (legacyCollision) {
+        hasEnvironmentCollision = true;
+        collisionType = legacyCollision.type;
+      }
+    }
+    
+    if (hasEnvironmentCollision && !hitDetected.current) {
       // Mark as hit to prevent multiple hits
       hitDetected.current = true;
       
       // Log collision with environment
-      console.log(`[CANNONBALL] Hit ${environmentCollision.type} at (${environmentCollision.x}, ${environmentCollision.z})`);
+      console.log(`[CANNONBALL] Hit ${collisionType} at (${cannonballPosition.x.toFixed(1)}, ${cannonballPosition.z.toFixed(1)})`);
       
       // Create explosion effect at the impact point
       setEffectPosition(cannonballPosition.clone());
@@ -156,10 +177,10 @@ const Cannonball = ({
       // Calculate distance to enemy
       const distance = cannonballPosition.distanceTo(enemy.position);
       
-      // Enemy ship collision radius - should match the visual/physics size of the ship
-      // Using a smaller hit radius to require more accurate shots
-      const enemyShipHitRadius = 6; // Radius at which cannonball hits the ship
-      const effectiveHitRadius = hitRadius + enemyShipHitRadius; // Combined collision radius
+      // Enemy ship collision radius - matches visual ship size at scale 4.5
+      // Ship is approximately 3-4 units wide, so we use 3 for the hit radius
+      const enemyShipHitRadius = 3; // Radius at which cannonball hits the ship
+      const effectiveHitRadius = cannonballRadius + enemyShipHitRadius; // = 3.5 units combined
       
       // If distance is less than effective hit radius, we have a hit
       if (distance < effectiveHitRadius && !hitDetected.current) {
@@ -221,14 +242,14 @@ const Cannonball = ({
     
     if (playerPosition) {
       // Check if cannonball origin is far from player (enemy cannonball)
-      const isEnemyCannonball = localPosition.distanceTo(playerPosition) > 15;
+      const isEnemyCannonball = localPosition.distanceTo(playerPosition) > 10;
       
       if (isEnemyCannonball) {
         // Calculate distance to player
         const distanceToPlayer = cannonballPosition.distanceTo(playerPosition);
         
-        // Set slightly larger hit radius for player to make it easier to hit
-        const playerHitRadius = 8;
+        // Player ship collision radius - matches visual ship size at scale 4.5
+        const playerHitRadius = cannonballRadius + 3; // = 3.5 units total
         
         // If distance is less than hit radius, we have a hit
         if (distanceToPlayer < playerHitRadius && !hitDetected.current) {
