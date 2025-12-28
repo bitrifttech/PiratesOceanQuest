@@ -17,7 +17,8 @@ import '../bvh-setup';
 
 // Water level threshold - collisions below this Y coordinate are ignored
 // Ships only collide with above-water parts of islands
-const WATER_LEVEL = 0;
+// We use a slight offset above 0 to ensure we don't collide with shoreline/underwater geometry
+const WATER_LEVEL = 0.5; // Slightly above water surface
 
 export interface BVHCollisionResult {
   isColliding: boolean;

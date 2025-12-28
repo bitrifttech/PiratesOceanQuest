@@ -184,28 +184,32 @@ export const ENVIRONMENT = {
   WORLD_RADIUS: 400,
 
   // Collision margin added to all feature collision checks
-  COLLISION_MARGIN: 2,
+  // Reduced since we now only consider above-water portions
+  COLLISION_MARGIN: 1,
 } as const;
 
 // =============================================================================
 // FEATURE COLLISION RADII
 // Base collision radii for each environment feature type.
 // These are multiplied by the feature's scale to get the actual collision radius.
+// IMPORTANT: These values represent only the ABOVE-WATER portion of islands.
+// The underwater portions have been subtracted to prevent ships from colliding
+// with submerged geometry.
 // =============================================================================
 export const FEATURE_COLLISION_RADII: Record<string, number> = {
-  tropical: 6,
-  mountain: 8,
-  rocks: 4,
-  shipwreck: 5,
-  port: 5,
-  lighthouse: 4,
-  volcanic: 7,
-  atoll: 6,
-  ice: 5,
+  tropical: 3,    // Reduced from 6 - much of the base is underwater
+  mountain: 4,    // Reduced from 8 - large underwater base
+  rocks: 2,       // Reduced from 4 - rocks are partially submerged
+  shipwreck: 2,   // Reduced from 5 - mostly underwater
+  port: 4,        // Reduced from 5 - docks extend into water
+  lighthouse: 3,  // Reduced from 4 - sits on rocks
+  volcanic: 4,    // Reduced from 7 - large underwater base
+  atoll: 3,       // Reduced from 6 - atoll is mostly at water level
+  ice: 3,         // Reduced from 5 - ice extends underwater
 } as const;
 
 // Default collision radius for unknown feature types
-export const DEFAULT_FEATURE_RADIUS = 5;
+export const DEFAULT_FEATURE_RADIUS = 3;
 
 // =============================================================================
 // VISUAL / PERFORMANCE
