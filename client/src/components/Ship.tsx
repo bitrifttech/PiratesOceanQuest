@@ -13,6 +13,8 @@ import { checkCollision } from "../lib/helpers/collisionDetection";
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC } from "../lib/constants";
 import { collisionHandler } from "../lib/services/CollisionHandler";
 import { ModelService } from "../lib/services/ModelService";
+import { BVHCollisionService } from "../lib/services/BVHCollisionService";
+import { MeshCollisionRegistry } from "../lib/services/MeshCollisionRegistry";
 import Cannon from "./Cannon";
 import Cannonball from "./Cannonball";
 import CannonFireEffect from "./CannonFireEffect";
@@ -499,71 +501,113 @@ const Ship = () => {
     setVelocity(newVelocity);
     
     // BALANCED COLLISION HANDLING: Prevent ships from passing through islands but keep reasonable boundaries
-    const shipRadius = 12; // Good collision radius for reliable detection without being excessive
-    const safetyMargin = 5; // Reasonable buffer zone to ensure ships don't pass through islands
+    const shipRadius = 8; // Ship collision radius for BVH mesh-level detection
+    const safetyMargin = 2; // Safety margin for collision response
     
     // Calculate proposed new position with velocity
     const futurePosition = position.clone().add(
       newVelocity.clone().multiplyScalar(delta)
     );
     
-    // Check if current position is already inside a feature (in case we somehow got inside)
-    const currentPositionCollision = collisionHandler.checkPointCollision(position, shipRadius);
+    // Use BVH for precise mesh-level collision detection if meshes are registered
+    const useBVH = MeshCollisionRegistry.isInitialized();
     
-    // Also check if future position would result in a collision
-    const futurePositionCollision = collisionHandler.checkPointCollision(futurePosition, shipRadius + safetyMargin);
+    let currentCollision: ReturnType<typeof BVHCollisionService.checkSphereCollision> | null = null;
+    let futureCollision: ReturnType<typeof BVHCollisionService.checkSphereCollision> | null = null;
+    let currentPositionCollision: ReturnType<typeof collisionHandler.checkPointCollision> | null = null;
+    let futurePositionCollision: ReturnType<typeof collisionHandler.checkPointCollision> | null = null;
+    
+    if (useBVH) {
+      // Use BVH mesh-level collision detection
+      currentCollision = BVHCollisionService.checkSphereCollision(position, shipRadius);
+      futureCollision = BVHCollisionService.checkSphereCollision(futurePosition, shipRadius + safetyMargin);
+    } else {
+      // Fallback to 2D circle-based collision (legacy)
+      currentPositionCollision = collisionHandler.checkPointCollision(position, shipRadius);
+      futurePositionCollision = collisionHandler.checkPointCollision(futurePosition, shipRadius + safetyMargin);
+    }
+    
+    // Determine if collision is happening
+    const hasCurrentCollision = useBVH ? currentCollision?.isColliding : !!currentPositionCollision;
+    const hasFutureCollision = useBVH ? futureCollision?.isColliding : !!futurePositionCollision;
     
     // If we detect a future collision, trigger crew response now
-    if (futurePositionCollision && !currentPositionCollision) {
+    if (hasFutureCollision && !hasCurrentCollision) {
       playerNearCollision();
     }
     
     // Handle collision response
     let newPosition;
-    if (currentPositionCollision || futurePositionCollision) {
-      // Get the feature we're colliding with (prioritize current collision)
-      const collidingFeature = currentPositionCollision || futurePositionCollision;
-      
-      if (collidingFeature) {
-        if (currentPositionCollision) {
-          // We're already inside a feature - use safe position calculation to push out
-          // Get push-back position from collision handler with increased safety margin
-          newPosition = collisionHandler.calculateSafePosition(
-            position,
-            collidingFeature,
-            shipRadius,
-            safetyMargin + 10 // Increased safety margin to ensure we get out
-          );
-          
-          // Stop all movement to prevent bouncing back into the collision
-          setVelocity(new THREE.Vector3(0, 0, 0));
-        } else {
-          // Future collision - calculate a safe position to prevent penetration
-          // Calculate a deflection position based on approach angle
-          const toFeatureDirection = new THREE.Vector3()
-            .subVectors(new THREE.Vector3(collidingFeature.x, 0, collidingFeature.z), position)
-            .normalize();
+    if (hasCurrentCollision || hasFutureCollision) {
+      if (useBVH) {
+        // BVH collision handling with proper push-back
+        const activeCollision = currentCollision?.isColliding ? currentCollision : futureCollision;
+        
+        if (activeCollision?.isColliding) {
+          if (currentCollision?.isColliding) {
+            // Already inside a feature - use BVH safe position calculation to push out
+            newPosition = BVHCollisionService.calculateSafePosition(
+              position,
+              activeCollision,
+              shipRadius,
+              safetyMargin + 5
+            );
             
-          // Get deflection angle (perpendicular to approach)
-          const deflectionAngle = Math.atan2(toFeatureDirection.x, toFeatureDirection.z) + Math.PI/2;
-          const deflectionDirection = new THREE.Vector3(
-            Math.sin(deflectionAngle),
-            0,
-            Math.cos(deflectionAngle)
-          ).normalize();
-          
-          // Apply deflection to velocity instead of zeroing it out
-          const deflectionVelocity = deflectionDirection.multiplyScalar(velocity.length() * 0.8);
-          setVelocity(deflectionVelocity);
-          
-          // Stay at current position but slightly away from the feature
-          newPosition = position.clone().add(
-            deflectionDirection.multiplyScalar(0.5) // Small push away from collision path
-          );
+            // Stop all movement
+            setVelocity(new THREE.Vector3(0, 0, 0));
+          } else {
+            // Future collision - deflect using push direction from BVH
+            if (activeCollision.pushDirection) {
+              const deflectionVelocity = activeCollision.pushDirection
+                .clone()
+                .multiplyScalar(velocity.length() * 0.8);
+              setVelocity(deflectionVelocity);
+              
+              newPosition = position.clone().add(
+                activeCollision.pushDirection.clone().multiplyScalar(0.5)
+              );
+            } else {
+              newPosition = position.clone();
+            }
+          }
+        } else {
+          newPosition = position.clone();
         }
       } else {
-        // This shouldn't happen, but just in case
-        newPosition = position.clone();
+        // Legacy collision handling (circle-based)
+        const collidingFeature = currentPositionCollision || futurePositionCollision;
+        
+        if (collidingFeature) {
+          if (currentPositionCollision) {
+            newPosition = collisionHandler.calculateSafePosition(
+              position,
+              collidingFeature,
+              shipRadius,
+              safetyMargin + 10
+            );
+            setVelocity(new THREE.Vector3(0, 0, 0));
+          } else {
+            const toFeatureDirection = new THREE.Vector3()
+              .subVectors(new THREE.Vector3(collidingFeature.x, 0, collidingFeature.z), position)
+              .normalize();
+              
+            const deflectionAngle = Math.atan2(toFeatureDirection.x, toFeatureDirection.z) + Math.PI/2;
+            const deflectionDirection = new THREE.Vector3(
+              Math.sin(deflectionAngle),
+              0,
+              Math.cos(deflectionAngle)
+            ).normalize();
+            
+            const deflectionVelocity = deflectionDirection.multiplyScalar(velocity.length() * 0.8);
+            setVelocity(deflectionVelocity);
+            
+            newPosition = position.clone().add(
+              deflectionDirection.multiplyScalar(0.5)
+            );
+          }
+        } else {
+          newPosition = position.clone();
+        }
       }
     } else {
       // No collision at the future position - allow the ship to move

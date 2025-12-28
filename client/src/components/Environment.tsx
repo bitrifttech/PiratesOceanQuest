@@ -1,10 +1,15 @@
 import { useRef, useState, useEffect, memo } from "react";
 import { useGLTF } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { GLTF } from "three-stdlib";
 import { SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
 import { environmentCollisions } from "../lib/collision";
 import CollisionBoundaryVisualizer from "./CollisionBoundaryVisualizer";
+import { MeshCollisionRegistry } from "../lib/services/MeshCollisionRegistry";
+import { BVHCollisionService } from "../lib/services/BVHCollisionService";
+// Import BVH setup to extend Three.js prototypes
+import "../lib/bvh-setup";
 
 // Preload all models once at module level
 useGLTF.preload('/models/tropical_island.glb');
@@ -82,6 +87,13 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
     }
   }, [originalModel, id, modelPath]);
   
+  // Cleanup: unregister mesh from collision registry when component unmounts
+  useEffect(() => {
+    return () => {
+      MeshCollisionRegistry.unregisterMesh(id);
+    };
+  }, [id]);
+  
   // Calculate base scale based on type
   const getBaseScale = () => {
     switch (type) {
@@ -119,6 +131,11 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
   // Final scaling factor
   const finalScale = scale * getBaseScale() * getModelAdjustment();
   
+  // Track if BVH has been registered
+  const bvhRegistered = useRef(false);
+  // Reference to the scaled group for proper BVH registration
+  const scaledGroupRef = useRef<THREE.Group>(null);
+  
   // Position the model ONCE only when first loaded
   useEffect(() => {
     // Skip if already positioned or not loaded
@@ -146,7 +163,7 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
       // Set rotation
       featureRef.current.rotation.set(rotation[0], rotation[1], rotation[2]);
       
-      // Mark as positioned
+      // Mark as positioned - BVH will be registered in useFrame after transforms are applied
       setPositioned(true);
     } catch (error) {
       // Fallback positioning at grid level
@@ -157,11 +174,52 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
     }
   }, [id, type, x, z, rotation, loaded, positioned]);
   
+  // Register BVH after the mesh is in the scene with proper transforms
+  // This needs to happen after render when the scaled group has been created
+  useFrame(() => {
+    // Only register once, after positioned and not yet registered
+    if (!positioned || bvhRegistered.current || !model.current || !scaledGroupRef.current) return;
+    
+    // Ensure the scene graph is updated
+    scaledGroupRef.current.updateMatrixWorld(true);
+    
+    // Find the first mesh in the loaded model to use for collision
+    let primaryMesh: THREE.Mesh | null = null;
+    model.current.traverse((child) => {
+      if (child instanceof THREE.Mesh && !primaryMesh) {
+        primaryMesh = child;
+      }
+    });
+    
+    if (primaryMesh && featureRef.current) {
+      // Update the mesh's world matrix to include scale from parent groups
+      primaryMesh.updateMatrixWorld(true);
+      
+      // Compute BVH for the mesh geometry
+      BVHCollisionService.computeBVH(primaryMesh.geometry);
+      
+      // Register the mesh with the collision registry
+      // The mesh now has the correct world matrix including scale
+      MeshCollisionRegistry.registerMesh(
+        id,
+        type,
+        primaryMesh,
+        featureRef.current
+      );
+      
+      // Update BVH status in registry
+      MeshCollisionRegistry.updateBVHStatus(id, BVHCollisionService.hasBVH(primaryMesh.geometry));
+      
+      // Mark as registered
+      bvhRegistered.current = true;
+    }
+  });
+  
   // Return the model within a group
   return (
     <group ref={featureRef}>
       {loaded && model.current && (
-        <group scale={[finalScale, finalScale, finalScale]}>
+        <group ref={scaledGroupRef} scale={[finalScale, finalScale, finalScale]}>
           <primitive 
             object={model.current} 
             castShadow 

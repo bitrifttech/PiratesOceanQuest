@@ -10,6 +10,8 @@ import Cannonball from "./Cannonball";
 import CrewSystem from "./CrewSystem";
 import { POSITION, SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
 import { collisionHandler } from "../lib/services/CollisionHandler";
+import { BVHCollisionService } from "../lib/services/BVHCollisionService";
+import { MeshCollisionRegistry } from "../lib/services/MeshCollisionRegistry";
 
 interface EnemyShipProps {
   id: string;
@@ -235,28 +237,57 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       const futurePosition = currentPos.clone().add(velocity);
       
       // Ship collision radius - should match the visual size
-      const shipRadius = 12;
+      const shipRadius = 8;
       
-      // Check for collisions with environmental features
-      // First check the potential new position
-      const collision = collisionHandler.handleCollision(
-        futurePosition, 
-        shipRadius, 
-        false, // Not player ship
-        id // Enemy ID for crew reactions
-      );
+      // Use BVH for precise mesh-level collision detection if meshes are registered
+      const useBVH = MeshCollisionRegistry.isInitialized();
       
-      if (collision) {
-        // We have a collision, use the safe position provided by collision handler
+      let hasCollision = false;
+      let safePosition: THREE.Vector3 | null = null;
+      let pushDirection: THREE.Vector3 | null = null;
+      
+      if (useBVH) {
+        // Use BVH mesh-level collision detection
+        const collision = BVHCollisionService.checkSphereCollision(futurePosition, shipRadius);
+        
+        if (collision.isColliding) {
+          hasCollision = true;
+          safePosition = BVHCollisionService.calculateSafePosition(
+            currentPos,
+            collision,
+            shipRadius,
+            2 // safetyMargin
+          );
+          pushDirection = collision.pushDirection || null;
+        }
+      } else {
+        // Fallback to legacy collision handler
+        const collision = collisionHandler.handleCollision(
+          futurePosition, 
+          shipRadius, 
+          false, // Not player ship
+          id // Enemy ID for crew reactions
+        );
+        
+        if (collision) {
+          hasCollision = true;
+          safePosition = collision;
+        }
+      }
+      
+      if (hasCollision && safePosition) {
+        // We have a collision, use the safe position
         // Trigger crew reaction for near collision
         const { enemyNearCollision } = useShipEvents.getState();
         enemyNearCollision(id);
         
         // Update position to safe position
-        currentPos.copy(collision);
+        currentPos.copy(safePosition);
         
         // Reverse direction slightly to move away from obstacle
-        const bounceDirection = new THREE.Vector3().subVectors(currentPos, futurePosition).normalize();
+        const bounceDirection = pushDirection 
+          ? pushDirection.clone()
+          : new THREE.Vector3().subVectors(currentPos, futurePosition).normalize();
         const bounceFactor = 0.5; // How much to bounce
         
         // Apply bounce velocity

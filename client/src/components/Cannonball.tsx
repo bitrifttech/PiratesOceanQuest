@@ -156,8 +156,13 @@ const Cannonball = ({
       // Calculate distance to enemy
       const distance = cannonballPosition.distanceTo(enemy.position);
       
-      // If distance is less than hit radius, we have a hit
-      if (distance < hitRadius && !hitDetected.current) {
+      // Enemy ship collision radius - should match the visual/physics size of the ship
+      // Using a smaller hit radius to require more accurate shots
+      const enemyShipHitRadius = 6; // Radius at which cannonball hits the ship
+      const effectiveHitRadius = hitRadius + enemyShipHitRadius; // Combined collision radius
+      
+      // If distance is less than effective hit radius, we have a hit
+      if (distance < effectiveHitRadius && !hitDetected.current) {
         // Mark as hit to prevent multiple hits
         hitDetected.current = true;
         
