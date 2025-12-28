@@ -187,7 +187,7 @@ const Cannonball = ({
         hitDetected.current = true;
         
         // Check for double damage power-up from player ship
-        let damage = WEAPONS.PLAYER_CANNON_DAMAGE;
+        let damage: number = WEAPONS.PLAYER_CANNON_DAMAGE;
         
         // Check for one-shot kill debug feature
         const gameState = useGameState.getState();

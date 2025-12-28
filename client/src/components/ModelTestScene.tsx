@@ -4,7 +4,7 @@ import { OrbitControls, Stars } from "@react-three/drei";
 import * as THREE from "three";
 import CustomModel from "./CustomModel";
 import ModelTestNavigation from "./ModelTestNavigation";
-import { SCALE, MODEL_ADJUSTMENT, POSITION } from "../lib/constants";
+import { SCALE, MODEL_ADJUSTMENT } from "../lib/constants";
 
 interface ModelTestSceneProps {
   modelPath?: string;
@@ -137,7 +137,9 @@ export const ModelTestScene = ({
           {/* Custom model */}
           <CustomModel
             path={modelPath}
-            position={[0, 0, 0]}
+            xPosition={0}
+            yPosition={0}
+            zPosition={0}
             scale={scale}
             modelAdjustment={adjustmentFactor}
             modelHeightOffset={heightOffset}

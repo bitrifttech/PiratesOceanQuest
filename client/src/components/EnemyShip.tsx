@@ -1,4 +1,4 @@
-import { useRef, useEffect, memo, useState, useMemo, useCallback } from "react";
+import { useRef, useEffect, memo, useState, useCallback } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { usePlayer } from "../lib/stores/usePlayer";
@@ -7,8 +7,7 @@ import { useGameState } from "../lib/stores/useGameState";
 import { useShipEvents } from "../lib/stores/useShipEvents";
 import CustomModel from "./CustomModel";
 import Cannonball from "./Cannonball";
-import CrewSystem from "./CrewSystem";
-import { POSITION, SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
+import { SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
 import { collisionHandler } from "../lib/services/CollisionHandler";
 import { BVHCollisionService } from "../lib/services/BVHCollisionService";
 import { MeshCollisionRegistry } from "../lib/services/MeshCollisionRegistry";
@@ -28,16 +27,10 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   const shipRef = useRef<THREE.Group>(null);
   const positionRef = useRef<THREE.Vector3>(initialPosition.clone());
   const rotationRef = useRef<THREE.Euler>(initialRotation.clone());
-  const velocityRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
-  const healthRef = useRef<number>(100);
   const initialized = useRef<boolean>(false);
   
   // Collision and combat references
   const collisionCooldown = useRef<number>(0);
-  
-  // Get the ship event state for this specific enemy ship
-  const shipEvent = useShipEvents(state => state.enemyShipEvents[id] || 'sailing');
-  const cannonballsRef = useRef<JSX.Element[]>([]);
   const cannonCooldownRef = useRef<number>(0);
   
   // Get player position for AI behavior

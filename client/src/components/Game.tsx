@@ -1,28 +1,25 @@
-import { useEffect, useRef, useState, useMemo, memo } from "react";
+import { useEffect, useRef, useMemo, memo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Environment as ThreeEnvironment, OrbitControls, Text, useGLTF } from "@react-three/drei";
+import { Environment as ThreeEnvironment, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
-import Ocean from "./Ocean"; // Using Ocean for water surface
+import Ocean from "./Ocean";
 import Ship from "./Ship";
-import EnemyShip from "./EnemyShip"; // Added back enemy ship component
-import SkyWithClouds from "./SkyWithClouds"; // New enhanced sky with cloud system
-import EnvironmentComponent, { EnvironmentFeature, EnvironmentFeatureType } from "./Environment";
-import PowerUpManager from "./PowerUpManager"; // Power-up system for prizes
-import WorldPowerUp from "./WorldPowerUp"; // World power-up rendering component
-import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC, WORLD } from "../lib/constants";
+import EnemyShip from "./EnemyShip";
+import SkyWithClouds from "./SkyWithClouds";
+import EnvironmentComponent from "./Environment";
+import PowerUpManager from "./PowerUpManager";
+import WorldPowerUp from "./WorldPowerUp";
 import { logger } from "../lib/utils/logger";
 
 import { usePlayer } from "../lib/stores/usePlayer";
-import { useEnemies } from "../lib/stores/useEnemies"; // Re-enabled enemies
+import { useEnemies } from "../lib/stores/useEnemies";
 import { useGameState } from "../lib/stores/useGameState";
 import { useAudio } from "../lib/stores/useAudio";
-import { usePowerUps, PowerUpType } from "../lib/stores/usePowerUps"; // Power-up state management
+import { usePowerUps } from "../lib/stores/usePowerUps";
 
-// Import services
 import { EnemyManager } from "../lib/services/EnemyManager";
 import { EnvironmentGenerator } from "../lib/services/EnvironmentGenerator";
-import { CollisionService } from "../lib/services/CollisionService";
 import { collisionHandler } from "../lib/services/CollisionHandler";
 
 // WorldPowerUpCollector component to handle collection logic
@@ -68,17 +65,13 @@ const WorldPowerUpCollector = memo(() => {
 // Main game component that sets up the 3D scene
 const Game = () => {
   const { camera } = useThree();
-  const cameraTargetRef = useRef(new THREE.Vector3());
-  const cameraOffsetRef = useRef(new THREE.Vector3(0, 15, 30));
   
   // Get player state
   const playerPosition = usePlayer((state) => state.position);
-  const playerRotation = usePlayer((state) => state.rotation);
   const initializePlayer = usePlayer((state) => state.initialize);
   
   // Enemy state
   const enemies = useEnemies((state) => state.enemies);
-  const spawnEnemies = useEnemies((state) => state.spawnEnemies);
   
   // World power-ups (dropped by enemies)
   const worldPowerUps = usePowerUps((state) => state.worldPowerUps);
@@ -89,13 +82,6 @@ const Game = () => {
   // Game state
   const setGameOver = useGameState((state) => state.setGameOver);
   const playerHealth = usePlayer((state) => state.health);
-  const shipHeight = useGameState((state) => state.shipHeight);
-  const waveHeight = useGameState((state) => state.waveHeight);
-  const waveSpeed = useGameState((state) => state.waveSpeed);
-  const setShipHeight = useGameState((state) => state.setShipHeight);
-  const setWaveParameters = useGameState((state) => state.setWaveParameters);
-  
-  // Environmental features are defined and managed by the EnvironmentGenerator service
   
   // Island positions and other environment features (generated to avoid overlaps)
   // Only create this data once and never update it
@@ -172,67 +158,35 @@ const Game = () => {
   // Reference to the OrbitControls
   const orbitControlsRef = useRef<any>(null);
   
-  // Track the last camera position and rotation before manual adjustment
-  const lastCameraPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
-  const lastCameraRotationRef = useRef<THREE.Euler>(new THREE.Euler());
-  const cameraAdjustedRef = useRef<boolean>(false);
-  
-  // Player's ship orientation for forward direction
-  const shipForwardRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, -1));
-  
-  // Camera dynamics settings
-  const [cameraSmoothing, setCameraSmoothing] = useState<number>(0.05);
-  
   // Health regeneration timer
   const healthRegenTimer = useRef<number>(0);
-  const regenInterval = 2; // Regenerate health every 2 seconds
-  const regenAmount = 1; // Amount of health to regenerate each interval (slowed down)
+  const REGEN_INTERVAL = 2; // Regenerate health every 2 seconds
+  const REGEN_AMOUNT = 1; // Amount of health to regenerate each interval
   
-  // Camera follows player ship but preserves manual adjustments
-  useFrame((state, delta) => {
+  // Camera follows player ship and handles game updates
+  useFrame((_, delta) => {
     if (!playerPosition) return;
     
     // Health regeneration system
     const playerState = usePlayer.getState();
     healthRegenTimer.current += delta;
     
-    // Check if it's time to regenerate health
-    if (healthRegenTimer.current >= regenInterval) {
+    if (healthRegenTimer.current >= REGEN_INTERVAL) {
       // Only regenerate if player health is below max and above 0 (not dead)
       if (playerState.health > 0 && playerState.health < playerState.maxHealth) {
-        playerState.heal(regenAmount);
+        playerState.heal(REGEN_AMOUNT);
       }
-      // Reset timer
       healthRegenTimer.current = 0;
     }
     
     // Update active power-ups
-    const powerUpsState = usePowerUps.getState();
-    powerUpsState.updatePowerUps(delta);
+    usePowerUps.getState().updatePowerUps(delta);
     
-    // Update target to always follow the player ship
-    cameraTargetRef.current.set(
-      playerPosition.x,
-      0,
-      playerPosition.z
-    );
-    
-    // Always update the ship's forward direction based on rotation
-    // This is needed for proper WASD controls relative to camera view
-    shipForwardRef.current.set(0, 0, -1).applyEuler(playerRotation);
-    
+    // Update orbit controls target to follow the player
     if (orbitControlsRef.current) {
-      // Update orbit controls target to follow the player
-      orbitControlsRef.current.target.set(
-        playerPosition.x,
-        0,
-        playerPosition.z
-      );
+      orbitControlsRef.current.target.set(playerPosition.x, 0, playerPosition.z);
     }
   });
-
-  // Add the DebugControls UI directly in the render tree
-  // This avoids repeated mounting/unmounting that was causing flickering
 
   return (
     <>

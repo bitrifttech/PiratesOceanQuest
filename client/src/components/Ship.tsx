@@ -1,6 +1,6 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
-import { useKeyboardControls, useTexture, useGLTF } from "@react-three/drei";
+import { useKeyboardControls } from "@react-three/drei";
 import * as THREE from "three";
 
 import { Controls } from "../App";
@@ -8,16 +8,13 @@ import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
 import { useGameState } from "../lib/stores/useGameState";
 import { useShipEvents } from "../lib/stores/useShipEvents";
-import { checkCollision } from "../lib/helpers/collisionDetection";
-import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC } from "../lib/constants";
+import { SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
 import { ModelService } from "../lib/services/ModelService";
 import { useShipMovement } from "../hooks/useShipMovement";
 import { useCannonSystem } from "../hooks/useCannonSystem";
-import Cannon from "./Cannon";
 import Cannonball from "./Cannonball";
 import CannonFireEffect from "./CannonFireEffect";
 import CustomModel from "./CustomModel";
-import CrewSystem from "./CrewSystem";
 
 // Ship models are preloaded in ModelService
 
@@ -25,76 +22,24 @@ const Ship = () => {
   // Get player state and controls
   const {
     position,
-    rotation,
-    velocity,
-    health,
     cannonReady,
     setPosition,
     setRotation,
     setVelocity,
-    takeDamage,
     resetCannonCooldown,
   } = usePlayer();
   
   // Get ship event state for crew animations
-  const { 
-    playerShipEvent, 
-    playerHit, 
-    updateEnemyProximity 
-  } = useShipEvents();
+  const { updateEnemyProximity } = useShipEvents();
   
   // Enemy proximity tracking for crew reactions
   const enemies = useEnemies(state => state.enemies);
   
-  // Ship mesh references
+  // Ship mesh reference
   const shipRef = useRef<THREE.Group>(null);
-  const hullRef = useRef<THREE.Mesh>(null);
-  const sailRef = useRef<THREE.Mesh>(null);
   
-  // Store initial ship config values to ensure consistency across restarts
-  const initialShipConfig = useRef({
-    shipHeight: STATIC.WATER_LEVEL + STATIC.SHIP_OFFSET, // Use universal static values
-    waveHeight: useGameState.getState().waveHeight,
-    waveSpeed: useGameState.getState().waveSpeed
-  });
-  
-  // Textures
-  const woodTexture = useTexture("/textures/wood.jpg");
-  
-  // Direct access to keyboard controls through subscribe (more reliable)
-  const [subscribeKeys, getKeys] = useKeyboardControls<Controls>();
-  
-  // Set up subscriptions to key states for better debugging
-  useEffect(() => {
-    // Using silent subscriptions to avoid console spam
-    const unsubForward = subscribeKeys(
-      (state) => state.forward,
-      (pressed) => { /* No logging */ }
-    );
-    
-    const unsubBackward = subscribeKeys(
-      (state) => state.backward,
-      (pressed) => { /* No logging */ }
-    );
-    
-    const unsubLeft = subscribeKeys(
-      (state) => state.leftward,
-      (pressed) => { /* No logging */ }
-    );
-    
-    const unsubRight = subscribeKeys(
-      (state) => state.rightward,
-      (pressed) => { /* No logging */ }
-    );
-    
-    // Clean up subscriptions
-    return () => {
-      unsubForward();
-      unsubBackward();
-      unsubLeft();
-      unsubRight();
-    };
-  }, [subscribeKeys]);
+  // Direct access to keyboard controls
+  const [, getKeys] = useKeyboardControls<Controls>();
   
   // Cannon system hook - handles firing, tracking, and effects
   const {
@@ -154,7 +99,7 @@ const Ship = () => {
   }, [getKeys, fireAllCannons]);
   
   // Ship movement hook - handles physics, steering, and collision
-  const { updateMovement, position: movementPosition } = useShipMovement();
+  const { updateMovement } = useShipMovement();
   
   // Update ship position and rotation
   useFrame((_, delta) => {
@@ -195,9 +140,6 @@ const Ship = () => {
     }
   });
 
-  // Track model loading through a ref to avoid state issues
-  const shipModelLoadedRef = useRef(false);
-
   return (
     <>
       {/* Ship Group - contains only the ship model and health indicator */}
@@ -216,44 +158,16 @@ const Ship = () => {
           xPosition={0}
           yPosition={0}
           zPosition={0}
-          rotation={[0, -Math.PI / 3 + Math.PI / 12 + Math.PI / 45, 0]} // Rotate 60-15+4 = 49 degrees clockwise
+          rotation={[0, -Math.PI / 3 + Math.PI / 12 + Math.PI / 45, 0]}
           scale={useGameState.getState().shipScale * SCALE.PLAYER_SHIP}
           modelAdjustment={MODEL_ADJUSTMENT.SHIP}
-          modelHeightOffset={STATIC.SHIP_OFFSET} // Using static offset from water level
+          modelHeightOffset={STATIC.SHIP_OFFSET}
           bob={false}
           bobHeight={0}
           bobSpeed={0}
           castShadow
           receiveShadow
-          onLoad={() => {
-            shipModelLoadedRef.current = true;
-          }}
         />
-        
-        {/* Fallback cannons - shown only until model loads */}
-        <group visible={!shipModelLoadedRef.current}>
-          {/* Cannons - port side (left) - shown only in fallback mode */}
-          {[-6, -3, 0, 3, 6].map((z, i) => (
-            <Cannon
-              key={`port-${i}`}
-              position={[-3.5, 0.8, z]}
-              rotation={[0, -Math.PI / 2, 0]}
-            />
-          ))}
-          
-          {/* Cannons - starboard side (right) - shown only in fallback mode */}
-          {[-6, -3, 0, 3, 6].map((z, i) => (
-            <Cannon
-              key={`starboard-${i}`}
-              position={[3.5, 0.8, z]}
-              rotation={[0, Math.PI / 2, 0]}
-            />
-          ))}
-        </group>
-        
-        {/* Health indicator above ship removed - health now only shown in HUD */}
-        
-        {/* Crew System disabled */}
       </group>
       
       {/* Scene-level projectiles and effects - not children of the ship group */}

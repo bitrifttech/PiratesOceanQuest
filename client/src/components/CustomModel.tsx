@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { useKeyboardControls, OrbitControls, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTF } from "three-stdlib";
-import { SCALE, MODEL_ADJUSTMENT, STATIC, POSITION } from "../lib/constants";
+import { SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
 
 interface CustomModelProps {
   path: string;                           // Path to the GLB model file

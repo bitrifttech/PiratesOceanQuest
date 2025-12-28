@@ -308,6 +308,16 @@ export function useShipMovement() {
    * Main movement update function - call this from useFrame
    */
   function updateMovement(keys: KeyState, delta: number): MovementResult {
+    // Guard: position must be initialized
+    if (!position) {
+      return {
+        newPosition: new THREE.Vector3(0, 0, 0),
+        newRotation: rotation,
+        newVelocity: velocity,
+        hasCollision: false,
+      };
+    }
+
     const shipRadius = SHIP_PHYSICS.PLAYER_COLLISION_RADIUS;
     const safetyMargin = SHIP_PHYSICS.SAFETY_MARGIN;
 
@@ -391,10 +401,5 @@ export function useShipMovement() {
     rotation,
     velocity,
     updateMovement,
-    updateRotation,
-    getMovementDirection,
-    calculateAcceleration,
-    updateVelocity,
-    clampToWorldBounds,
   };
 }

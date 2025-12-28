@@ -20,6 +20,7 @@ const POWER_UP_VISUALS: Record<PowerUpType, { color: string; geometryType: strin
   shield: { color: '#0000ff', geometryType: 'torus' },
   triple_shot: { color: '#ff00ff', geometryType: 'dodecahedron' },
   long_range: { color: '#ffff00', geometryType: 'octahedron' },
+  gold_bonus: { color: '#ffd700', geometryType: 'icosahedron' },
 };
 
 /**
@@ -41,6 +42,8 @@ const PowerUpGeometry = ({ type }: { type: PowerUpType }) => {
       return <dodecahedronGeometry args={[0.7, 0]} />;
     case 'long_range':
       return <octahedronGeometry args={[0.7, 0]} />;
+    case 'gold_bonus':
+      return <icosahedronGeometry args={[0.7, 0]} />;
     default:
       return <sphereGeometry args={[0.6, 12, 12]} />;
   }

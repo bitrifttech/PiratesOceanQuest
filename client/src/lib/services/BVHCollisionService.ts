@@ -95,8 +95,12 @@ export class BVHCollisionService {
       
       if (intersects) {
         // Find the closest point on the mesh to the sphere center
-        const closestPoint = new THREE.Vector3();
-        boundsTree.closestPointToPoint(localSphere.center, closestPoint);
+        // In three-mesh-bvh 0.8.0, closestPointToPoint returns HitPointInfo or null
+        const hitInfo = boundsTree.closestPointToPoint(localSphere.center);
+        if (!hitInfo) {
+          return { isColliding: false };
+        }
+        const closestPoint = hitInfo.point.clone();
         
         // Transform closest point back to world space
         closestPoint.applyMatrix4(meshWorldMatrix);

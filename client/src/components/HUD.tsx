@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { usePlayer } from "../lib/stores/usePlayer";
-import { useEnemies } from "../lib/stores/useEnemies"; // Re-added for mini-map
+import { useEnemies } from "../lib/stores/useEnemies";
 import { useGameState } from "../lib/stores/useGameState";
+import { useAudio } from "../lib/stores/useAudio";
 import { usePowerUps, PowerUpType, ActivePowerUp, InventoryPowerUp } from "../lib/stores/usePowerUps";
 import { environmentCollisions } from "../lib/collision";
 

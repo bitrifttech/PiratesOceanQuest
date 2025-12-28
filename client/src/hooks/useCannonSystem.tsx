@@ -132,36 +132,11 @@ export function useCannonSystem() {
     });
   }, []);
 
-  /**
-   * Get current cannonballs for rendering
-   */
-  const getCannonballs = useCallback(() => {
-    return cannonballs.current;
-  }, []);
-
-  /**
-   * Get current fire effects for rendering
-   */
-  const getFireEffects = useCallback(() => {
-    return cannonFireEffects.current;
-  }, []);
-
-  /**
-   * Remove a specific cannonball (e.g., when it hits something)
-   */
-  const removeCannonball = useCallback((id: number) => {
-    cannonballs.current = cannonballs.current.filter((ball) => ball.id !== id);
-  }, []);
-
   return {
-    cannonReady,
     fireAllCannons,
     updateCannonballs,
     updateFireEffects,
-    getCannonballs,
-    getFireEffects,
-    removeCannonball,
-    // Expose refs for backward compatibility with existing render logic
+    // Expose refs for rendering
     cannonballsRef: cannonballs,
     fireEffectsRef: cannonFireEffects,
   };

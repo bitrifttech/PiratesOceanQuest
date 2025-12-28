@@ -184,13 +184,14 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
     scaledGroupRef.current.updateMatrixWorld(true);
     
     // Find the first mesh in the loaded model to use for collision
-    let primaryMesh: THREE.Mesh | null = null;
+    const meshes: THREE.Mesh[] = [];
     model.current.traverse((child) => {
-      if (child instanceof THREE.Mesh && !primaryMesh) {
-        primaryMesh = child;
+      if (child instanceof THREE.Mesh) {
+        meshes.push(child);
       }
     });
     
+    const primaryMesh = meshes[0];
     if (primaryMesh && featureRef.current) {
       // Update the mesh's world matrix to include scale from parent groups
       primaryMesh.updateMatrixWorld(true);
