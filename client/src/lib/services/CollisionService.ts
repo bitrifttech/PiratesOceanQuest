@@ -1,52 +1,18 @@
 import * as THREE from "three";
 import { EnvironmentFeature, EnvironmentFeatureType } from "../../components/Environment";
 import { environmentCollisions } from "../collision";
+import { getFeatureRadius as getFeatureRadiusFromUtils } from "../utils/CollisionUtils";
 
 /**
  * Service for handling various types of collisions in the game
  */
 export class CollisionService {
   /**
-   * Get radius for different feature types
+   * Get radius for different feature types.
+   * Delegates to the centralized collision utils.
    */
   static getFeatureRadius(type: EnvironmentFeatureType, scale: number): number {
-    // Base radius depends on feature type (these are approximate values)
-    // All values reduced by half to allow easier navigation
-    let baseRadius = 0;
-    switch (type) {
-      case 'tropical':
-        baseRadius = 4; // Reduced by half for easier navigation
-        break;
-      case 'mountain':
-        baseRadius = 5; // Reduced by half for easier navigation
-        break;
-      case 'rocks':
-        baseRadius = 2.5; // Reduced by half for easier navigation
-        break;
-      case 'shipwreck':
-        baseRadius = 3; // Reduced by half for easier navigation
-        break;
-      case 'port':
-        baseRadius = 3; // Reduced by half for easier navigation
-        break;
-      case 'lighthouse':
-        baseRadius = 3; // Reduced by half for easier navigation
-        break;
-      // New island types with appropriate collision service radii
-      case 'volcanic':
-        baseRadius = 5; // Slightly larger radius for volcanic islands
-        break;
-      case 'atoll':
-        baseRadius = 4; // Standard radius for atoll islands
-        break;
-      case 'ice':
-        baseRadius = 3.5; // Standard radius for ice islands
-        break;
-      default:
-        baseRadius = 3; // Default radius
-    }
-    // Scale the radius based on the feature's scale
-    return baseRadius * scale;
+    return getFeatureRadiusFromUtils(type, scale);
   }
   
   /**

@@ -41,6 +41,14 @@ export interface InventoryPowerUp {
   collectTime: number;
 }
 
+// Interface for world power-ups (dropped items waiting to be collected)
+export interface WorldPowerUp {
+  id: string;
+  position: THREE.Vector3;
+  type: PowerUpType;
+  createdAt: number;
+}
+
 interface PowerUpsState {
   // Available power-up definitions
   powerUpDefinitions: PowerUpDefinition[];
@@ -50,6 +58,9 @@ interface PowerUpsState {
   
   // Inventory of collected but not yet activated power-ups
   inventoryPowerUps: InventoryPowerUp[];
+  
+  // World power-ups (dropped by enemies, waiting to be collected)
+  worldPowerUps: WorldPowerUp[];
   
   // Actions
   addPowerUp: (type: PowerUpType) => void;      // Legacy method for internal use
@@ -62,6 +73,11 @@ interface PowerUpsState {
   getPowerUpValue: (type: PowerUpType) => number | null;
   hasPowerUp: (type: PowerUpType) => boolean;
   getRandomPowerUpType: () => PowerUpType;
+  
+  // World power-up management
+  spawnWorldPowerUp: (position: THREE.Vector3) => void;
+  removeWorldPowerUp: (id: string) => void;
+  clearWorldPowerUps: () => void;
 }
 
 export const usePowerUps = create<PowerUpsState>((set, get) => ({
@@ -156,6 +172,9 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
   
   // Inventory of collected but not yet activated power-ups
   inventoryPowerUps: [],
+  
+  // World power-ups (dropped by enemies, waiting to be collected)
+  worldPowerUps: [],
   
   // Collect a power-up (add to inventory)
   collectPowerUp: (type: PowerUpType) => {
@@ -451,5 +470,43 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
     
     // Fallback to first power-up if something goes wrong
     return powerUpDefinitions[0].type;
+  },
+  
+  // Spawn a world power-up at a position (e.g., when enemy is destroyed)
+  spawnWorldPowerUp: (position: THREE.Vector3) => {
+    const { getRandomPowerUpType, worldPowerUps } = get();
+    
+    const powerUpId = `world-powerup-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const powerUpType = getRandomPowerUpType();
+    
+    // Position slightly above water level
+    const spawnPosition = position.clone();
+    spawnPosition.y = 1;
+    
+    set({
+      worldPowerUps: [
+        ...worldPowerUps,
+        {
+          id: powerUpId,
+          position: spawnPosition,
+          type: powerUpType,
+          createdAt: Date.now()
+        }
+      ]
+    });
+    
+    logger.debug('powerup', `Spawned ${powerUpType} power-up at (${spawnPosition.x.toFixed(1)}, ${spawnPosition.z.toFixed(1)})`);
+  },
+  
+  // Remove a world power-up (when collected or expired)
+  removeWorldPowerUp: (id: string) => {
+    set((state) => ({
+      worldPowerUps: state.worldPowerUps.filter(p => p.id !== id)
+    }));
+  },
+  
+  // Clear all world power-ups (on game reset)
+  clearWorldPowerUps: () => {
+    set({ worldPowerUps: [] });
   }
 }));

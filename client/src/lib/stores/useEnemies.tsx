@@ -2,6 +2,7 @@ import { create } from "zustand";
 import * as THREE from "three";
 import { usePlayer } from "./usePlayer";
 import { useUpgrades } from "./useUpgrades";
+import { usePowerUps } from "./usePowerUps";
 import { collisionHandler } from "../services/CollisionHandler";
 import { EnvironmentGenerator } from "../services/EnvironmentGenerator";
 import { logger } from "../utils/logger";
@@ -16,28 +17,16 @@ interface Enemy {
   peacefulStartTimer?: number; // Optional timer for grace period before attacking
 }
 
-// Define a power-up for our direct approach
-interface DirectPowerUp {
-  id: string;
-  position: THREE.Vector3;
-  type: string;
-  createdAt: number;
-}
-
 interface EnemiesState {
   enemies: Enemy[];
-  directPowerUps: DirectPowerUp[]; // New state for direct power-ups
   spawnEnemies: (count: number) => void;
   moveEnemy: (id: string, position: THREE.Vector3, rotation: THREE.Euler) => void;
   damageEnemy: (id: string, amount: number) => void;
   resetEnemies: () => void;
-  addDirectPowerUp: (id: string, position: THREE.Vector3, type: string) => void; // New function
-  removeDirectPowerUp: (id: string) => void; // New function to remove collected power-ups
 }
 
 export const useEnemies = create<EnemiesState>((set, get) => ({
   enemies: [],
-  directPowerUps: [], // Initialize power-ups array
   
   // Spawn new enemies
   spawnEnemies: (count) => {
@@ -139,35 +128,20 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
     const newHealth = Math.max(0, enemy.health - scaledDamage);
     
     if (newHealth <= 0) {
-      // Enemy is destroyed, add loot
+      // Enemy is destroyed
+      logger.debug('enemy', `Ship ${id} destroyed`);
+      
+      // Add loot to player
       const { addLoot } = useUpgrades.getState();
       const lootAmount = Math.floor(Math.random() * 50) + 50;
       addLoot(lootAmount);
       
-      logger.debug('enemy', `Ship ${id} destroyed, spawning power-up`);
-      
-      // DIRECT APPROACH: Add a direct power-up to the game state
+      // Spawn power-up at enemy position (handled by usePowerUps now)
       try {
-        const enemyPosition = enemy.position.clone();
-        enemyPosition.y = 1; // Ensure it's just above water level
-        
-        const powerUpId = `direct-powerup-${Date.now()}`;
-        const powerUpTypes = ['health_boost', 'speed_boost', 'double_damage', 'rapid_fire', 'shield', 'triple_shot', 'long_range'];
-        const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
-        
-        set((state) => ({
-          directPowerUps: [
-            ...state.directPowerUps,
-            {
-              id: powerUpId,
-              position: enemyPosition,
-              type: randomType,
-              createdAt: Date.now()
-            }
-          ]
-        }));
+        const { spawnWorldPowerUp } = usePowerUps.getState();
+        spawnWorldPowerUp(enemy.position);
       } catch (error) {
-        logger.error('enemy', 'Failed to create direct power-up:', error);
+        logger.error('enemy', 'Failed to spawn power-up:', error);
       }
       
       // Remove the enemy
@@ -187,40 +161,19 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
           return e;
         }),
       }));
-      
-      // Log removed to reduce console spam
     }
   },
   
   // Reset all enemies (for new game)
   resetEnemies: () => {
-    set({ 
-      enemies: [],
-      directPowerUps: [] // Also clear any power-ups
-    });
+    set({ enemies: [] });
     
-    // Don't spawn enemies automatically - logging removed
-  },
-  
-  // Add a new direct power-up
-  addDirectPowerUp: (id, position, type) => {
-    set((state) => ({
-      directPowerUps: [
-        ...state.directPowerUps,
-        {
-          id,
-          position,
-          type,
-          createdAt: Date.now()
-        }
-      ]
-    }));
-  },
-
-  // Remove a direct power-up (when collected or expired)
-  removeDirectPowerUp: (id) => {
-    set((state) => ({
-      directPowerUps: state.directPowerUps.filter(powerUp => powerUp.id !== id)
-    }));
+    // Also clear world power-ups
+    try {
+      const { clearWorldPowerUps } = usePowerUps.getState();
+      clearWorldPowerUps();
+    } catch (error) {
+      logger.error('enemy', 'Failed to clear world power-ups:', error);
+    }
   },
 }));

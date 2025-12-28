@@ -24,18 +24,18 @@ import { EnvironmentGenerator } from "../lib/services/EnvironmentGenerator";
 import { CollisionService } from "../lib/services/CollisionService";
 import { collisionHandler } from "../lib/services/CollisionHandler";
 
-// DirectPowerUpCollector component to handle collection logic
+// WorldPowerUpCollector component to handle collection logic
 // We separate this to avoid React hooks conditional calling issues
-const DirectPowerUpCollector = memo(() => {
+const WorldPowerUpCollector = memo(() => {
   const playerPosition = usePlayer((state) => state.position);
-  const directPowerUps = useEnemies((state) => state.directPowerUps);
-  const removeDirectPowerUp = useEnemies((state) => state.removeDirectPowerUp);
+  const worldPowerUps = usePowerUps((state) => state.worldPowerUps);
+  const removeWorldPowerUp = usePowerUps((state) => state.removeWorldPowerUp);
 
   useFrame(() => {
-    if (!playerPosition || directPowerUps.length === 0) return;
+    if (!playerPosition || worldPowerUps.length === 0) return;
     
     // Check each power-up for collection
-    directPowerUps.forEach(powerUp => {
+    worldPowerUps.forEach(powerUp => {
       // Calculate distance to player
       const dx = playerPosition.x - powerUp.position.x;
       const dz = playerPosition.z - powerUp.position.z;
@@ -48,7 +48,7 @@ const DirectPowerUpCollector = memo(() => {
         // Add power-up to inventory (doesn't activate immediately)
         const { collectPowerUp } = usePowerUps.getState();
         if (collectPowerUp) {
-          collectPowerUp(powerUp.type as PowerUpType);
+          collectPowerUp(powerUp.type);
           
           // Play sound effect for collection
           const { playSound } = useAudio.getState();
@@ -56,7 +56,7 @@ const DirectPowerUpCollector = memo(() => {
         }
         
         // Remove from the state
-        removeDirectPowerUp(powerUp.id);
+        removeWorldPowerUp(powerUp.id);
       }
     });
   });
@@ -75,11 +75,12 @@ const Game = () => {
   const playerRotation = usePlayer((state) => state.rotation);
   const initializePlayer = usePlayer((state) => state.initialize);
   
-  // Enemy state and direct power-ups
+  // Enemy state
   const enemies = useEnemies((state) => state.enemies);
-  const directPowerUps = useEnemies((state) => state.directPowerUps);
-  const removeDirectPowerUp = useEnemies((state) => state.removeDirectPowerUp);
   const spawnEnemies = useEnemies((state) => state.spawnEnemies);
+  
+  // World power-ups (dropped by enemies)
+  const worldPowerUps = usePowerUps((state) => state.worldPowerUps);
   
   // Sound effects
   const playBackgroundMusic = useAudio((state) => state.playBackgroundMusic);
@@ -269,11 +270,11 @@ const Game = () => {
       {/* Power-up system to handle prizes from defeated enemy ships */}
       <PowerUpManager />
       
-      {/* Direct Power-Ups Collection Logic */}
-      <DirectPowerUpCollector />
+      {/* World Power-Ups Collection Logic */}
+      <WorldPowerUpCollector />
       
-      {/* Render all direct power-ups from the global state */}
-      {directPowerUps.map((powerUp) => {
+      {/* Render all world power-ups from the global state */}
+      {worldPowerUps.map((powerUp) => {
         // Determine color based on power-up type
         let color = '#ffffff';
         let geometry = null;

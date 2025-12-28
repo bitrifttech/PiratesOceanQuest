@@ -157,7 +157,30 @@ export const ENVIRONMENT = {
 
   // World bounds
   WORLD_RADIUS: 400,
+
+  // Collision margin added to all feature collision checks
+  COLLISION_MARGIN: 2,
 } as const;
+
+// =============================================================================
+// FEATURE COLLISION RADII
+// Base collision radii for each environment feature type.
+// These are multiplied by the feature's scale to get the actual collision radius.
+// =============================================================================
+export const FEATURE_COLLISION_RADII: Record<string, number> = {
+  tropical: 6,
+  mountain: 8,
+  rocks: 4,
+  shipwreck: 5,
+  port: 5,
+  lighthouse: 4,
+  volcanic: 7,
+  atoll: 6,
+  ice: 5,
+} as const;
+
+// Default collision radius for unknown feature types
+export const DEFAULT_FEATURE_RADIUS = 5;
 
 // =============================================================================
 // VISUAL / PERFORMANCE

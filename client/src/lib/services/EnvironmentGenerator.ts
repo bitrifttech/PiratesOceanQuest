@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { EnvironmentFeature, EnvironmentFeatureType } from "../../components/Environment";
 import { logger } from "../utils/logger";
+import { getFeatureRadius as getFeatureRadiusFromUtils } from "../utils/CollisionUtils";
 
 /**
  * Utility class for generating and managing environment features like islands and rocks
@@ -43,23 +44,11 @@ export class EnvironmentGenerator {
   }
 
   /**
-   * Gets the collision radius for a feature type (mirrors CollisionService)
+   * Gets the collision radius for a feature type.
+   * Delegates to the centralized collision utils.
    */
   private static getFeatureRadius(type: EnvironmentFeatureType, scale: number): number {
-    let baseRadius = 0;
-    switch (type) {
-      case 'tropical': baseRadius = 10; break;
-      case 'mountain': baseRadius = 12.5; break;
-      case 'rocks': baseRadius = 5; break;
-      case 'shipwreck': baseRadius = 7.5; break;
-      case 'port': baseRadius = 9; break;
-      case 'lighthouse': baseRadius = 6; break;
-      case 'volcanic': baseRadius = 12; break;
-      case 'atoll': baseRadius = 10; break;
-      case 'ice': baseRadius = 9; break;
-      default: baseRadius = 7.5;
-    }
-    return baseRadius * scale;
+    return getFeatureRadiusFromUtils(type, scale);
   }
 
   /**
@@ -69,55 +58,14 @@ export class EnvironmentGenerator {
     feature1: { x: number; z: number; type: EnvironmentFeatureType; scale: number },
     feature2: { x: number; z: number; type: EnvironmentFeatureType; scale: number }
   ): boolean {
-    // Calculate radius based on feature type and scale
-    const getRadius = (type: EnvironmentFeatureType, scale: number): number => {
-      // Base radius depends on feature type (these are approximate values)
-      // All values reduced by half for easier navigation between environment features
-      let baseRadius = 0;
-      switch (type) {
-        case 'tropical':
-          baseRadius = 10; // Reduced from 20
-          break;
-        case 'mountain':
-          baseRadius = 12.5; // Reduced from 25
-          break;
-        case 'rocks':
-          baseRadius = 5; // Reduced from 10
-          break;
-        case 'shipwreck':
-          baseRadius = 7.5; // Reduced from 15
-          break;
-        case 'port':
-          baseRadius = 9; // Reduced from 18
-          break;
-        case 'lighthouse':
-          baseRadius = 6; // Reduced from 12
-          break;
-        // New island types with appropriate generation spacing
-        case 'volcanic':
-          baseRadius = 12; // Large spacing for the dramatic volcanic islands
-          break;
-        case 'atoll':
-          baseRadius = 10; // Medium spacing for the wide atoll islands
-          break;
-        case 'ice':
-          baseRadius = 9; // Standard spacing for ice islands
-          break;
-        default:
-          baseRadius = 7.5; // Default spacing
-      }
-      // Scale the radius based on the feature's scale
-      return baseRadius * scale;
-    };
-
     // Calculate distance between features
     const dx = feature1.x - feature2.x;
     const dz = feature1.z - feature2.z;
     const distance = Math.sqrt(dx * dx + dz * dz);
     
-    // Calculate minimum required distance
-    const radius1 = getRadius(feature1.type, feature1.scale);
-    const radius2 = getRadius(feature2.type, feature2.scale);
+    // Calculate minimum required distance using centralized radii
+    const radius1 = this.getFeatureRadius(feature1.type, feature1.scale);
+    const radius2 = this.getFeatureRadius(feature2.type, feature2.scale);
     const minDistance = radius1 + radius2 + 2; // 2 units of padding
     
     // Return true if overlapping

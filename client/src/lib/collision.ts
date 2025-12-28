@@ -1,49 +1,15 @@
 import * as THREE from "three";
 import { EnvironmentFeature, EnvironmentFeatureType } from "../components/Environment";
+import { getFeatureRadius as getFeatureRadiusFromUtils } from "./utils/CollisionUtils";
+import { ENVIRONMENT } from "./config/gameBalance";
 
-// Collision constants
-const COLLISION_MARGIN = 3; // Increased margin for more reliable collision detection
-
-// Get radius based on feature type and scale
+// Re-export the centralized getFeatureRadius for backwards compatibility
 export function getFeatureRadius(type: EnvironmentFeatureType, scale: number): number {
-  // Base radius depends on feature type
-  let baseRadius = 0;
-  switch (type) {
-    case 'tropical':
-      baseRadius = 7.5; // Reduced by half for easier navigation
-      break;
-    case 'mountain':
-      baseRadius = 15; // Reduced by half for easier navigation
-      break;
-    case 'rocks':
-      baseRadius = 5; // Reduced by half for easier navigation
-      break;
-    case 'shipwreck':
-      baseRadius = 6; // Reduced by half for easier navigation
-      break;
-    case 'port':
-      baseRadius = 6; // Reduced by half for easier navigation
-      break;
-    case 'lighthouse':
-      baseRadius = 6; // Reduced by half for easier navigation
-      break;
-    // New island types with appropriate collision radii
-    case 'volcanic':
-      baseRadius = 10; // Larger collision for the dramatic volcanic island
-      break;
-    case 'atoll':
-      baseRadius = 8; // Wider but low profile atoll island
-      break;
-    case 'ice':
-      baseRadius = 7; // Standard ice island collision radius
-      break;
-    default:
-      baseRadius = 6; // Default collision radius
-  }
-  // Scale the radius based on the feature's scale
-  const scaledRadius = baseRadius * scale;
-  return scaledRadius;
+  return getFeatureRadiusFromUtils(type, scale);
 }
+
+// Collision margin from centralized config
+const COLLISION_MARGIN = ENVIRONMENT.COLLISION_MARGIN;
 
 // Check if a point collides with an environment feature
 export function checkPointFeatureCollision(

@@ -161,31 +161,92 @@ const unsubscribe = usePlayer.subscribe(
 );
 ```
 
-## Accessing State Outside React
+## Store Access Patterns (Hooks vs getState)
 
-- **Use `getState()` for imperative access**:
-  - Safe to call from event handlers, services, or other stores.
-  - Returns current state snapshot.
+### When to Use Hook Selectors
+
+Use `useStore(selector)` when:
+- Inside React components that need to re-render on state changes.
+- You need reactivity - the component should update when state changes.
+- Rendering UI that depends on store values.
 
 ```tsx
-// Good: Accessing state from service
-class CollisionService {
-  checkPlayerCollision() {
-    const playerPosition = usePlayer.getState().position;
-    // ... collision logic
-  }
+// ✅ Good: Component re-renders when health changes
+function HealthBar() {
+  const health = usePlayer((state) => state.health);
+  return <div style={{ width: `${health}%` }} />;
 }
 
-// Good: Cross-store communication
+// ✅ Good: Multiple values with shallow comparison
+const { position, rotation } = usePlayer(
+  (state) => ({ position: state.position, rotation: state.rotation }),
+  shallow
+);
+```
+
+### When to Use getState()
+
+Use `useStore.getState()` when:
+- Inside `useFrame` callbacks (R3F render loop).
+- Inside `useEffect` cleanup or timeouts.
+- In event handlers that don't need reactivity.
+- Cross-store communication (one store reading another).
+- In services or utility functions outside React.
+
+```tsx
+// ✅ Good: useFrame doesn't need reactivity, runs every frame
+useFrame((_, delta) => {
+  const position = usePlayer.getState().position;
+  const velocity = usePlayer.getState().velocity;
+  // ... physics calculations
+});
+
+// ✅ Good: Cross-store access in store actions
 const useEnemies = create((set) => ({
   damageEnemy: (id, amount) => {
-    // Access player state
-    const playerDamageBonus = useUpgrades.getState().damageBonus;
-    const totalDamage = amount * playerDamageBonus;
-    // ... apply damage
+    const damageBonus = useUpgrades.getState().damageBonus;
+    // ...
   },
 }));
+
+// ✅ Good: Service accessing store
+class CollisionService {
+  checkPlayerCollision() {
+    const position = usePlayer.getState().position;
+    // ...
+  }
+}
 ```
+
+### Anti-Patterns to Avoid
+
+```tsx
+// ❌ Bad: Using getState in component render - won't update on changes
+function HealthBar() {
+  const health = usePlayer.getState().health; // Won't re-render!
+  return <div style={{ width: `${health}%` }} />;
+}
+
+// ❌ Bad: Using hook inside useFrame - causes re-render issues
+useFrame(() => {
+  const health = usePlayer((state) => state.health); // Wrong!
+  // This creates a new subscription every frame
+});
+
+// ❌ Bad: Selecting entire state
+const state = usePlayer((state) => state); // Re-renders on ANY change
+```
+
+### Summary Rules
+
+| Context | Use | Example |
+|---------|-----|---------|
+| Component render | Hook + selector | `usePlayer(s => s.health)` |
+| useFrame callback | getState() | `usePlayer.getState().position` |
+| Store action | getState() | `useOther.getState().value` |
+| Service/utility | getState() | `useStore.getState().data` |
+| Event handler (needs re-render) | Hook | `const fn = useStore(s => s.fn)` |
+| Event handler (one-time read) | getState() | `useStore.getState().value` |
 
 ## Middleware
 
