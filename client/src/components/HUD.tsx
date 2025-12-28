@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies";
-import { useGameState } from "../lib/stores/useGameState";
+import { useGameState, MISSION_CONFIG } from "../lib/stores/useGameState";
 import { useAudio } from "../lib/stores/useAudio";
 import { usePowerUps, PowerUpType, ActivePowerUp, InventoryPowerUp } from "../lib/stores/usePowerUps";
 import { environmentCollisions } from "../lib/collision";
@@ -16,6 +16,11 @@ const HUD = () => {
   // Added back enemy state for the mini-map
   const enemies = useEnemies((state) => state.enemies);
   const gameState = useGameState((state) => state.gameState);
+  
+  // Mission tracking
+  const gold = useGameState((state) => state.gold);
+  const enemiesKilled = useGameState((state) => state.enemiesKilled);
+  const missionTarget = useGameState((state) => state.missionTarget);
   
   // Get active power-ups and inventory
   const activePowerUps = usePowerUps((state) => state.activePowerUps);
@@ -216,6 +221,29 @@ const HUD = () => {
   const healthColor = health > 70 ? "#4CAF50" : health > 30 ? "#FF9800" : "#F44336";
   
   return (
+    <>
+      {/* Top center - Mission objective */}
+      <div className="absolute top-5 left-1/2 transform -translate-x-1/2 pointer-events-none">
+        <div className="bg-gray-900 bg-opacity-80 px-6 py-3 rounded-lg border-2 border-yellow-600">
+          <div className="text-yellow-400 font-['Pirata_One'] text-2xl text-center">
+            ⚔️ MISSION: Sink {missionTarget} Enemy Ships ⚔️
+          </div>
+          <div className="text-white text-xl text-center mt-1">
+            Ships Destroyed: <span className="text-green-400 font-bold">{enemiesKilled}</span> / {missionTarget}
+          </div>
+        </div>
+      </div>
+      
+      {/* Top right - Gold counter */}
+      <div className="absolute top-5 right-5 pointer-events-none">
+        <div className="bg-gray-900 bg-opacity-80 px-4 py-2 rounded-lg border border-yellow-600">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🪙</span>
+            <span className="text-yellow-400 font-['Pirata_One'] text-2xl">{gold}</span>
+          </div>
+        </div>
+      </div>
+    
     <div className="absolute bottom-5 left-5 right-5 flex justify-between items-end">
       {/* Left side - health display */}
       <div className="bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700 pointer-events-none">
@@ -358,6 +386,7 @@ const HUD = () => {
         />
       </div>
     </div>
+    </>
   );
 };
 

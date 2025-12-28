@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { usePlayer } from "./usePlayer";
 import { useUpgrades } from "./useUpgrades";
 import { usePowerUps } from "./usePowerUps";
+import { useGameState, MISSION_CONFIG } from "./useGameState";
 import { collisionHandler } from "../services/CollisionHandler";
 import { EnvironmentGenerator } from "../services/EnvironmentGenerator";
 import { logger } from "../utils/logger";
@@ -131,7 +132,12 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
       // Enemy is destroyed
       logger.debug('enemy', `Ship ${id} destroyed`);
       
-      // Add loot to player
+      // Track kill and add gold (mission system)
+      const { incrementKills, addGold } = useGameState.getState();
+      incrementKills();
+      addGold(MISSION_CONFIG.GOLD_PER_KILL);
+      
+      // Add loot to player (upgrade system)
       const { addLoot } = useUpgrades.getState();
       const lootAmount = Math.floor(Math.random() * 50) + 50;
       addLoot(lootAmount);

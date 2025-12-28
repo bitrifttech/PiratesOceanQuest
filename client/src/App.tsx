@@ -5,6 +5,9 @@ import { useAudio } from "./lib/stores/useAudio";
 import { useGameState } from "./lib/stores/useGameState";
 import Game from "./components/Game";
 import GameUI from "./components/GameUI";
+import GameOverScreen from "./components/GameOverScreen";
+import VictoryScreen from "./components/VictoryScreen";
+import { PortHealingIndicator } from "./components/PortHealingSystem";
 import ModelTestScene from "./components/ModelTestScene";
 import { MODEL_ADJUSTMENT } from "./lib/constants";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
@@ -130,7 +133,12 @@ function App() {
                   {/* Game UI overlay */}
                   <GameUI />
                   
-                  {/* Debug controls removed from visible UI */}
+                  {/* Port healing indicator */}
+                  <PortHealingIndicator />
+                  
+                  {/* Game Over and Victory screens */}
+                  <GameOverScreen />
+                  <VictoryScreen />
                 </>
               )}
             </KeyboardControls>

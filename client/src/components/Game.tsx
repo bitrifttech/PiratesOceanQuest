@@ -10,6 +10,7 @@ import SkyWithClouds from "./SkyWithClouds";
 import EnvironmentComponent from "./Environment";
 import PowerUpManager from "./PowerUpManager";
 import WorldPowerUp from "./WorldPowerUp";
+import PortHealingSystem from "./PortHealingSystem";
 import { logger } from "../lib/utils/logger";
 
 import { usePlayer } from "../lib/stores/usePlayer";
@@ -18,9 +19,9 @@ import { useGameState } from "../lib/stores/useGameState";
 import { useAudio } from "../lib/stores/useAudio";
 import { usePowerUps } from "../lib/stores/usePowerUps";
 
-import { EnemyManager } from "../lib/services/EnemyManager";
 import { EnvironmentGenerator } from "../lib/services/EnvironmentGenerator";
 import { collisionHandler } from "../lib/services/CollisionHandler";
+import { MISSION_CONFIG } from "../lib/stores/useGameState";
 
 // WorldPowerUpCollector component to handle collection logic
 // We separate this to avoid React hooks conditional calling issues
@@ -72,6 +73,7 @@ const Game = () => {
   
   // Enemy state
   const enemies = useEnemies((state) => state.enemies);
+  const spawnEnemies = useEnemies((state) => state.spawnEnemies);
   
   // World power-ups (dropped by enemies)
   const worldPowerUps = usePowerUps((state) => state.worldPowerUps);
@@ -106,8 +108,8 @@ const Game = () => {
     // Initialize player
     initializePlayer();
     
-    // Spawn a test enemy ship directly in front of the player for debugging orientation
-    EnemyManager.spawnTestEnemyShip();
+    // Spawn enemy ships for the mission
+    spawnEnemies(MISSION_CONFIG.ENEMIES_TO_KILL);
     
     // Play background music
     playBackgroundMusic();
@@ -224,6 +226,9 @@ const Game = () => {
       
       {/* Power-up system to handle prizes from defeated enemy ships */}
       <PowerUpManager />
+      
+      {/* Port healing system - heals player when docked at a port */}
+      <PortHealingSystem />
       
       {/* World Power-Ups Collection Logic */}
       <WorldPowerUpCollector />
