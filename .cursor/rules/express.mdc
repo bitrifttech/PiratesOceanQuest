@@ -1,0 +1,195 @@
+---
+description: Express.js backend Clean Code rules
+alwaysApply: false
+---
+# Express.js Rules
+
+These rules apply Clean Code and Clean Architecture principles to Express.js backend development.
+
+## Project Structure
+
+- **Layer separation**:
+  - `routes/` - Route definitions and request handling.
+  - `controllers/` - Request/response logic (if separating from routes).
+  - `services/` - Business logic and data operations.
+  - `middleware/` - Express middleware functions.
+  - `types/` - TypeScript type definitions.
+
+- **File naming**:
+  - Use descriptive names: `auth.routes.ts`, `user.service.ts`.
+  - Group by feature or domain when appropriate.
+  - Keep index files for clean exports.
+
+## Routes
+
+- **Route organization**:
+  ```typescript
+  // routes.ts - Central route registration
+  import { Express } from 'express';
+  import { authRoutes } from './auth.routes';
+  import { userRoutes } from './user.routes';
+
+  export function registerRoutes(app: Express) {
+    app.use('/api/auth', authRoutes);
+    app.use('/api/users', userRoutes);
+  }
+  ```
+
+- **Route handlers should be thin**:
+  - Extract request data.
+  - Call service layer.
+  - Send response.
+  - Handle errors.
+
+- **Use proper HTTP methods**:
+  - GET for retrieval.
+  - POST for creation.
+  - PUT/PATCH for updates.
+  - DELETE for removal.
+
+## Middleware
+
+- **Middleware responsibilities**:
+  - Authentication/authorization.
+  - Request validation.
+  - Logging and monitoring.
+  - Error handling.
+  - CORS configuration.
+
+- **Middleware order matters**:
+  ```typescript
+  app.use(express.json());
+  app.use(cors());
+  app.use(sessionMiddleware);
+  app.use(authMiddleware);
+  // Routes after middleware
+  ```
+
+- **Error handling middleware**:
+  ```typescript
+  // Always define error handler last
+  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Internal server error' });
+  });
+  ```
+
+## Request/Response
+
+- **Validate input**:
+  - Use Zod or similar for request validation.
+  - Validate early, fail fast.
+  - Return meaningful error messages.
+
+- **Consistent response format**:
+  ```typescript
+  // Success
+  res.json({ data: result });
+
+  // Error
+  res.status(400).json({ error: 'Validation failed', details: errors });
+  ```
+
+- **Use appropriate status codes**:
+  - 200: Success.
+  - 201: Created.
+  - 400: Bad request.
+  - 401: Unauthorized.
+  - 403: Forbidden.
+  - 404: Not found.
+  - 500: Server error.
+
+## Services
+
+- **Services encapsulate business logic**:
+  - Independent of Express request/response.
+  - Reusable across different entry points.
+  - Testable in isolation.
+
+- **Service pattern**:
+  ```typescript
+  export class UserService {
+    async findById(id: string): Promise<User | null> {
+      return await db.query.users.findFirst({
+        where: eq(users.id, id)
+      });
+    }
+
+    async create(data: CreateUserDto): Promise<User> {
+      // Business logic here
+    }
+  }
+  ```
+
+## Database Integration
+
+- **Use repository/service pattern**:
+  - Services call database operations.
+  - Keep SQL/ORM queries in services or repositories.
+  - Don't put database code in route handlers.
+
+- **Transaction handling**:
+  - Wrap related operations in transactions.
+  - Handle rollback on errors.
+  - Keep transactions short.
+
+## Security
+
+- **Input sanitization**:
+  - Never trust user input.
+  - Validate and sanitize all inputs.
+  - Use parameterized queries.
+
+- **Authentication**:
+  - Use secure session management.
+  - Hash passwords properly (bcrypt).
+  - Implement proper logout.
+
+- **Headers and CORS**:
+  - Set security headers.
+  - Configure CORS appropriately.
+  - Use HTTPS in production.
+
+## Error Handling
+
+- **Centralized error handling**:
+  - Use error handling middleware.
+  - Create custom error classes.
+  - Log errors appropriately.
+
+- **Don't expose internals**:
+  - Return user-friendly error messages.
+  - Log detailed errors server-side.
+  - Never expose stack traces in production.
+
+## Performance
+
+- **Response optimization**:
+  - Use compression middleware.
+  - Implement caching where appropriate.
+  - Stream large responses.
+
+- **Connection handling**:
+  - Use connection pooling for databases.
+  - Handle timeouts gracefully.
+  - Implement health check endpoints.
+
+## Testing
+
+- **Test routes with supertest**:
+  ```typescript
+  import request from 'supertest';
+  import { app } from '../app';
+
+  describe('GET /api/users', () => {
+    it('returns users list', async () => {
+      const response = await request(app).get('/api/users');
+      expect(response.status).toBe(200);
+    });
+  });
+  ```
+
+- **Mock services in route tests**:
+  - Isolate route logic from services.
+  - Test service layer separately.
+  - Use dependency injection for testability.

@@ -1,0 +1,214 @@
+---
+description: Drizzle ORM Clean Code rules for database operations
+alwaysApply: false
+---
+# Drizzle ORM Rules
+
+These rules apply Clean Code and Clean Architecture principles to database operations with Drizzle ORM.
+
+## Schema Definition
+
+- **Schema organization**:
+  - Define schemas in `shared/schema.ts` or `db/schema/` directory.
+  - Group related tables together.
+  - Export all schemas from a central index.
+
+- **Table naming**:
+  - Use plural, snake_case for table names: `users`, `game_sessions`.
+  - Use singular, camelCase for TypeScript: `user`, `gameSession`.
+  - Be consistent across the project.
+
+- **Column definitions**:
+  ```typescript
+  export const users = pgTable('users', {
+    id: serial('id').primaryKey(),
+    username: varchar('username', { length: 255 }).notNull().unique(),
+    email: varchar('email', { length: 255 }).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  });
+  ```
+
+## Type Safety
+
+- **Infer types from schema**:
+  ```typescript
+  // Infer types for select and insert
+  export type User = typeof users.$inferSelect;
+  export type NewUser = typeof users.$inferInsert;
+  ```
+
+- **Use Drizzle-Zod for validation**:
+  ```typescript
+  import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+
+  export const insertUserSchema = createInsertSchema(users);
+  export const selectUserSchema = createSelectSchema(users);
+  ```
+
+- **Avoid `any` types**:
+  - Let Drizzle infer types from schema.
+  - Use explicit types for complex queries.
+  - Document any necessary type assertions.
+
+## Query Patterns
+
+- **Use query builder for complex queries**:
+  ```typescript
+  const result = await db.query.users.findMany({
+    where: eq(users.status, 'active'),
+    with: {
+      posts: true,
+    },
+    orderBy: [desc(users.createdAt)],
+    limit: 10,
+  });
+  ```
+
+- **Use SQL template for simple queries**:
+  ```typescript
+  const users = await db.select().from(users).where(eq(users.id, id));
+  ```
+
+- **Parameterize all queries**:
+  - Never concatenate user input into queries.
+  - Use Drizzle's parameter binding.
+  - Validate input before querying.
+
+## Repository Pattern
+
+- **Encapsulate database operations**:
+  ```typescript
+  // storage.ts or repositories/user.repository.ts
+  export const userRepository = {
+    async findById(id: number): Promise<User | null> {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user ?? null;
+    },
+
+    async create(data: NewUser): Promise<User> {
+      const [user] = await db.insert(users).values(data).returning();
+      return user;
+    },
+
+    async update(id: number, data: Partial<NewUser>): Promise<User | null> {
+      const [user] = await db
+        .update(users)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(users.id, id))
+        .returning();
+      return user ?? null;
+    },
+  };
+  ```
+
+- **Keep queries in repository/storage layer**:
+  - Routes call services.
+  - Services call repositories.
+  - Repositories execute queries.
+
+## Transactions
+
+- **Use transactions for related operations**:
+  ```typescript
+  await db.transaction(async (tx) => {
+    const [user] = await tx.insert(users).values(userData).returning();
+    await tx.insert(profiles).values({ userId: user.id, ...profileData });
+  });
+  ```
+
+- **Handle transaction errors**:
+  - Transactions auto-rollback on error.
+  - Catch and handle errors appropriately.
+  - Log transaction failures.
+
+## Migrations
+
+- **Use Drizzle Kit for migrations**:
+  - Define migrations with `drizzle-kit generate`.
+  - Apply with `drizzle-kit push` or `drizzle-kit migrate`.
+  - Version control migration files.
+
+- **Migration best practices**:
+  - Make migrations reversible when possible.
+  - Test migrations on staging first.
+  - Don't modify existing migrations.
+
+## Performance
+
+- **Select only needed columns**:
+  ```typescript
+  // Good: Select specific columns
+  const users = await db.select({
+    id: users.id,
+    username: users.username,
+  }).from(users);
+
+  // Avoid: Select all when you need few
+  const users = await db.select().from(users);
+  ```
+
+- **Use indexes appropriately**:
+  - Index frequently queried columns.
+  - Index foreign key columns.
+  - Don't over-index.
+
+- **Pagination**:
+  ```typescript
+  const page = 1;
+  const pageSize = 20;
+  const results = await db.select()
+    .from(users)
+    .limit(pageSize)
+    .offset((page - 1) * pageSize);
+  ```
+
+## Relations
+
+- **Define relations in schema**:
+  ```typescript
+  export const usersRelations = relations(users, ({ many }) => ({
+    posts: many(posts),
+  }));
+
+  export const postsRelations = relations(posts, ({ one }) => ({
+    author: one(users, {
+      fields: [posts.authorId],
+      references: [users.id],
+    }),
+  }));
+  ```
+
+- **Use `with` for eager loading**:
+  ```typescript
+  const userWithPosts = await db.query.users.findFirst({
+    where: eq(users.id, id),
+    with: {
+      posts: true,
+    },
+  });
+  ```
+
+## Clean Architecture
+
+- **Database as infrastructure detail**:
+  - Schema defines data structure.
+  - Repository/storage abstracts database access.
+  - Services use repositories, not direct queries.
+
+- **Keep Drizzle out of routes**:
+  - Routes should not import from `drizzle-orm`.
+  - Use services or repositories as intermediaries.
+  - This allows swapping databases if needed.
+
+## Testing
+
+- **Use test database**:
+  - Separate database for tests.
+  - Reset state between tests.
+  - Use transactions for test isolation.
+
+- **Mock repository in service tests**:
+  - Test services without database.
+  - Test repositories with test database.
+  - Keep tests fast and isolated.

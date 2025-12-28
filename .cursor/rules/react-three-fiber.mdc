@@ -1,0 +1,213 @@
+---
+description: React Three Fiber (R3F), Three.js, and Drei clean code rules for 3D graphics
+alwaysApply: false
+---
+# React Three Fiber & Three.js Rules
+
+These rules apply to 3D graphics code using Three.js, React Three Fiber, and Drei.
+
+## Component Structure
+
+- **Separate 3D logic from React logic**:
+  - Keep 3D scene components focused on rendering and interaction.
+  - Extract complex calculations into utility functions or services.
+  - Use custom hooks for reusable 3D behavior (e.g., `useShipMovement`, `useCollision`).
+
+- **Component organization**:
+  - Group related 3D components in feature folders (e.g., `Ship/`, `Environment/`, `Effects/`).
+  - Keep scene setup separate from interactive elements.
+  - Use composition over inheritance for 3D objects.
+
+```tsx
+// Good: Focused component with extracted logic
+const Ship = () => {
+  const { position, rotation, handleMovement } = useShipMovement();
+  
+  return (
+    <group position={position} rotation={rotation}>
+      <ShipModel />
+      <ShipEffects />
+    </group>
+  );
+};
+```
+
+## Performance Best Practices
+
+- **Avoid creating objects in render/useFrame**:
+  - Pre-allocate vectors, quaternions, and matrices outside the render loop.
+  - Use `useRef` to store mutable 3D objects.
+  - Reuse geometry and materials across instances.
+
+```tsx
+// Bad: Creates new Vector3 every frame
+useFrame(() => {
+  mesh.position.copy(new THREE.Vector3(x, y, z)); // ❌
+});
+
+// Good: Reuse pre-allocated vector
+const tempVector = useMemo(() => new THREE.Vector3(), []);
+useFrame(() => {
+  tempVector.set(x, y, z);
+  mesh.position.copy(tempVector); // ✓
+});
+```
+
+- **Optimize useFrame callbacks**:
+  - Use frame skipping for non-critical updates.
+  - Check if updates are actually needed before applying.
+  - Use squared distances instead of `distanceTo()` when comparing.
+
+```tsx
+// Good: Frame skipping and early exit
+const frameCount = useRef(0);
+useFrame((state, delta) => {
+  frameCount.current++;
+  if (frameCount.current % 2 !== 0) return; // Skip every other frame
+  
+  // Only update if visible
+  if (!meshRef.current?.visible) return;
+  
+  // Use squared distance for performance
+  const distSq = position.distanceToSquared(target);
+  if (distSq > maxRangeSq) return;
+});
+```
+
+- **Geometry and Material management**:
+  - Share geometries and materials when possible using `useMemo`.
+  - Dispose of geometries and materials on unmount.
+  - Use instancing for repeated objects (InstancedMesh).
+
+```tsx
+// Good: Shared geometry and material
+const geometry = useMemo(() => new THREE.SphereGeometry(1, 16, 16), []);
+const material = useMemo(() => new THREE.MeshStandardMaterial({ color: 'blue' }), []);
+
+useEffect(() => {
+  return () => {
+    geometry.dispose();
+    material.dispose();
+  };
+}, [geometry, material]);
+```
+
+## Three.js Object Management
+
+- **Use refs for Three.js objects**:
+  - Store mesh refs with `useRef<THREE.Mesh>(null)`.
+  - Access Three.js objects via refs, not state.
+  - Update transforms directly on the object, not through React state.
+
+- **Coordinate systems**:
+  - Document coordinate system assumptions (Y-up, Z-forward, etc.).
+  - Keep Y coordinate consistent for water-level objects.
+  - Use consistent units throughout the project.
+
+- **Matrix updates**:
+  - Call `updateMatrixWorld()` when needed for accurate world positions.
+  - Be aware of parent-child transform hierarchies.
+  - Use `getWorldPosition()` for world-space coordinates.
+
+## Collision Detection
+
+- **Use appropriate collision methods**:
+  - Simple shapes: Use bounding spheres or boxes.
+  - Complex shapes: Use BVH (three-mesh-bvh) for mesh-level collision.
+  - Raycasting: Use for projectiles and line-of-sight checks.
+
+- **Collision radius guidelines**:
+  - Match collision radii to visual object sizes.
+  - Document collision radii in constants.
+  - Test collision feel, not just technical accuracy.
+
+```tsx
+// Good: Documented collision constants
+const COLLISION = {
+  SHIP_RADIUS: 4,        // Matches visual ship width at scale 4.5
+  CANNONBALL_RADIUS: 0.5,
+  SAFETY_MARGIN: 1,
+} as const;
+```
+
+- **Preserve Y coordinate in collision responses**:
+  - Water-surface objects should stay at water level.
+  - Zero out Y component of push/deflection vectors.
+  - Explicitly preserve Y after collision calculations.
+
+## Loading and Assets
+
+- **Preload models and textures**:
+  - Use `useGLTF.preload()` for critical models.
+  - Show loading states during asset loading.
+  - Handle loading errors gracefully.
+
+```tsx
+// Preload at module level
+useGLTF.preload('/models/ship.glb');
+
+// In component
+const { scene } = useGLTF('/models/ship.glb');
+const clonedScene = useMemo(() => scene.clone(), [scene]);
+```
+
+- **Clone loaded models**:
+  - Always clone GLTF scenes before using in multiple components.
+  - Store cloned models in refs to avoid re-cloning.
+
+## Drei Helpers
+
+- **Use Drei components appropriately**:
+  - `<OrbitControls>` for camera control.
+  - `<Environment>` for lighting presets.
+  - `<useGLTF>` for model loading.
+  - `<Trail>` for motion trails.
+
+- **Prefer Drei over custom implementations**:
+  - Use `<Html>` for 2D overlays in 3D space.
+  - Use `<Billboard>` for always-facing-camera elements.
+  - Use `<Float>` for floating animations.
+
+## Animation
+
+- **Use delta time for frame-rate independence**:
+  - Always multiply movement by `delta` in useFrame.
+  - Avoid fixed increments that depend on frame rate.
+
+```tsx
+// Good: Frame-rate independent movement
+useFrame((state, delta) => {
+  mesh.position.x += speed * delta; // ✓
+});
+
+// Bad: Frame-rate dependent
+useFrame(() => {
+  mesh.position.x += 0.1; // ❌ Varies with frame rate
+});
+```
+
+- **Smooth transitions**:
+  - Use lerp/slerp for smooth position/rotation changes.
+  - Consider using GSAP or Framer Motion for complex animations.
+
+## Debug and Development
+
+- **Use r3f-perf for performance monitoring**:
+  - Enable only in development.
+  - Monitor draw calls, triangles, and frame time.
+
+- **Visual debugging**:
+  - Add debug visualizers for collision boundaries.
+  - Use `<axesHelper>` and `<gridHelper>` during development.
+  - Toggle debug visuals via game state.
+
+## Testing
+
+- **Unit test utility functions**:
+  - Test collision calculations independently.
+  - Test coordinate transformations.
+  - Mock Three.js objects when needed.
+
+- **Visual testing**:
+  - Use Storybook or similar for component isolation.
+  - Test at different screen sizes and aspect ratios.

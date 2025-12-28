@@ -1,0 +1,303 @@
+---
+description: Zustand state management clean code rules
+alwaysApply: false
+---
+# Zustand State Management Rules
+
+These rules apply to state management using Zustand.
+
+## Store Structure
+
+- **Single responsibility per store**:
+  - Each store should manage one domain (e.g., `usePlayer`, `useEnemies`, `useGameState`).
+  - Avoid "god stores" that manage everything.
+  - Keep stores focused and cohesive.
+
+```tsx
+// Good: Focused stores
+const usePlayer = create<PlayerState>((set, get) => ({
+  position: null,
+  health: 100,
+  setPosition: (pos) => set({ position: pos }),
+  takeDamage: (amount) => set({ health: get().health - amount }),
+}));
+
+const useEnemies = create<EnemiesState>((set) => ({
+  enemies: [],
+  spawnEnemy: (enemy) => set((state) => ({ enemies: [...state.enemies, enemy] })),
+}));
+```
+
+- **Organize by domain**:
+  - Place stores in `lib/stores/` or `stores/` directory.
+  - Name files to match the hook (e.g., `usePlayer.tsx` for `usePlayer`).
+  - Co-locate related types with the store.
+
+## State Shape
+
+- **Keep state flat when possible**:
+  - Avoid deeply nested state structures.
+  - Normalize data when dealing with collections.
+  - Use IDs to reference related entities.
+
+```tsx
+// Good: Flat state with ID references
+interface GameState {
+  currentPlayerId: string | null;
+  activeEnemyIds: string[];
+}
+
+// Bad: Deeply nested
+interface GameState {
+  player: {
+    ship: {
+      position: { x: number; y: number; z: number };
+    };
+  };
+}
+```
+
+- **Separate UI state from domain state**:
+  - Domain state: game entities, player data, scores.
+  - UI state: modals, loading flags, selected items.
+  - Consider separate stores for UI concerns.
+
+## Actions and Updates
+
+- **Name actions clearly**:
+  - Use verb prefixes: `set`, `add`, `remove`, `update`, `toggle`, `reset`.
+  - Be specific: `takeDamage` not `updateHealth`.
+  - Match the domain language.
+
+- **Use `get()` for accessing current state in actions**:
+  - Access current state via `get()` inside actions.
+  - Avoid stale closures by not capturing state values.
+
+```tsx
+// Good: Using get() for current state
+const usePlayer = create<PlayerState>((set, get) => ({
+  health: 100,
+  maxHealth: 100,
+  
+  takeDamage: (amount) => {
+    const { health, maxHealth } = get();
+    const newHealth = Math.max(0, health - amount);
+    set({ health: newHealth });
+    return newHealth;
+  },
+  
+  heal: (amount) => {
+    const { health, maxHealth } = get();
+    set({ health: Math.min(maxHealth, health + amount) });
+  },
+}));
+```
+
+- **Batch related updates**:
+  - Update multiple fields in a single `set()` call.
+  - Use functional updates when depending on previous state.
+
+```tsx
+// Good: Batched update
+set({
+  position: newPosition,
+  velocity: newVelocity,
+  lastUpdate: Date.now(),
+});
+
+// Good: Functional update for arrays
+set((state) => ({
+  enemies: state.enemies.filter((e) => e.id !== id),
+}));
+```
+
+## Subscriptions and Selectors
+
+- **Use selectors to minimize re-renders**:
+  - Select only the state you need in components.
+  - Avoid selecting entire store state.
+  - Use shallow comparison for object selections.
+
+```tsx
+// Good: Specific selector
+const position = usePlayer((state) => state.position);
+const health = usePlayer((state) => state.health);
+
+// Bad: Selecting everything
+const playerState = usePlayer((state) => state); // ❌ Re-renders on any change
+```
+
+- **Use `shallow` for object/array selections**:
+  - Import `shallow` from `zustand/shallow`.
+  - Use when selecting multiple values.
+
+```tsx
+import { shallow } from 'zustand/shallow';
+
+// Good: Shallow comparison for multiple values
+const { position, rotation, health } = usePlayer(
+  (state) => ({
+    position: state.position,
+    rotation: state.rotation,
+    health: state.health,
+  }),
+  shallow
+);
+```
+
+- **External subscriptions with `subscribe`**:
+  - Use `store.subscribe()` for non-React code.
+  - Clean up subscriptions when no longer needed.
+
+```tsx
+// Subscribe to changes outside React
+const unsubscribe = usePlayer.subscribe(
+  (state) => state.health,
+  (health) => {
+    if (health <= 0) {
+      triggerGameOver();
+    }
+  }
+);
+```
+
+## Accessing State Outside React
+
+- **Use `getState()` for imperative access**:
+  - Safe to call from event handlers, services, or other stores.
+  - Returns current state snapshot.
+
+```tsx
+// Good: Accessing state from service
+class CollisionService {
+  checkPlayerCollision() {
+    const playerPosition = usePlayer.getState().position;
+    // ... collision logic
+  }
+}
+
+// Good: Cross-store communication
+const useEnemies = create((set) => ({
+  damageEnemy: (id, amount) => {
+    // Access player state
+    const playerDamageBonus = useUpgrades.getState().damageBonus;
+    const totalDamage = amount * playerDamageBonus;
+    // ... apply damage
+  },
+}));
+```
+
+## Middleware
+
+- **Use middleware judiciously**:
+  - `persist`: For saving state to localStorage/sessionStorage.
+  - `devtools`: For Redux DevTools integration (dev only).
+  - `immer`: For complex nested state updates.
+
+```tsx
+import { create } from 'zustand';
+import { persist, devtools } from 'zustand/middleware';
+
+const useGameState = create<GameState>()(
+  devtools(
+    persist(
+      (set) => ({
+        score: 0,
+        level: 1,
+        incrementScore: (amount) => set((state) => ({ score: state.score + amount })),
+      }),
+      { name: 'game-storage' }
+    ),
+    { name: 'GameState' }
+  )
+);
+```
+
+## TypeScript
+
+- **Define explicit state and action types**:
+  - Separate state interface from actions interface.
+  - Use discriminated unions for complex state.
+
+```tsx
+interface PlayerState {
+  // State
+  position: THREE.Vector3 | null;
+  health: number;
+  maxHealth: number;
+  
+  // Actions
+  setPosition: (position: THREE.Vector3) => void;
+  takeDamage: (amount: number) => void;
+  heal: (amount: number) => void;
+  reset: () => void;
+}
+
+const usePlayer = create<PlayerState>((set, get) => ({
+  // ... implementation
+}));
+```
+
+## Initialization and Reset
+
+- **Provide initialization functions**:
+  - Support initializing with default or custom values.
+  - Separate initialization from reset logic.
+
+```tsx
+const initialState = {
+  position: new THREE.Vector3(0, 0, 0),
+  health: 100,
+  maxHealth: 100,
+};
+
+const usePlayer = create<PlayerState>((set) => ({
+  ...initialState,
+  
+  initialize: (overrides = {}) => {
+    set({ ...initialState, ...overrides });
+  },
+  
+  reset: () => {
+    set(initialState);
+  },
+}));
+```
+
+## Testing
+
+- **Reset stores between tests**:
+  - Clear store state before each test.
+  - Use the reset action or reinitialize.
+
+```tsx
+beforeEach(() => {
+  usePlayer.getState().reset();
+  useEnemies.getState().resetEnemies();
+});
+```
+
+- **Test stores in isolation**:
+  - Test actions produce expected state changes.
+  - Test selectors return correct derived values.
+  - Mock cross-store dependencies.
+
+## Common Patterns
+
+- **Derived state**:
+  - Compute derived values in selectors, not stored state.
+  - Use `useMemo` in components for expensive derivations.
+
+```tsx
+// Good: Derived in selector
+const isAlive = usePlayer((state) => state.health > 0);
+const healthPercent = usePlayer((state) => (state.health / state.maxHealth) * 100);
+```
+
+- **Optimistic updates**:
+  - Update UI immediately, revert on error.
+  - Store previous state for rollback.
+
+- **Action creators for complex logic**:
+  - Extract complex action logic into separate functions.
+  - Keep store definitions clean and readable.
