@@ -9,9 +9,9 @@
 // =============================================================================
 export const SHIP_PHYSICS = {
   // Movement
-  FORWARD_ACCELERATION: 9,
-  BACKWARD_ACCELERATION: 4.5,
-  ROTATION_SPEED: 2.0,
+  FORWARD_ACCELERATION: 18, // 2x speed increase
+  BACKWARD_ACCELERATION: 9, // 2x speed increase
+  ROTATION_SPEED: 4.0, // 2x speed increase
   DRAG: 0.95,
 
   // Collision
