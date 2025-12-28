@@ -73,15 +73,31 @@ export const ENEMY_AI = {
   SPAWN_ATTEMPTS_MAX: 20,
   SPAWN_RADIUS: 12,
 
-  // Movement
-  MOVEMENT_SPEED: 8,
-  CHASE_SPEED_MULTIPLIER: 1.2,
-  PATROL_RADIUS: 50,
+  // Movement (used in EnemyShip.tsx)
+  MOVEMENT_SPEED: 0.05, // Base speed per frame
+  ROTATION_SPEED: 0.01, // Rotation speed per frame
+  RETREAT_SPEED_MULTIPLIER: 1.5, // Speed multiplier when retreating
+  CIRCLE_SPEED_MULTIPLIER: 0.8, // Speed multiplier when circling
+  APPROACH_SPEED_MULTIPLIER: 0.9, // Speed multiplier when approaching
+
+  // Detection ranges
+  DETECTION_RANGE: 80, // Distance at which enemy detects player
+  CAN_FIRE_RANGE: 30, // Range at which enemy will fire cannons
+  OPTIMAL_RANGE: 25, // Ideal distance to maintain from player
+  MINIMUM_RANGE: 15, // Minimum distance before retreating
 
   // Combat
   ATTACK_RANGE: 60,
-  FIRE_INTERVAL_MIN: 3, // seconds
-  FIRE_INTERVAL_MAX: 5, // seconds
+  FIRE_COOLDOWN_MIN: 5, // seconds
+  FIRE_COOLDOWN_MAX: 8, // seconds (5 + 3 random)
+  CANNON_SPREAD: 0.2, // Random spread for aiming
+  CANNON_HEIGHT: 1.0, // Height at which cannons fire
+
+  // Collision
+  COLLISION_COOLDOWN: 1.5, // seconds between collision damage
+  WARNING_DISTANCE_MULTIPLIER: 1.5, // Multiplier for collision warning distance
+  BOUNCE_FORCE: 2.5, // Force applied when ships collide
+  BOUNCE_FACTOR: 0.5, // Factor for environment collision bounce
 
   // Stats
   BASE_HEALTH: 100,

@@ -11,6 +11,7 @@ import { environmentCollisions } from "../lib/collision";
 import { MeshCollisionRegistry } from "../lib/services/MeshCollisionRegistry";
 import { BVHCollisionService } from "../lib/services/BVHCollisionService";
 import { logger } from "../lib/utils/logger";
+import { WEAPONS } from "../lib/config/gameBalance";
 import ExplosionEffect from "./ExplosionEffect";
 import WaterSplashEffect from "./WaterSplashEffect";
 import ShipExplosionEffect from "./ShipExplosionEffect";
@@ -104,8 +105,8 @@ const Cannonball = ({
     // Move cannonball using local velocity reference
     ballRef.current.position.add(velocity.clone().multiplyScalar(delta));
     
-    // Apply stronger gravity effect - increased from 5 to 9.8 for more realistic arcs
-    velocity.y -= 9.8 * delta;
+    // Apply gravity effect for realistic arcs
+    velocity.y -= WEAPONS.CANNONBALL_GRAVITY * delta;
     
     // Apply slight drag in horizontal directions for realism
     velocity.x *= 0.995;
@@ -122,8 +123,8 @@ const Cannonball = ({
     const cannonballPosition = ballRef.current.position.clone();
     
     // Check for collisions with environmental features first
-    // Cannonball collision radius - small for precise hits
-    const cannonballRadius = 0.5; // Small radius for the cannonball itself
+    // Cannonball collision radius from gameBalance config
+    const cannonballRadius = WEAPONS.CANNONBALL_RADIUS;
     
     // Use BVH for precise mesh-level collision if available
     const useBVH = MeshCollisionRegistry.isInitialized();
@@ -176,10 +177,9 @@ const Cannonball = ({
       // Calculate distance to enemy
       const distance = cannonballPosition.distanceTo(enemy.position);
       
-      // Enemy ship collision radius - matches visual ship size at scale 4.5
-      // Ship is approximately 3-4 units wide, so we use 3 for the hit radius
-      const enemyShipHitRadius = 3; // Radius at which cannonball hits the ship
-      const effectiveHitRadius = cannonballRadius + enemyShipHitRadius; // = 3.5 units combined
+      // Enemy ship collision radius from gameBalance config
+      const enemyShipHitRadius = WEAPONS.SHIP_HIT_RADIUS;
+      const effectiveHitRadius = cannonballRadius + enemyShipHitRadius;
       
       // If distance is less than effective hit radius, we have a hit
       if (distance < effectiveHitRadius && !hitDetected.current) {
@@ -187,7 +187,7 @@ const Cannonball = ({
         hitDetected.current = true;
         
         // Check for double damage power-up from player ship
-        let damage = 20; // Base damage
+        let damage = WEAPONS.PLAYER_CANNON_DAMAGE;
         
         // Check for one-shot kill debug feature
         const gameState = useGameState.getState();
@@ -245,8 +245,8 @@ const Cannonball = ({
         // Calculate distance to player
         const distanceToPlayer = cannonballPosition.distanceTo(playerPosition);
         
-        // Player ship collision radius - matches visual ship size at scale 4.5
-        const playerHitRadius = cannonballRadius + 3; // = 3.5 units total
+        // Player ship collision radius from gameBalance config
+        const playerHitRadius = cannonballRadius + WEAPONS.SHIP_HIT_RADIUS;
         
         // If distance is less than hit radius, we have a hit
         if (distanceToPlayer < playerHitRadius && !hitDetected.current) {
@@ -254,7 +254,7 @@ const Cannonball = ({
           hitDetected.current = true;
           
           // Apply damage to player (correctly access from the state we already retrieved)
-          playerState.takeDamage(15); // 15 damage per enemy cannonball (slightly less than player's cannons)
+          playerState.takeDamage(WEAPONS.ENEMY_CANNON_DAMAGE);
           
           // Create ship explosion effect at the impact point
           setEffectPosition(cannonballPosition.clone());

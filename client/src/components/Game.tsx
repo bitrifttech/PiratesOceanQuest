@@ -9,6 +9,7 @@ import EnemyShip from "./EnemyShip"; // Added back enemy ship component
 import SkyWithClouds from "./SkyWithClouds"; // New enhanced sky with cloud system
 import EnvironmentComponent, { EnvironmentFeature, EnvironmentFeatureType } from "./Environment";
 import PowerUpManager from "./PowerUpManager"; // Power-up system for prizes
+import WorldPowerUp from "./WorldPowerUp"; // World power-up rendering component
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC, WORLD } from "../lib/constants";
 import { logger } from "../lib/utils/logger";
 
@@ -274,79 +275,14 @@ const Game = () => {
       <WorldPowerUpCollector />
       
       {/* Render all world power-ups from the global state */}
-      {worldPowerUps.map((powerUp) => {
-        // Determine color based on power-up type
-        let color = '#ffffff';
-        let geometry = null;
-        
-        switch (powerUp.type) {
-          case 'health_boost':
-            color = '#ff0000';
-            geometry = <sphereGeometry args={[0.8, 16, 16]} />;
-            break;
-          case 'speed_boost':
-            color = '#00ff00';
-            geometry = <coneGeometry args={[0.7, 1.4, 16]} />;
-            break;
-          case 'double_damage':
-            color = '#ff7700';
-            geometry = <boxGeometry args={[1, 1, 1]} />;
-            break;
-          case 'rapid_fire':
-            color = '#00ffff';
-            geometry = <cylinderGeometry args={[0.4, 0.6, 1.2, 16]} />;
-            break;
-          case 'shield':
-            color = '#0000ff';
-            geometry = <torusGeometry args={[0.6, 0.2, 16, 32]} />;
-            break;
-          case 'triple_shot':
-            color = '#ff00ff';
-            geometry = <dodecahedronGeometry args={[0.7, 0]} />;
-            break;
-          case 'long_range':
-            color = '#ffff00';
-            geometry = <octahedronGeometry args={[0.7, 0]} />;
-            break;
-          default:
-            color = '#ffffff';
-            geometry = <sphereGeometry args={[0.6, 12, 12]} />;
-        }
-        
-        // The position from the stored power-up as Three.js compatible array
-        const position: [number, number, number] = [
-          powerUp.position.x,
-          powerUp.position.y, // Should already be at 1
-          powerUp.position.z
-        ];
-        
-        // Calculate time-based animation with unique variations
-        // Use hash code of the ID as an offset to create different animations for each power-up
-        const idHash = powerUp.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-        const bobOffset = Math.sin((Date.now() + idHash) * 0.003) * 0.3;
-        const spinOffset = (Date.now() + idHash) * 0.001;
-                
-        return (
-          <group key={powerUp.id} position={position} rotation={[0, spinOffset, 0]}>
-            <mesh position={[0, bobOffset, 0]} userData={{ isPowerUp: true, id: powerUp.id, type: powerUp.type }}>
-              {geometry}
-              <meshStandardMaterial 
-                color={color} 
-                emissive={color} 
-                emissiveIntensity={0.7} 
-                metalness={0.8}
-                roughness={0.2}
-              />
-            </mesh>
-            <pointLight 
-              color={color} 
-              intensity={0.8} 
-              distance={5} 
-              position={[0, bobOffset, 0]}
-            />
-          </group>
-        );
-      })}
+      {worldPowerUps.map((powerUp) => (
+        <WorldPowerUp
+          key={powerUp.id}
+          id={powerUp.id}
+          type={powerUp.type}
+          position={powerUp.position}
+        />
+      ))}
       
       {/* Enemy ships */}
       {enemies.map((enemy) => (

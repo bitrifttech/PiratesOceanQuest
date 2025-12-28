@@ -12,6 +12,7 @@ import { POSITION, SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
 import { collisionHandler } from "../lib/services/CollisionHandler";
 import { BVHCollisionService } from "../lib/services/BVHCollisionService";
 import { MeshCollisionRegistry } from "../lib/services/MeshCollisionRegistry";
+import { ENEMY_AI, SHIP_PHYSICS, WEAPONS } from "../lib/config/gameBalance";
 
 interface EnemyShipProps {
   id: string;
@@ -42,13 +43,13 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   // Get player position for AI behavior
   const playerPosition = usePlayer((state) => state.position);
   
-  // Ship movement parameters - moved outside component to prevent recreation
-  const speed = 0.05;
-  const rotationSpeed = 0.01;
-  const detectionRange = 80; // Units at which the enemy ship detects the player
-  const canFireRange = 30; // Range at which enemy will fire cannons
-  const optimalRange = 25; // Ideal distance to maintain from player
-  const minimumRange = 15; // Minimum distance before retreating
+  // Ship movement parameters from gameBalance config
+  const speed = ENEMY_AI.MOVEMENT_SPEED;
+  const rotationSpeed = ENEMY_AI.ROTATION_SPEED;
+  const detectionRange = ENEMY_AI.DETECTION_RANGE;
+  const canFireRange = ENEMY_AI.CAN_FIRE_RANGE;
+  const optimalRange = ENEMY_AI.OPTIMAL_RANGE;
+  const minimumRange = ENEMY_AI.MINIMUM_RANGE;
   
   // Cache squared distances to avoid Math.sqrt in distance checks
   const detectionRangeSq = detectionRange * detectionRange;
@@ -113,13 +114,12 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
     const distanceSqToPlayer = dx * dx + dz * dz;
     const distanceToPlayer = Math.sqrt(distanceSqToPlayer);
     
-    // Ship collision parameters - adjusted to match visual ship size
-    // Ships at scale 4.5 are approximately 3-4 units wide visually
-    const enemyShipRadius = 4; // Smaller collision radius to match visual ship size
-    const playerShipRadius = 4; // Match the player ship's collision radius
-    const collisionDamage = 10; // Damage on collision
-    const collisionRadiusSum = enemyShipRadius + playerShipRadius; // = 8 units total
-    const collisionRadiusSumSq = collisionRadiusSum * collisionRadiusSum; // = 64
+    // Ship collision parameters from gameBalance config
+    const enemyShipRadius = SHIP_PHYSICS.ENEMY_COLLISION_RADIUS;
+    const playerShipRadius = SHIP_PHYSICS.PLAYER_COLLISION_RADIUS;
+    const collisionDamage = WEAPONS.COLLISION_DAMAGE;
+    const collisionRadiusSum = enemyShipRadius + playerShipRadius;
+    const collisionRadiusSumSq = collisionRadiusSum * collisionRadiusSum;
     
     // Track collision state and add cooldown for damage
     if (collisionCooldown.current > 0) {
@@ -127,9 +127,8 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
     }
     
     // Proximity alert - using squared distances for better performance
-    // Warning at 1.5x collision distance: (collisionRadiusSum * 1.5)^2
-    const warningDistance = collisionRadiusSum * 1.5; // = 12 units
-    const collisionWarningDistanceSq = warningDistance * warningDistance; // = 144
+    const warningDistance = collisionRadiusSum * ENEMY_AI.WARNING_DISTANCE_MULTIPLIER;
+    const collisionWarningDistanceSq = warningDistance * warningDistance;
     const inCollisionDanger = distanceSqToPlayer < collisionWarningDistanceSq;
     
     // Check for actual collision with player ship using squared distance
@@ -150,7 +149,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         playerHit(); // Player ship crew also reacts
         
         // Set collision cooldown to avoid rapid damage
-        collisionCooldown.current = 1.5; // 1.5 second cooldown
+        collisionCooldown.current = ENEMY_AI.COLLISION_COOLDOWN;
         
       }
       
@@ -159,7 +158,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       const bounceDirection = new THREE.Vector3()
         .subVectors(currentPos, playerPosition)
         .normalize()
-        .multiplyScalar(2.5); // Stronger bounce force
+        .multiplyScalar(ENEMY_AI.BOUNCE_FORCE);
       
       // Apply bounce to enemy position
       currentPos.add(bounceDirection);
@@ -182,7 +181,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       if (distanceToPlayer < minimumRange || inCollisionDanger) {
         // Reverse the direction to move away
         targetAngle = angleToPlayer + Math.PI; // Turn 180° away
-        movementSpeed = speed * 1.5; // Move away faster
+        movementSpeed = speed * ENEMY_AI.RETREAT_SPEED_MULTIPLIER; // Move away faster
         
         // Trigger crew near collision animation when collision danger detected
         if (inCollisionDanger && Math.random() < 0.05) {
@@ -198,13 +197,13 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         if (Math.random() < 0.01) {
           targetAngle = angleToPlayer - Math.PI / 2;
         }
-        movementSpeed = speed * 0.8; // Slower circular movement
+        movementSpeed = speed * ENEMY_AI.CIRCLE_SPEED_MULTIPLIER; // Slower circular movement
       }
       // If beyond optimal range but within detection, approach cautiously
       else {
         // Approach normally
         targetAngle = angleToPlayer;
-        movementSpeed = speed * 0.9; // Slightly slower approach
+        movementSpeed = speed * ENEMY_AI.APPROACH_SPEED_MULTIPLIER; // Slightly slower approach
       }
       
       // Gradually rotate toward the target angle with smooth turning
@@ -237,8 +236,8 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       // Calculate the future position to check for collisions
       const futurePosition = currentPos.clone().add(velocity);
       
-      // Ship collision radius - matches visual ship size at scale 4.5 (approximately 3-4 units wide)
-      const shipRadius = 4;
+      // Ship collision radius from gameBalance config
+      const shipRadius = SHIP_PHYSICS.ENEMY_COLLISION_RADIUS;
       
       // Use BVH for precise mesh-level collision detection if meshes are registered
       const useBVH = MeshCollisionRegistry.isInitialized();
@@ -257,7 +256,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
             currentPos,
             collision,
             shipRadius,
-            1 // safetyMargin - smaller for tighter collision response
+            SHIP_PHYSICS.SAFETY_MARGIN
           );
           pushDirection = collision.pushDirection || null;
         }
@@ -297,7 +296,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         if (bounceDirection.length() > 0) {
           bounceDirection.normalize();
         }
-        const bounceFactor = 0.5; // How much to bounce
+        const bounceFactor = ENEMY_AI.BOUNCE_FACTOR; // How much to bounce
         
         // Apply bounce velocity (horizontal only)
         const bounceVelocity = bounceDirection.multiplyScalar(movementSpeed * delta * 60 * bounceFactor);
@@ -331,7 +330,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         .normalize();
       
       // Add slight randomness to aim (makes it possible for player to dodge)
-      const spread = 0.2; // Amount of random spread
+      const spread = ENEMY_AI.CANNON_SPREAD;
       toPlayerDirection.x += (Math.random() - 0.5) * spread;
       toPlayerDirection.z += (Math.random() - 0.5) * spread;
       toPlayerDirection.normalize(); // Re-normalize after adding randomness
@@ -339,7 +338,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       // Set cannon firing position slightly above water at the ship's position
       const cannonPosition = new THREE.Vector3(
         currentPos.x,
-        1.0, // Fixed height for cannon position
+        ENEMY_AI.CANNON_HEIGHT,
         currentPos.z
       );
       
@@ -350,8 +349,9 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       const newCannonball = createCannonball(cannonPosition, toPlayerDirection, cannonballId);
       setCannonballs(prev => [...prev, newCannonball]);
       
-      // Set cooldown for next cannon fire (5-8 seconds, random to make it less predictable)
-      cannonCooldownRef.current = 5 + Math.random() * 3;
+      // Set cooldown for next cannon fire (random to make it less predictable)
+      const cooldownRange = ENEMY_AI.FIRE_COOLDOWN_MAX - ENEMY_AI.FIRE_COOLDOWN_MIN;
+      cannonCooldownRef.current = ENEMY_AI.FIRE_COOLDOWN_MIN + Math.random() * cooldownRange;
     }
     
     // Update cannon cooldown
