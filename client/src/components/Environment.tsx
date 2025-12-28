@@ -136,20 +136,11 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
   // Reference to the scaled group for proper BVH registration
   const scaledGroupRef = useRef<THREE.Group>(null);
   
-  // Get underwater offset based on island type (how much should be submerged)
+  // Get vertical offset for positioning islands at water level
+  // All islands are now positioned with their bottoms at water level (Y=0)
+  // This ensures all geometry is visible and prevents underwater collisions
   const getUnderwaterOffset = () => {
-    switch (type) {
-      case 'tropical': return -2.0;   // Tropical islands: lower portions underwater
-      case 'mountain': return -3.0;   // Mountain islands: base partially submerged
-      case 'rocks': return -1.5;      // Rock formations: slight submersion
-      case 'shipwreck': return -1.0;  // Shipwrecks: mostly above water but base submerged
-      case 'port': return -0.5;       // Ports: just slightly in water
-      case 'lighthouse': return -1.5; // Lighthouses: base in water
-      case 'volcanic': return -3.5;   // Volcanic: deep base underwater with peaks showing
-      case 'atoll': return -1.0;      // Atolls: shallow submersion, beach level
-      case 'ice': return -2.5;        // Ice islands: significant portion underwater like icebergs
-      default: return -1.5;
-    }
+    return 0; // Position all islands with bottom at water level
   };
   
   // Position the model ONCE only when first loaded
@@ -165,11 +156,11 @@ const EnvironmentalFeature = memo(({ feature }: { feature: EnvironmentFeature })
       // Calculate the offset needed to place bottom at water level
       const baselineOffset = -modelBottom;
       
-      // Get underwater offset for this island type
-      const underwaterOffset = getUnderwaterOffset();
+      // Get vertical offset for this island type
+      const verticalOffset = getUnderwaterOffset();
       
-      // Calculate final Y position - water level is at 0, push islands down to submerge portions
-      const yPosition = STATIC.WATER_LEVEL + underwaterOffset;
+      // Calculate final Y position - position islands at water level
+      const yPosition = STATIC.WATER_LEVEL + verticalOffset;
       
       // Set the position once
       featureRef.current.position.set(x, yPosition, z);
