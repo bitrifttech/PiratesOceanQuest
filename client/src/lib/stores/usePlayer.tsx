@@ -2,6 +2,7 @@ import { create } from "zustand";
 import * as THREE from "three";
 import { useUpgrades } from "./useUpgrades";
 import { usePowerUps } from "./usePowerUps";
+import { logger } from "../utils/logger";
 
 interface PlayerState {
   // Ship properties
@@ -47,7 +48,6 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   initialize: () => {
     // Check if player is already initialized
     if (get().position !== null) {
-      console.log("Player already initialized, skipping initialization");
       return;
     }
     
@@ -63,8 +63,6 @@ export const usePlayer = create<PlayerState>((set, get) => ({
       cannonReady: true,
       cannonCooldown: 0,
     });
-    
-    console.log("Player initialized with max health:", maxHealth);
   },
   
   // Reset player state (used when starting a new game)
@@ -104,12 +102,10 @@ export const usePlayer = create<PlayerState>((set, get) => ({
       if (powerUpState.hasPowerUp('rapid_fire')) {
         const rapidFireMultiplier = powerUpState.getPowerUpValue('rapid_fire') || 1;
         cooldownTime *= rapidFireMultiplier; // e.g., 0.3 = 70% cooldown reduction
-        console.log(`[POWER-UP] Rapid fire active: ${(1 - rapidFireMultiplier) * 100}% faster cannons`);
       }
       
       // Apply triple shot if active
       if (powerUpState.hasPowerUp('triple_shot')) {
-        console.log(`[POWER-UP] Triple shot active!`);
         // The actual triple shot logic is in the Ship component
         // We just track shot consumption here
         powerUpState.consumeShot('triple_shot');
@@ -158,19 +154,13 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     if (powerUpState.hasPowerUp('shield')) {
       const damageReduction = powerUpState.getPowerUpValue('shield') || 1;
       damageAmount = Math.floor(amount * damageReduction);
-      
-      if (damageAmount < amount) {
-        console.log(`[POWER-UP] Shield active: Reduced damage from ${amount} to ${damageAmount}`);
-      }
     }
     
     // Re-enabled damage system to support ship collisions
     const newHealth = Math.max(0, health - damageAmount);
     set({ health: newHealth });
     
-    if (damageAmount > 0) {
-      console.log(`[PLAYER] Took ${damageAmount} damage. Health: ${newHealth}/${get().maxHealth}`);
-    }
+    logger.debug('ship', `Player took ${damageAmount} damage. Health: ${newHealth}/${get().maxHealth}`);
     
     // Trigger crew reaction in ship events store if available
     try {
@@ -178,11 +168,10 @@ export const usePlayer = create<PlayerState>((set, get) => ({
       if (playerHit) {
         playerHit();
       }
-    } catch (error) {
+    } catch {
       // Silently handle if the module isn't available yet
     }
     
-    console.log(`[PLAYER] Took ${amount} damage. Health: ${newHealth}/${get().maxHealth}`);
     return newHealth;
   },
   

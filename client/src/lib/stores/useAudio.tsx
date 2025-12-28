@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { logger } from "../utils/logger";
 
 // Track identifiers
 export type MusicTrack = 'main' | 'alternate';
@@ -69,7 +70,7 @@ export const useAudio = create<AudioState>((set, get) => ({
       successSound: success
     });
     
-    console.log("Game sounds loaded");
+    logger.debug('audio', 'Game sounds loaded');
   },
   
   toggleMute: () => {
@@ -86,13 +87,11 @@ export const useAudio = create<AudioState>((set, get) => ({
       if (newMutedState) {
         activeMusic.pause();
       } else if (activeMusic.paused) {
-        activeMusic.play().catch(error => {
-          console.log(`Background music play prevented:`, error);
+        activeMusic.play().catch(() => {
+          // Audio play was prevented (browser policy)
         });
       }
     }
-    
-    console.log(`Sound ${newMutedState ? 'muted' : 'unmuted'}`);
   },
   
   switchTrack: (track: MusicTrack) => {
@@ -118,14 +117,13 @@ export const useAudio = create<AudioState>((set, get) => ({
     const newMusic = track === 'main' ? backgroundMusic : alternateMusic;
     if (newMusic && !isMuted) {
       newMusic.volume = volume;
-      newMusic.play().catch(error => {
-        console.log(`New music track play prevented:`, error);
+      newMusic.play().catch(() => {
+        // Audio play was prevented (browser policy)
       });
     }
     
     // Update state
     set({ currentTrack: track });
-    console.log(`Switched to ${track} music track`);
   },
   
   setVolume: (volume: number) => {
@@ -140,7 +138,6 @@ export const useAudio = create<AudioState>((set, get) => ({
     
     // Update state
     set({ volume: clampedVolume });
-    console.log(`Set volume to ${clampedVolume}`);
   },
   
   playHit: () => {
@@ -149,8 +146,8 @@ export const useAudio = create<AudioState>((set, get) => ({
       // Clone the sound to allow overlapping playback
       const soundClone = hitSound.cloneNode() as HTMLAudioElement;
       soundClone.volume = volume;
-      soundClone.play().catch(error => {
-        console.log("Hit sound play prevented:", error);
+      soundClone.play().catch(() => {
+        // Audio play was prevented (browser policy)
       });
     }
   },
@@ -160,8 +157,8 @@ export const useAudio = create<AudioState>((set, get) => ({
     if (successSound && !isMuted) {
       successSound.currentTime = 0;
       successSound.volume = volume;
-      successSound.play().catch(error => {
-        console.log("Success sound play prevented:", error);
+      successSound.play().catch(() => {
+        // Audio play was prevented (browser policy)
       });
     }
   },
@@ -180,8 +177,8 @@ export const useAudio = create<AudioState>((set, get) => ({
     
     if (activeMusic && !isMuted) {
       activeMusic.volume = volume;
-      activeMusic.play().catch(error => {
-        console.log("Background music play prevented:", error);
+      activeMusic.play().catch(() => {
+        // Audio play was prevented (browser policy)
       });
     }
   },
@@ -195,7 +192,6 @@ export const useAudio = create<AudioState>((set, get) => ({
     if (activeMusic) {
       activeMusic.pause();
       activeMusic.currentTime = 0;
-      console.log("Background music stopped");
     }
   },
   
@@ -228,7 +224,7 @@ export const useAudio = create<AudioState>((set, get) => ({
         sound = hitSound;
         break;
       default:
-        console.warn(`Unknown sound type: ${soundType}`);
+        logger.warn('audio', `Unknown sound type: ${soundType}`);
         return;
     }
     
@@ -247,8 +243,8 @@ export const useAudio = create<AudioState>((set, get) => ({
         soundClone.volume = volume * 0.7; // Make splashes quieter
       }
       
-      soundClone.play().catch(error => {
-        console.log(`${soundType} sound play prevented:`, error);
+      soundClone.play().catch(() => {
+        // Audio play was prevented (browser policy)
       });
     }
   }

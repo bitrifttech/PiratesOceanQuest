@@ -2,8 +2,9 @@ import { useRef, useState, useEffect } from "react";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTF } from "three-stdlib";
-import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC } from "../lib/constants";
+import { SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
 import { useIslandPositions, getModelPositionId } from "../lib/stores/useIslandPositions";
+import { logger } from "../lib/utils/logger";
 
 // Define island types
 type IslandType = 'tropical' | 'mountain' | 'rocks';
@@ -45,19 +46,17 @@ const Island = ({
       scene: THREE.Group
     };
     model = gltf.scene;
-    console.log(`Successfully loaded model from ${modelPath}`);
   } catch (error) {
-    console.error(`Error loading model from ${modelPath}:`, error);
+    logger.error('model', `Error loading model from ${modelPath}:`, error);
     model = null;
   }
   
   // Detect when model is loaded
   useEffect(() => {
     if (model) {
-      console.log(`Island model loaded: ${type}`, model);
       setModelLoaded(true);
     } else {
-      console.error(`Failed to load island model for type: ${type}`);
+      logger.error('model', `Failed to load island model for type: ${type}`);
     }
   }, [model, type]);
   
@@ -67,7 +66,7 @@ const Island = ({
     try {
       islandModel = model.clone();
     } catch (error) {
-      console.error(`Error cloning model for ${type}:`, error);
+      logger.error('model', `Error cloning model for ${type}:`, error);
     }
   }
   
@@ -96,20 +95,12 @@ const Island = ({
   useEffect(() => {
     if (!islandRef.current || !islandModel) return;
     
-    const id = instanceId.current;
-    console.log(`[ISLAND][${id}] Positioning island ${modelId}`);
-    
     // Check if we already have a stored position
     if (hasIslandPosition(modelId)) {
       // Use the stored position
       const storedY = getIslandPosition(modelId);
-      console.log(`[ISLAND][${id}] Using stored position Y=${storedY} for ${modelId}`);
-      
-      // Apply position directly
       islandRef.current.position.set(xPosition, storedY!, zPosition);
     } else {
-      console.log(`[ISLAND][${id}] Calculating new position for ${modelId}`);
-      
       try {
         // First time - calculate the position
         const boundingBox = new THREE.Box3().setFromObject(islandModel);
@@ -117,19 +108,13 @@ const Island = ({
         const baselineOffset = -modelBottom;
         const yPosition = STATIC.WATER_LEVEL + baselineOffset;
         
-        console.log(`[ISLAND][${id}] Calculated position Y=${yPosition.toFixed(2)} for ${modelId}`, {
-          modelBottom: modelBottom.toFixed(2),
-          baselineOffset: baselineOffset.toFixed(2),
-          waterLevel: STATIC.WATER_LEVEL
-        });
-        
         // Store the position in the global store
         setIslandPosition(modelId, yPosition);
         
         // Apply the position
         islandRef.current.position.set(xPosition, yPosition, zPosition);
       } catch (error) {
-        console.error(`[ISLAND][${id}] Error calculating position:`, error);
+        logger.error('environment', 'Error calculating island position:', error);
         // Fallback to grid level
         islandRef.current.position.set(xPosition, STATIC.WATER_LEVEL, zPosition);
       }
@@ -144,7 +129,6 @@ const Island = ({
         // Check if position has been modified
         const currentY = islandRef.current.position.y;
         if (Math.abs(currentY - storedY) > 0.01) {
-          console.log(`[ISLAND][${id}] ⚠️ Enforcing Y position ${storedY.toFixed(2)} (was ${currentY.toFixed(2)})`);
           islandRef.current.position.y = storedY;
         }
       }
@@ -152,7 +136,6 @@ const Island = ({
     
     return () => {
       clearInterval(enforcementInterval);
-      console.log(`[ISLAND][${id}] Cleanup for ${modelId}`);
     };
   }, [modelId, xPosition, zPosition, islandModel, getIslandPosition, hasIslandPosition, setIslandPosition]);
   

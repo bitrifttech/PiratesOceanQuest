@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { POSITION, STATIC } from "../constants";
+import { POSITION } from "../constants";
+import { logger } from "../utils/logger";
 
 export type GameState = 'title' | 'menu' | 'settings' | 'help' | 'upgrade' | 'playing' | 'gameOver';
 
@@ -31,12 +32,12 @@ export const useGameState = create<GameStateStore>((set) => ({
   
   setGameState: (state) => {
     set({ gameState: state });
-    console.log(`Game state changed to: ${state}`);
+    logger.debug('game', `Game state changed to: ${state}`);
   },
   
   setGameOver: () => {
     set({ gameState: 'gameOver' });
-    console.log("Game over!");
+    logger.debug('game', 'Game over!');
   },
   
   // Initial parameters with standardized values - using constants from STATIC
@@ -52,7 +53,6 @@ export const useGameState = create<GameStateStore>((set) => ({
   // Update functions
   setShipHeight: (height) => {
     set({ shipHeight: height });
-    console.log(`Ship height updated to: ${height}`);
   },
   
   setWaveParameters: (params) => {
@@ -60,19 +60,16 @@ export const useGameState = create<GameStateStore>((set) => ({
       waveHeight: params.waveHeight,
       waveSpeed: params.waveSpeed,
     });
-    console.log(`Wave parameters updated: height=${params.waveHeight}, speed=${params.waveSpeed}`);
   },
   
   setShipScale: (scale) => {
     set({ shipScale: scale });
-    console.log(`Ship scale updated to: ${scale}`);
   },
   
   // Toggle water visibility
   toggleWaterVisibility: () => {
     set((state) => {
       const newValue = !state.waterVisible;
-      console.log(`Water visibility toggled: ${newValue ? 'ON' : 'OFF'}`);
       return { waterVisible: newValue };
     });
   },
@@ -81,7 +78,6 @@ export const useGameState = create<GameStateStore>((set) => ({
   toggleOneShotKill: () => {
     set((state) => {
       const newValue = !state.oneShotKill;
-      console.log(`One-shot kill toggled: ${newValue ? 'ON' : 'OFF'}`);
       return { oneShotKill: newValue };
     });
   },

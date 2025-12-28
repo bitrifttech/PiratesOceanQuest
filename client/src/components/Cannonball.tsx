@@ -10,6 +10,7 @@ import { useGameState } from "../lib/stores/useGameState";
 import { environmentCollisions } from "../lib/collision";
 import { MeshCollisionRegistry } from "../lib/services/MeshCollisionRegistry";
 import { BVHCollisionService } from "../lib/services/BVHCollisionService";
+import { logger } from "../lib/utils/logger";
 import ExplosionEffect from "./ExplosionEffect";
 import WaterSplashEffect from "./WaterSplashEffect";
 import ShipExplosionEffect from "./ShipExplosionEffect";
@@ -57,7 +58,6 @@ const Cannonball = ({
       const rangeMultiplier = powerUpsState.getPowerUpValue('long_range') || 1;
       adjustedSpeed = speed * rangeMultiplier;
       adjustedLifespan = lifespan * rangeMultiplier;
-      console.log(`[POWER-UP] Long range active: ${rangeMultiplier.toFixed(1)}x range and speed`);
     }
   }
   
@@ -150,8 +150,7 @@ const Cannonball = ({
       // Mark as hit to prevent multiple hits
       hitDetected.current = true;
       
-      // Log collision with environment
-      console.log(`[CANNONBALL] Hit ${collisionType} at (${cannonballPosition.x.toFixed(1)}, ${cannonballPosition.z.toFixed(1)})`);
+      logger.debug('cannonball', `Hit ${collisionType} at (${cannonballPosition.x.toFixed(1)}, ${cannonballPosition.z.toFixed(1)})`);
       
       // Create explosion effect at the impact point
       setEffectPosition(cannonballPosition.clone());
@@ -195,7 +194,6 @@ const Cannonball = ({
         if (gameState.oneShotKill && (!sourceId || !sourceId.includes('enemy'))) {
           // Set damage to a very high value to guarantee a kill
           damage = 1000;
-          console.log(`[DEBUG] One-shot kill activated! Damage set to ${damage}`);
         } 
         // Only apply power-ups for player cannonballs (not enemy cannonballs)
         else if (!sourceId || !sourceId.includes('enemy')) {
@@ -208,14 +206,13 @@ const Cannonball = ({
             
             // Consume one shot from the double_damage power-up
             powerUpsState.consumeShot('double_damage');
-            console.log(`[POWER-UP] Applied double damage: ${damage} damage (${multiplier}x multiplier)`);
           }
         }
         
         // Apply damage to enemy
         damageEnemy(enemy.id, damage);
         
-        console.log(`[CANNONBALL] Hit enemy ship ${enemy.id}! Applied ${damage} damage.`);
+        logger.debug('cannonball', `Hit enemy ship ${enemy.id}! Applied ${damage} damage.`);
         
         // Create ship explosion effect at the impact point
         setEffectPosition(cannonballPosition.clone());
@@ -259,8 +256,6 @@ const Cannonball = ({
           // Apply damage to player (correctly access from the state we already retrieved)
           playerState.takeDamage(15); // 15 damage per enemy cannonball (slightly less than player's cannons)
           
-          console.log(`[CANNONBALL] Enemy cannonball hit player! Applied 15 damage.`);
-          
           // Create ship explosion effect at the impact point
           setEffectPosition(cannonballPosition.clone());
           setShowShipExplosion(true);
@@ -292,8 +287,6 @@ const Cannonball = ({
         0, // Always at water level
         ballRef.current.position.z
       );
-      
-      console.log(`[CANNONBALL] Splashed into water at (${splashPosition.x.toFixed(1)}, ${splashPosition.z.toFixed(1)})`);
       
       // Set effect position and show splash
       setEffectPosition(splashPosition);

@@ -10,6 +10,7 @@ import SkyWithClouds from "./SkyWithClouds"; // New enhanced sky with cloud syst
 import EnvironmentComponent, { EnvironmentFeature, EnvironmentFeatureType } from "./Environment";
 import PowerUpManager from "./PowerUpManager"; // Power-up system for prizes
 import { SCALE, MODEL_ADJUSTMENT, POSITION, STATIC, WORLD } from "../lib/constants";
+import { logger } from "../lib/utils/logger";
 
 import { usePlayer } from "../lib/stores/usePlayer";
 import { useEnemies } from "../lib/stores/useEnemies"; // Re-enabled enemies
@@ -22,8 +23,6 @@ import { EnemyManager } from "../lib/services/EnemyManager";
 import { EnvironmentGenerator } from "../lib/services/EnvironmentGenerator";
 import { CollisionService } from "../lib/services/CollisionService";
 import { collisionHandler } from "../lib/services/CollisionHandler";
-
-// Direction indicators removed - no longer needed after fixing ship orientation
 
 // DirectPowerUpCollector component to handle collection logic
 // We separate this to avoid React hooks conditional calling issues
@@ -44,7 +43,7 @@ const DirectPowerUpCollector = memo(() => {
       
       // If player is within 5 units, collect the power-up
       if (distanceSquared < 25) { // 5 squared
-        console.log(`[DIRECT POWER-UP] Player collected power-up: ${powerUp.id} (${powerUp.type})`);
+        logger.debug('powerup', `Player collected power-up: ${powerUp.id} (${powerUp.type})`);
         
         // Add power-up to inventory (doesn't activate immediately)
         const { collectPowerUp } = usePowerUps.getState();
@@ -99,8 +98,6 @@ const Game = () => {
   // Island positions and other environment features (generated to avoid overlaps)
   // Only create this data once and never update it
   const environmentFeatures = useMemo(() => {
-    console.log("[GAME] Generating non-overlapping environment features using EnvironmentGenerator service");
-    
     // Use our refactored service to generate environment features
     return EnvironmentGenerator.generateEnvironment();
   }, []);
@@ -112,15 +109,8 @@ const Game = () => {
   useEffect(() => {
     // Skip if already initialized
     if (initialized.current) {
-      console.log("Game already initialized, skipping");
       return;
     }
-    
-    console.log("Game initialized", {
-      environmentFeatures: environmentFeatures.length,
-      sampleFeature: environmentFeatures[0],
-      playerPosition
-    });
     
     // Register environment features with collision handler
     collisionHandler.setFeatures(environmentFeatures);
@@ -137,20 +127,6 @@ const Game = () => {
     // Set up camera
     camera.position.set(0, 15, 30);
     camera.lookAt(0, 0, 0);
-    
-    // Log key game elements
-    console.log("[GAME-INIT] Environment features sample:", 
-                environmentFeatures.slice(0, 3)); 
-    console.log("[GAME-INIT] Player state:", {
-      position: usePlayer.getState().position,
-      rotation: usePlayer.getState().rotation,
-      health: usePlayer.getState().health
-    });
-    console.log("[GAME-INIT] Game state:", {
-      gameState: useGameState.getState().gameState,
-      shipHeight: useGameState.getState().shipHeight,
-      shipScale: useGameState.getState().shipScale
-    });
     
     // Mark as initialized
     initialized.current = true;
@@ -174,16 +150,12 @@ const Game = () => {
         const { activateAllPowerUps, inventoryPowerUps } = usePowerUps.getState();
         
         if (inventoryPowerUps.length > 0) {
-          console.log('[POWER-UP] Activating all power-ups via E key');
-          
           // Play activation sound
           const { playSound } = useAudio.getState();
           playSound('powerUp');
           
           // Activate all power-ups in inventory
           activateAllPowerUps();
-        } else {
-          console.log('[POWER-UP] No power-ups in inventory to activate');
         }
       }
     };
@@ -227,10 +199,6 @@ const Game = () => {
       // Only regenerate if player health is below max and above 0 (not dead)
       if (playerState.health > 0 && playerState.health < playerState.maxHealth) {
         playerState.heal(regenAmount);
-        // Only log every 5th regeneration to reduce console spam (every 10 seconds)
-        if (Math.floor(playerState.health) % 5 === 0) {
-          console.log(`[PLAYER] Health: ${playerState.health}/${playerState.maxHealth} (slowly regenerating)`);
-        }
       }
       // Reset timer
       healthRegenTimer.current = 0;

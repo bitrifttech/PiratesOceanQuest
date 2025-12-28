@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { EnvironmentFeature, EnvironmentFeatureType } from "../../components/Environment";
+import { logger } from "../utils/logger";
 
 /**
  * Utility class for generating and managing environment features like islands and rocks
@@ -198,12 +199,12 @@ export class EnvironmentGenerator {
       
       // If no overlap, we found a good spot
       if (!hasOverlap) {
-        console.log(`[ENV GEN] Successfully placed ${id} at (${x.toFixed(1)}, ${z.toFixed(1)}) with scale ${scale.toFixed(2)}`);
+        logger.debug("environment", `[ENV GEN] Successfully placed ${id} at (${x.toFixed(1)}, ${z.toFixed(1)}) with scale ${scale.toFixed(2)}`);
         return candidate;
       }
     }
     
-    console.warn(`[ENV GEN] Failed to place ${id} after ${maxAttempts} attempts`);
+    logger.warn("environment", `[ENV GEN] Failed to place ${id} after ${maxAttempts} attempts`);
     return null;
   }
 
@@ -257,7 +258,7 @@ export class EnvironmentGenerator {
       
       if (!overlaps) {
         arenaFeatures.push(feature);
-        console.log(`[ENV GEN] Added arena rock at (${x.toFixed(1)}, ${z.toFixed(1)})`);
+        logger.debug("environment", `[ENV GEN] Added arena rock at (${x.toFixed(1)}, ${z.toFixed(1)})`);
       }
     }
     
@@ -307,7 +308,7 @@ export class EnvironmentGenerator {
       
       if (!overlaps) {
         archipelagoFeatures.push(feature);
-        console.log(`[ENV GEN] Added archipelago ${islandType} at (${x.toFixed(1)}, ${z.toFixed(1)})`);
+        logger.debug("environment", `[ENV GEN] Added archipelago ${islandType} at (${x.toFixed(1)}, ${z.toFixed(1)})`);
       }
     }
     
@@ -411,7 +412,7 @@ export class EnvironmentGenerator {
    * Using an improved design pattern with meaningful gameplay areas
    */
   static generateEnvironment(): EnvironmentFeature[] {
-    console.log("[GAME] Generating structured environment with gameplay areas");
+    logger.debug("environment", "Generating structured environment with gameplay areas");
     
     const features: EnvironmentFeature[] = [];
     const worldRadius = 400; // Expanded world size
@@ -579,18 +580,18 @@ export class EnvironmentGenerator {
           
           if (!overlaps) {
             features.push(feature);
-            console.log(`[ENV GEN] Added standalone ${featureConfig.type} at (${x.toFixed(1)}, ${z.toFixed(1)})`);
+            logger.debug("environment", `[ENV GEN] Added standalone ${featureConfig.type} at (${x.toFixed(1)}, ${z.toFixed(1)})`);
             placed = true;
           }
         }
         
         if (!placed) {
-          console.log(`[ENV GEN] Failed to place ${id} after multiple attempts`);
+          logger.debug("environment", `[ENV GEN] Failed to place ${id} after multiple attempts`);
         }
       }
     });
     
-    console.log(`[ENV GEN] Generated ${features.length} environment features`);
+    logger.debug("environment", `[ENV GEN] Generated ${features.length} environment features`);
     return features;
   }
 }

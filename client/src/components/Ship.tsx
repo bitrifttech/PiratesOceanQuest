@@ -89,8 +89,6 @@ const Ship = () => {
   // Textures
   const woodTexture = useTexture("/textures/wood.jpg");
   
-  // Enemy state removed
-  
   // Audio
   const playHit = useAudio((state) => state.playHit);
   
@@ -394,8 +392,6 @@ const Ship = () => {
     }
   }, [cannonReady, position, rotation, fireCannon, getKeys]);
   
-  // Boarding functionality removed
-  
   // Update ship position and rotation
   useFrame((_, delta) => {
     if (!position || !shipRef.current) return;
@@ -406,35 +402,17 @@ const Ship = () => {
     // Get dynamic ship parameters from game state
     const { shipHeight, waveHeight, waveSpeed, shipScale } = useGameState.getState();
     
-    // No need to update model scale here, CustomModel handles it internally
-    
-    // Debug: Show current key states (commented out to reduce console spam)
-    /*
-    console.log("Current key states:", 
-      JSON.stringify({
-        forward: keys.forward,
-        backward: keys.backward,
-        leftward: keys.leftward,
-        rightward: keys.rightward,
-        fire: keys.fire,
-        board: keys.board
-      })
-    );
-    */
-    
     // Current rotation (yaw only)
     const currentRotation = rotation.y;
     
     // Apply rotation from steering
     let rotationDelta = 0;
     if (keys.leftward) {
-      rotationDelta += 2.0 * delta; // Increased turning speed by ~33% for better handling at higher speeds
-      // console.log("Turning left");
+      rotationDelta += 2.0 * delta;
     }
     
     if (keys.rightward) {
-      rotationDelta -= 2.0 * delta; // Increased turning speed by ~33% for better handling at higher speeds
-      // console.log("Turning right");
+      rotationDelta -= 2.0 * delta;
     }
     
     // Update ship rotation
@@ -473,15 +451,6 @@ const Ship = () => {
       const forwardForce = direction.clone().multiplyScalar(9 * speedMultiplier * delta);
       acceleration.add(forwardForce);
       
-      // If speed boost is active, add visual effect
-      if (speedMultiplier > 1) {
-        if (boostEffectTimer.current <= 0) {
-          console.log(`[POWER-UP] Speed boost active: ${speedMultiplier.toFixed(1)}x speed`);
-          boostEffectTimer.current = 2; // Show message every 2 seconds
-        } else {
-          boostEffectTimer.current -= delta;
-        }
-      }
     }
     
     if (keys.backward) {
@@ -701,9 +670,6 @@ const Ship = () => {
 
   // Track model loading through a ref to avoid state issues
   const shipModelLoadedRef = useRef(false);
-  
-  // Timer for power-up effect messages
-  const boostEffectTimer = useRef(0);
 
   return (
     <>
@@ -733,15 +699,6 @@ const Ship = () => {
           castShadow
           receiveShadow
           onLoad={() => {
-            // Log detailed ship model properties
-            console.log('[PLAYER SHIP] Model properties:');
-            console.log(`- Path: ${ModelService.getShipModelPath('base')}`);
-            console.log(`- Scale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP}`);
-            console.log(`- ModelAdjustment: ${MODEL_ADJUSTMENT.SHIP}`);
-            console.log(`- TotalScale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP * MODEL_ADJUSTMENT.SHIP}`);
-            console.log(`- ModelHeightOffset: ${STATIC.SHIP_OFFSET}`);
-            console.log(`- Rotation: [0, -Math.PI / 3 + Math.PI / 12 + Math.PI / 45, 0]`);
-            
             shipModelLoadedRef.current = true;
           }}
         />

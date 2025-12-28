@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import * as THREE from "three";
+import { logger } from "../utils/logger";
 
 // Power-up types with their effects
 export type PowerUpType = 
@@ -188,13 +189,13 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
         // Give a small health bonus when collecting (1/3 of the normal amount)
         const smallHealthBonus = Math.ceil(definition.healthBonus / 3);
         heal(smallHealthBonus);
-        console.log(`[POWER-UP] Small health bonus on collection: +${smallHealthBonus}`);
+        logger.debug('powerup', `Small health bonus on collection: +${smallHealthBonus}`);
       }
     } catch (error) {
-      console.error("[POWER-UP] Failed to apply small health bonus:", error);
+      logger.error('powerup', 'Failed to apply small health bonus:', error);
     }
     
-    console.log(`[POWER-UP] Collected ${definition.name} and added to inventory (id: ${id})`);
+    logger.debug('powerup', `Collected ${definition.name} and added to inventory (id: ${id})`);
   },
   
   // Activate a power-up from inventory
@@ -204,7 +205,7 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
     // Find the power-up in inventory
     const inventoryIndex = inventoryPowerUps.findIndex(p => p.id === id);
     if (inventoryIndex === -1) {
-      console.error(`[POWER-UP] Cannot activate power-up with ID ${id}: not found in inventory`);
+      logger.error('powerup', `Cannot activate power-up with ID ${id}: not found in inventory`);
       return;
     }
     
@@ -214,7 +215,7 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
     // Find definition
     const definition = powerUpDefinitions.find(p => p.type === inventoryPowerUp.type);
     if (!definition) {
-      console.error(`[POWER-UP] Unknown power-up type: ${inventoryPowerUp.type}`);
+      logger.error('powerup', `Unknown power-up type during activation: ${inventoryPowerUp.type}`);
       return;
     }
     
@@ -229,10 +230,10 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
       if (heal) {
         const remainingHealthBonus = Math.floor(definition.healthBonus * 2 / 3);
         heal(remainingHealthBonus);
-        console.log(`[POWER-UP] Remaining health bonus on activation: +${remainingHealthBonus}`);
+        logger.debug('powerup', `Remaining health bonus on activation: +${remainingHealthBonus}`);
       }
     } catch (error) {
-      console.error("[POWER-UP] Failed to apply remaining health bonus:", error);
+      logger.error('powerup', 'Failed to apply remaining health bonus:', error);
     }
     
     // Now activate using the legacy activation logic
@@ -245,11 +246,10 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
     const { inventoryPowerUps } = get();
     
     if (inventoryPowerUps.length === 0) {
-      console.log('[POWER-UP] No power-ups in inventory to activate');
       return;
     }
     
-    console.log(`[POWER-UP] Activating all ${inventoryPowerUps.length} power-ups in inventory`);
+    logger.debug('powerup', `Activating all ${inventoryPowerUps.length} power-ups in inventory`);
     
     // Get IDs to avoid modifying during iteration
     const ids = inventoryPowerUps.map(p => p.id);
@@ -266,7 +266,7 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
     // Find the power-up definition
     const definition = powerUpDefinitions.find(p => p.type === type);
     if (!definition) {
-      console.error(`[POWER-UP] Unknown power-up type: ${type}`);
+      logger.error('powerup', `Unknown power-up type in addPowerUp: ${type}`);
       return;
     }
     
@@ -278,15 +278,15 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
       const { heal } = require('./usePlayer').usePlayer.getState();
       if (heal) {
         heal(definition.healthBonus);
-        console.log(`[POWER-UP] Health bonus: +${definition.healthBonus}`);
+        logger.debug('powerup', `Health bonus: +${definition.healthBonus}`);
       }
     } catch (error) {
-      console.error("[POWER-UP] Failed to apply health bonus:", error);
+      logger.error('powerup', 'Failed to apply health bonus:', error);
     }
     
     // Handle instant effect power-ups
     if (definition.duration === 0 && !definition.shots) {
-      console.log(`[POWER-UP] Applied instant effect: ${definition.name}`);
+      logger.debug('powerup', `Applied instant effect: ${definition.name}`);
       
       // Handle specific instant effects
       if (type === 'gold_bonus') {
@@ -294,10 +294,10 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
           const { addLoot } = require('./useUpgrades').useUpgrades.getState();
           if (addLoot) {
             addLoot(definition.value);
-            console.log(`[POWER-UP] Added ${definition.value} gold`);
+            logger.debug('powerup', `Added ${definition.value} gold`);
           }
         } catch (error) {
-          console.error("[POWER-UP] Failed to add gold:", error);
+          logger.error('powerup', 'Failed to add gold:', error);
         }
       }
       
@@ -328,7 +328,7 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
           ]
         });
       }
-      console.log(`[POWER-UP] Activated ${definition.name} for ${definition.shots} shots`);
+      logger.debug('powerup', `Activated ${definition.name} for ${definition.shots} shots`);
       return;
     }
     
@@ -353,7 +353,7 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
       });
     }
     
-    console.log(`[POWER-UP] Activated ${definition.name} for ${definition.duration}s`);
+    logger.debug('powerup', `Activated ${definition.name} for ${definition.duration}s`);
   },
   
   // Remove a power-up
@@ -362,7 +362,7 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
     set({
       activePowerUps: activePowerUps.filter(p => p.type !== type)
     });
-    console.log(`[POWER-UP] Removed ${type}`);
+    logger.debug('powerup', `Removed ${type}`);
   },
   
   // Update power-ups (call this every frame)
@@ -393,7 +393,7 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
         }
         
         // Power-up expired
-        console.log(`[POWER-UP] ${powerUp.type} expired`);
+        logger.debug('powerup', `${powerUp.type} expired`);
         return false;
       });
     
@@ -411,11 +411,6 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
     if (index >= 0 && activePowerUps[index].shotsRemaining) {
       const updatedPowerUps = [...activePowerUps];
       updatedPowerUps[index].shotsRemaining!--;
-      
-      // Log when shots are running low
-      if (updatedPowerUps[index].shotsRemaining === 1) {
-        console.log(`[POWER-UP] Last shot of ${type} remaining!`);
-      }
       
       set({ activePowerUps: updatedPowerUps });
     }

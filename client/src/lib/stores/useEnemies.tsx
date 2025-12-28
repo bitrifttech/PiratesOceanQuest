@@ -1,11 +1,10 @@
 import { create } from "zustand";
 import * as THREE from "three";
 import { usePlayer } from "./usePlayer";
-import { useGameState } from "./useGameState";
 import { useUpgrades } from "./useUpgrades";
-import { POSITION } from "../constants";
 import { collisionHandler } from "../services/CollisionHandler";
 import { EnvironmentGenerator } from "../services/EnvironmentGenerator";
+import { logger } from "../utils/logger";
 
 interface Enemy {
   id: string;
@@ -145,23 +144,17 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
       const lootAmount = Math.floor(Math.random() * 50) + 50;
       addLoot(lootAmount);
       
-      console.log(`[ENEMY] Ship ${id} DESTROYED! Attempting to spawn power-up at position:`, 
-        JSON.stringify(enemy.position.toArray()));
+      logger.debug('enemy', `Ship ${id} destroyed, spawning power-up`);
       
       // DIRECT APPROACH: Add a direct power-up to the game state
       try {
-        // Store the enemy position for debugging
         const enemyPosition = enemy.position.clone();
         enemyPosition.y = 1; // Ensure it's just above water level
         
-        console.log(`[DIRECT POWER-UP] Creating direct power-up at position: (${enemyPosition.x.toFixed(2)}, ${enemyPosition.y.toFixed(2)}, ${enemyPosition.z.toFixed(2)})`);
-        
-        // Generate power-up ID and type
         const powerUpId = `direct-powerup-${Date.now()}`;
         const powerUpTypes = ['health_boost', 'speed_boost', 'double_damage', 'rapid_fire', 'shield', 'triple_shot', 'long_range'];
         const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
         
-        // Add the power-up directly to the state instead of through a function call
         set((state) => ({
           directPowerUps: [
             ...state.directPowerUps,
@@ -173,27 +166,14 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
             }
           ]
         }));
-        
-        console.log(`[DIRECT POWER-UP] Successfully created direct power-up (id: ${powerUpId}) of type ${randomType}`);
       } catch (error) {
-        console.error("[DIRECT POWER-UP ERROR] Failed to create direct power-up:", error);
-        console.error("[DIRECT POWER-UP ERROR] Stack trace:", error instanceof Error ? error.stack : "No stack trace available");
+        logger.error('enemy', 'Failed to create direct power-up:', error);
       }
-      
-      // Log the enemy defeat
-      console.log(`[ENEMY] Ship ${id} was destroyed! Added ${lootAmount} loot.`);
       
       // Remove the enemy
       set((state) => ({
         enemies: state.enemies.filter((e) => e.id !== id),
       }));
-      
-      // Check if all enemies are defeated
-      const remainingEnemies = get().enemies.filter((e) => e.id !== id);
-      if (remainingEnemies.length === 0) {
-        // If all enemies are defeated, set game state to show victory screen
-        // This will be handled by the GameUI component
-      }
     } else {
       // Update enemy health
       set((state) => ({
@@ -224,8 +204,6 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
   
   // Add a new direct power-up
   addDirectPowerUp: (id, position, type) => {
-    console.log(`[DIRECT POWER-UP] Adding power-up to state: id=${id}, type=${type}, position=(${position.x.toFixed(2)}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)})`);
-    
     set((state) => ({
       directPowerUps: [
         ...state.directPowerUps,
@@ -241,8 +219,6 @@ export const useEnemies = create<EnemiesState>((set, get) => ({
 
   // Remove a direct power-up (when collected or expired)
   removeDirectPowerUp: (id) => {
-    console.log(`[DIRECT POWER-UP] Removing power-up from state: id=${id}`);
-    
     set((state) => ({
       directPowerUps: state.directPowerUps.filter(powerUp => powerUp.id !== id)
     }));

@@ -93,10 +93,8 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       if (enemyData?.peacefulStartTimer) {
         // Initialize peaceful start timer if provided in enemy data
         peacefulStartTimerRef.current = enemyData.peacefulStartTimer;
-        console.log(`[ENEMY SHIP ${id}] Initializing with ${peacefulStartTimerRef.current}s peaceful start timer`);
       }
       
-      console.log(`[ENEMY SHIP ${id}] Initializing at position ${JSON.stringify(positionRef.current)}`);
       initialized.current = true;
     }
   }, [id]);
@@ -399,10 +397,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
           castShadow={true}
           receiveShadow={true}
           onLoad={() => {
-            console.log(`[ENEMY SHIP ${id}] Model loaded successfully`);
-            console.log(`- Position: ${JSON.stringify(positionRef.current)}`);
-            console.log(`- Rotation: ${JSON.stringify(rotationRef.current)}`);
-            console.log(`- Scale: ${useGameState.getState().shipScale * SCALE.PLAYER_SHIP * 1.25}`);
+            // Model loaded
           }}
         />
         

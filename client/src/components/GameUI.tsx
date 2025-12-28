@@ -4,7 +4,6 @@ import { Controls } from "../App";
 import HUD from "./HUD";
 import DebugControls from "./DebugControls";
 import { usePlayer } from "../lib/stores/usePlayer";
-// import { useEnemies } from "../lib/stores/useEnemies"; // Removed enemies import
 import { useGameState } from "../lib/stores/useGameState";
 import { useUpgrades } from "../lib/stores/useUpgrades";
 import { useAudio } from "../lib/stores/useAudio";
@@ -34,8 +33,6 @@ const GameUI = () => {
   // Player state
   const playerHealth = usePlayer((state) => state.health);
   const resetPlayer = usePlayer((state) => state.resetPlayer);
-  
-  // Enemy state removed
   
   // Upgrades
   const loot = useUpgrades((state) => state.loot);
