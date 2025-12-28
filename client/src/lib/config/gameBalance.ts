@@ -207,9 +207,20 @@ export const VISUALS = {
   CLOUD_PUFFS_MIN: 4,
   CLOUD_PUFFS_MAX: 8,
 
-  // Ocean
-  OCEAN_SEGMENTS: 64,
-  OCEAN_FRAME_SKIP: 2,
+  // Ocean / Water (Realistic Tropical Caribbean)
+  OCEAN_SEGMENTS: 32, // GPU handles waves, fewer segments needed
+  WATER_WAVE_HEIGHT: 0.8,
+  WATER_WAVE_SPEED: 0.6,
+  
+  // Water Colors (Classic Blue Ocean)
+  WATER_SHALLOW_COLOR: '#4A9FD8', // Light blue
+  WATER_MID_COLOR: '#2B7FBF',     // Medium blue
+  WATER_DEEP_COLOR: '#1A5F8F',    // Deep blue
+  
+  // Water Properties
+  WATER_TRANSPARENCY: 0.85,
+  WATER_METALNESS: 0.1,
+  WATER_ROUGHNESS: 0.1,
 
   // Shadows
   SHADOW_MAP_SIZE: 1024,

@@ -1,311 +1,241 @@
+/**
+ * Ocean Component - Realistic Tropical Caribbean Water
+ * 
+ * Features:
+ * - GPU-based wave animation (no CPU vertex updates)
+ * - Realistic Gerstner waves
+ * - Fresnel reflections for realistic edge highlights
+ * - Depth-based color gradation (shallow turquoise to deep teal)
+ * - Transparency with proper depth
+ * - Optimized performance (single mesh, GPU-driven)
+ */
+
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
-import { MeshStandardMaterial } from "three";
 import * as THREE from "three";
 import { useGameState } from "../lib/stores/useGameState";
 import { STATIC } from "../lib/constants";
+import { VISUALS } from "../lib/config/gameBalance";
 
-interface OceanProps {
-  // The Ocean component doesn't need props currently, 
-  // but having the interface makes it future-proof
-}
+// Tropical Caribbean color palette from config
+const WATER_COLORS = {
+  shallow: new THREE.Color(VISUALS.WATER_SHALLOW_COLOR),
+  mid: new THREE.Color(VISUALS.WATER_MID_COLOR),
+  deep: new THREE.Color(VISUALS.WATER_DEEP_COLOR),
+};
+
+// Vertex shader - GPU-based Gerstner wave animation
+const vertexShader = `
+  uniform float uTime;
+  uniform float uWaveHeight;
+  uniform float uWaveSpeed;
+
+  varying vec2 vUv;
+  varying vec3 vWorldPosition;
+  varying vec3 vNormal;
+  varying float vElevation;
+
+  void main() {
+    vUv = uv;
+    
+    vec3 pos = position;
+    
+    // Gerstner-style waves with natural directional motion
+    // Wave 1: Primary diagonal wave
+    vec2 waveDir1 = normalize(vec2(1.0, 0.3));
+    float waveDot1 = dot(pos.xz, waveDir1);
+    float wave1 = sin(waveDot1 * 0.05 + uTime * uWaveSpeed * 0.8) * uWaveHeight;
+    
+    // Wave 2: Secondary wave in different direction
+    vec2 waveDir2 = normalize(vec2(-0.5, 1.0));
+    float waveDot2 = dot(pos.xz, waveDir2);
+    float wave2 = sin(waveDot2 * 0.08 + uTime * uWaveSpeed * 1.2) * (uWaveHeight * 0.5);
+    
+    // Wave 3: Small ripples for detail
+    float wave3 = sin(pos.x * 0.15 + pos.z * 0.12 + uTime * uWaveSpeed * 1.5) * (uWaveHeight * 0.2);
+    
+    // Combine waves
+    float totalElevation = wave1 + wave2 + wave3;
+    
+    // Dampen waves near center (calmer spawn area)
+    float distanceFromCenter = length(pos.xz);
+    float dampening = smoothstep(0.0, 100.0, distanceFromCenter);
+    totalElevation *= dampening;
+    
+    pos.y += totalElevation;
+    vElevation = totalElevation;
+    
+    // Calculate world position
+    vWorldPosition = (modelMatrix * vec4(pos, 1.0)).xyz;
+    
+    // Calculate normals for lighting (approximate gradient)
+    float eps = 2.0;
+    
+    // Sample neighboring heights for normal calculation
+    float hL = sin(dot(vec2(pos.x - eps, pos.z), waveDir1) * 0.05 + uTime * uWaveSpeed * 0.8) * uWaveHeight;
+    float hR = sin(dot(vec2(pos.x + eps, pos.z), waveDir1) * 0.05 + uTime * uWaveSpeed * 0.8) * uWaveHeight;
+    float hD = sin(dot(vec2(pos.x, pos.z - eps), waveDir1) * 0.05 + uTime * uWaveSpeed * 0.8) * uWaveHeight;
+    float hU = sin(dot(vec2(pos.x, pos.z + eps), waveDir1) * 0.05 + uTime * uWaveSpeed * 0.8) * uWaveHeight;
+    
+    vec3 calcNormal = normalize(vec3(hL - hR, eps * 2.0, hD - hU));
+    vNormal = normalMatrix * calcNormal;
+    
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+  }
+`;
+
+// Fragment shader - realistic tropical water coloring
+const fragmentShader = `
+  uniform float uTime;
+  uniform vec3 uShallowColor;
+  uniform vec3 uMidColor;
+  uniform vec3 uDeepColor;
+  uniform vec3 uCameraPosition;
+  uniform float uTransparency;
+
+  varying vec2 vUv;
+  varying vec3 vWorldPosition;
+  varying vec3 vNormal;
+  varying float vElevation;
+
+  void main() {
+    // Normalize normal
+    vec3 normal = normalize(vNormal);
+    
+    // View direction for fresnel
+    vec3 viewDir = normalize(uCameraPosition - vWorldPosition);
+    
+    // === FRESNEL EFFECT (realistic edge reflections) ===
+    float fresnelTerm = pow(1.0 - max(dot(viewDir, normal), 0.0), 3.0);
+    fresnelTerm = clamp(fresnelTerm, 0.0, 1.0);
+    
+    // === DEPTH-BASED COLOR GRADATION ===
+    float depthDistance = distance(uCameraPosition, vWorldPosition);
+    
+    // Smooth transitions between shallow, mid, and deep water
+    float shallowMix = smoothstep(0.0, 50.0, depthDistance);
+    float deepMix = smoothstep(50.0, 150.0, depthDistance);
+    
+    // Three-step color gradation
+    vec3 waterColor = mix(uShallowColor, uMidColor, shallowMix);
+    waterColor = mix(waterColor, uDeepColor, deepMix);
+    
+    // Add subtle variation based on wave height (lighter on peaks)
+    float waveInfluence = vElevation * 0.1;
+    waterColor = mix(waterColor, uShallowColor, waveInfluence);
+    
+    // === SKY REFLECTION ===
+    // Simple sky color for tropical Caribbean
+    vec3 skyColor = vec3(0.55, 0.75, 0.95); // Light blue sky
+    
+    // Mix sky reflection based on fresnel (more reflection at shallow angles)
+    vec3 reflectedColor = mix(waterColor, skyColor, fresnelTerm * 0.5);
+    
+    // === LIGHTING (Sun highlight) ===
+    vec3 lightDir = normalize(vec3(0.5, 1.0, 0.3)); // Sun position
+    float diffuse = max(dot(normal, lightDir), 0.0);
+    
+    // Specular highlight (sun glint on water)
+    vec3 halfDir = normalize(lightDir + viewDir);
+    float specular = pow(max(dot(normal, halfDir), 0.0), 64.0);
+    specular *= 0.4; // Moderate specularity
+    
+    // Add subtle ambient lighting
+    float ambient = 0.6;
+    
+    // Combine lighting
+    vec3 finalColor = reflectedColor * (ambient + diffuse * 0.4) + vec3(specular);
+    
+    // Subtle animated shimmer
+    float shimmer = sin(vWorldPosition.x * 0.2 + vWorldPosition.z * 0.15 + uTime * 0.8) * 0.02;
+    finalColor += shimmer;
+    
+    // Ensure color stays vibrant
+    finalColor = clamp(finalColor, 0.0, 1.0);
+    
+    gl_FragColor = vec4(finalColor, uTransparency);
+  }
+`;
+
+interface OceanProps {}
 
 const Ocean: React.FC<OceanProps> = () => {
   const meshRef = useRef<THREE.Mesh>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
   
   // Check if water should be visible from game state
   const waterVisible = useGameState((state) => state.waterVisible);
   
-  // Calculate the size to cover a large area
+  // Ocean configuration
   const oceanSize = 1000;
+  const segmentCount = VISUALS.OCEAN_SEGMENTS;
   
-  // Caustic effect - light patterns that show below water
-  const causticRef = useRef<THREE.Mesh>(null);
-  const segmentCount = 64; // Reduced from 128 for better performance (4x fewer vertices)
-  
-  // Frame skip counter for wave animation optimization
-  const frameSkipCounter = useRef(0);
-  const frameSkipInterval = 2; // Only update waves every 2 frames
-  
-  // Create caustic material
-  const causticMaterial = useMemo(() => {
-    const mat = new MeshStandardMaterial({
-      color: "#6FC0FF", // Light blue for caustics
-      transparent: true,
-      opacity: 0.3,
-      emissive: "#2E93FF",
-      emissiveIntensity: 0.3,
-      roughness: 0.1,
-    });
-    return mat;
-  }, []);
-  
-  // Time uniform for wave animation
-  const materialRef = useRef<MeshStandardMaterial>();
-  const timeRef = useRef(0);
-  
-  // Create the ocean material with enhanced water properties
-  const material = useMemo(() => {
-    const mat = new MeshStandardMaterial({
-      color: "#1E65AA", // Deeper blue color for water
-      metalness: 0.6,   // More reflective
-      roughness: 0.2,   // Smoother surface
-      transparent: true,
-      opacity: 0.9,     // Slight transparency
-    });
-    
-    // Store ref for animation updates
-    materialRef.current = mat;
-    return mat;
-  }, []);
-  
-  // Create a displacement map for waves
-  const waveGeometry = useMemo(() => {
+  // Create simple plane geometry (GPU handles all wave detail)
+  const oceanGeometry = useMemo(() => {
     const geo = new THREE.PlaneGeometry(
       oceanSize,
       oceanSize,
       segmentCount,
       segmentCount
     );
-    
-    // Rotate to be horizontal
     geo.rotateX(-Math.PI / 2);
-    
-    // Create initial wave pattern
-    const positionAttr = geo.attributes.position;
-    const vertices = positionAttr.array;
-    
-    // Base the wave height on position to create various wave patterns
-    for (let i = 0; i < vertices.length; i += 3) {
-      const x = vertices[i];
-      const z = vertices[i + 2];
-      
-      // Initial wave pattern with multiple frequencies for more natural look
-      vertices[i + 1] = 
-        Math.sin(x / 20) * Math.cos(z / 20) * 1.0 +  // Primary waves
-        Math.sin(x / 8 + z / 10) * 0.3 +            // Secondary pattern
-        Math.cos(x / 30 - z / 25) * 0.8;            // Tertiary longer waves
-    }
-    
-    // Update vertices
-    positionAttr.needsUpdate = true;
-    geo.computeVertexNormals();
-    
     return geo;
   }, [oceanSize, segmentCount]);
   
-  // Create the caustic effect geometry (light patterns through water)
-  const causticGeometry = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(
-      oceanSize * 0.8, // Slightly smaller than ocean
-      oceanSize * 0.8,
-      segmentCount / 2, // Lower resolution is fine for caustics
-      segmentCount / 2
-    );
+  // Create realistic tropical water shader material
+  const waterMaterial = useMemo(() => {
+    const mat = new THREE.ShaderMaterial({
+      vertexShader,
+      fragmentShader,
+      uniforms: {
+        uTime: { value: 0 },
+        uWaveHeight: { value: VISUALS.WATER_WAVE_HEIGHT },
+        uWaveSpeed: { value: VISUALS.WATER_WAVE_SPEED },
+        uShallowColor: { value: WATER_COLORS.shallow },
+        uMidColor: { value: WATER_COLORS.mid },
+        uDeepColor: { value: WATER_COLORS.deep },
+        uCameraPosition: { value: new THREE.Vector3() },
+        uTransparency: { value: VISUALS.WATER_TRANSPARENCY },
+      },
+      transparent: true,
+      side: THREE.DoubleSide,
+    });
     
-    // Rotate to be horizontal
-    geo.rotateX(-Math.PI / 2);
-    
-    // Create initial caustic pattern
-    const positionAttr = geo.attributes.position;
-    const vertices = positionAttr.array;
-    
-    // Base the caustic pattern on different frequencies
-    for (let i = 0; i < vertices.length; i += 3) {
-      const x = vertices[i];
-      const z = vertices[i + 2];
-      
-      // Create subtle bumps for the caustic effect
-      vertices[i + 1] = 
-        Math.sin(x / 5) * Math.cos(z / 5) * 0.2 +
-        Math.sin(x / 12 - z / 10) * 0.15;
-    }
-    
-    // Update vertices
-    positionAttr.needsUpdate = true;
-    geo.computeVertexNormals();
-    
-    return geo;
-  }, [oceanSize, segmentCount]);
+    materialRef.current = mat;
+    return mat;
+  }, []);
   
-  // Create the ocean floor with undulating terrain
-  const oceanFloorGeometry = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(
-      oceanSize,
-      oceanSize,
-      64,
-      64
-    );
+  // Update shader uniforms each frame (only time and camera - very cheap)
+  useFrame((state, delta) => {
+    if (!materialRef.current) return;
     
-    // Rotate to be horizontal
-    geo.rotateX(-Math.PI / 2);
+    const uniforms = materialRef.current.uniforms;
     
-    // Create random height variations for the ocean floor
-    const positionAttr = geo.attributes.position;
-    const vertices = positionAttr.array;
+    // Update time
+    uniforms.uTime.value += delta;
     
-    // Seed random heights for terrain
-    for (let i = 0; i < vertices.length; i += 3) {
-      const x = vertices[i];
-      const z = vertices[i + 2];
-      
-      // Distance from center
-      const distanceFromCenter = Math.sqrt(x * x + z * z);
-      
-      // Create gentle rolling hills and valleys with some randomization
-      // More pronounced variations further from center
-      const distanceFactor = Math.min(1.0, distanceFromCenter / 200);
-      
-      vertices[i + 1] = 
-        Math.sin(x / 80) * Math.cos(z / 80) * 2.0 * distanceFactor + // Large rolling hills
-        Math.sin(x / 30 + z / 20) * 1.0 * distanceFactor +          // Medium variations
-        Math.cos(x / 10 - z / 15) * 0.5 * distanceFactor;           // Small details
-    }
+    // Update camera position for fresnel and depth coloring
+    uniforms.uCameraPosition.value.copy(state.camera.position);
     
-    // Update vertices
-    positionAttr.needsUpdate = true;
-    geo.computeVertexNormals();
-    
-    return geo;
-  }, [oceanSize]);
-  
-  // Animate the waves and caustics (with frame skipping for performance)
-  useFrame((_, delta) => {
-    if (!meshRef.current) return;
-    
-    // Frame skipping - only update wave vertices every N frames
-    frameSkipCounter.current++;
-    const shouldUpdateWaves = frameSkipCounter.current >= frameSkipInterval;
-    if (shouldUpdateWaves) {
-      frameSkipCounter.current = 0;
-    }
-    
-    // Get wave parameters from game state
+    // Update wave parameters from game state (if they change)
     const { waveHeight, waveSpeed } = useGameState.getState();
-    
-    timeRef.current += delta * 0.5;
-    
-    // Only update wave geometry on certain frames for performance
-    if (shouldUpdateWaves) {
-      // Animate the wave displacement with complex wave patterns
-      const positionAttr = meshRef.current.geometry.attributes.position;
-      const vertices = positionAttr.array;
-      
-      // Different time frequencies for more natural motion
-      const time1 = timeRef.current * (waveSpeed * 0.8);
-      const time2 = timeRef.current * (waveSpeed * 1.2);
-      const time3 = timeRef.current * (waveSpeed * 0.5);
-      
-      for (let i = 0; i < vertices.length; i += 3) {
-        const x = vertices[i];
-        const z = vertices[i + 2];
-        
-        // Create complex wave effect with configurable height and multiple wave patterns
-        vertices[i + 1] = (
-          // Primary wave pattern
-          Math.sin(x / 20 + time1) * Math.cos(z / 20 + time1) * (waveHeight * 3) +
-          // Secondary faster waves
-          Math.sin(x / 10 + z / 15 + time2) * (waveHeight * 1.5) +
-          // Long period slow waves
-          Math.cos(x / 40 - z / 30 + time3) * (waveHeight * 2.5)
-        );
-        
-        // Apply distance-based amplitude damping for calmer water in center
-        const distanceFromCenter = Math.sqrt(x * x + z * z);
-        const distanceFactor = Math.min(1.0, distanceFromCenter / 100); 
-        vertices[i + 1] *= distanceFactor;
-      }
-      
-      positionAttr.needsUpdate = true;
-      
-      // Animate caustic effect if it exists
-      if (causticRef.current) {
-        const causticPosAttr = causticRef.current.geometry.attributes.position;
-        const causticVertices = causticPosAttr.array;
-        
-        // Faster time frequencies for caustics
-        const causticTime1 = timeRef.current * (waveSpeed * 1.5);
-        const causticTime2 = timeRef.current * (waveSpeed * 2.0);
-        
-        for (let i = 0; i < causticVertices.length; i += 3) {
-          const x = causticVertices[i];
-          const z = causticVertices[i + 2];
-          
-          // Create animated caustic pattern
-          causticVertices[i + 1] = 
-            Math.sin(x / 4 + causticTime1) * Math.cos(z / 4 + causticTime1) * 0.2 +
-            Math.sin(x / 8 - z / 6 + causticTime2) * 0.15;
-        }
-        
-        causticPosAttr.needsUpdate = true;
-        
-        // Update caustic material for pulsing effect
-        if (causticMaterial) {
-          causticMaterial.emissiveIntensity = 0.3 + Math.sin(timeRef.current * 2) * 0.15;
-          causticMaterial.opacity = 0.3 + Math.sin(timeRef.current * 1.5) * 0.1;
-        }
-      }
-    }
-    
-    // Apply a subtle color shift based on time for a water shimmering effect (every frame is fine)
-    if (materialRef.current) {
-      const baseColor = new THREE.Color("#1E65AA");
-      const shimmerAmount = (Math.sin(timeRef.current * 0.2) * 0.1) + 0.95;
-      materialRef.current.color.copy(baseColor).multiplyScalar(shimmerAmount);
-    }
+    uniforms.uWaveHeight.value = waveHeight;
+    uniforms.uWaveSpeed.value = waveSpeed;
   });
   
-  // Return empty fragment if water isn't visible
+  // Return null if water isn't visible
   if (!waterVisible) {
-    return <></>;
+    return null;
   }
 
   return (
-    <>
-      {/* Main water surface */}
-      <mesh
-        ref={meshRef}
-        geometry={waveGeometry}
-        material={material}
-        receiveShadow
-        position={[0, STATIC.WATER_LEVEL, 0]} // Always use the static water level
-      />
-      
-      {/* Add a secondary flat plane slightly below for depth effect */}
-      <mesh 
-        position={[0, STATIC.WATER_LEVEL - 1, 0]} 
-        rotation={[-Math.PI / 2, 0, 0]}
-        receiveShadow
-      >
-        <planeGeometry args={[oceanSize, oceanSize]} />
-        <meshStandardMaterial 
-          color="#0A4F8C"  // Darker blue for depth
-          transparent={true}
-          opacity={0.7}
-        />
-      </mesh>
-      
-      {/* Caustic light effect - light patterns under water */}
-      <mesh
-        ref={causticRef}
-        geometry={causticGeometry}
-        material={causticMaterial}
-        position={[0, STATIC.WATER_LEVEL - 2, 0]} // Just above the seabed
-      />
-      
-      {/* Ocean floor with undulating terrain */}
-      <mesh
-        position={[0, STATIC.WATER_LEVEL - 3, 0]}
-        geometry={oceanFloorGeometry}
-        receiveShadow
-      >
-        <meshStandardMaterial 
-          color="#0A3B5C"  // Dark blue for ocean floor
-          roughness={0.9}
-          metalness={0.1}
-        />
-      </mesh>
-    </>
+    <mesh
+      ref={meshRef}
+      geometry={oceanGeometry}
+      material={waterMaterial}
+      position={[0, STATIC.WATER_LEVEL, 0]}
+      receiveShadow
+    />
   );
 };
 
