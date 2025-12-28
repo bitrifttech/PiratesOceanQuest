@@ -33,6 +33,11 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   const collisionCooldown = useRef<number>(0);
   const cannonCooldownRef = useRef<number>(0);
   
+  // Obstacle avoidance references
+  const avoidanceCheckTimer = useRef<number>(0);
+  const currentAvoidanceSteer = useRef<number>(0); // Current avoidance steering angle
+  const lastObstacleDirection = useRef<'left' | 'right' | null>(null); // Remember which way we were avoiding
+  
   // Get player position for AI behavior
   const playerPosition = usePlayer((state) => state.position);
   
@@ -49,6 +54,145 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
   const canFireRangeSq = canFireRange * canFireRange;
   const optimalRangeSq = optimalRange * optimalRange;
   const minimumRangeSq = minimumRange * minimumRange;
+  
+  // Obstacle avoidance parameters
+  const lookAheadDistance = ENEMY_AI.AVOIDANCE_LOOK_AHEAD;
+  const whiskerAngle = ENEMY_AI.AVOIDANCE_WHISKER_ANGLE;
+  const whiskerLength = ENEMY_AI.AVOIDANCE_WHISKER_LENGTH;
+  const avoidanceStrength = ENEMY_AI.AVOIDANCE_STRENGTH;
+  const avoidanceCheckInterval = ENEMY_AI.AVOIDANCE_CHECK_INTERVAL;
+  const steerSmoothing = ENEMY_AI.AVOIDANCE_STEER_SMOOTHING;
+  
+  /**
+   * Check for obstacles in a given direction using collision detection
+   * Returns distance to obstacle if found, or Infinity if clear
+   */
+  const checkObstacleInDirection = useCallback((
+    origin: THREE.Vector3,
+    direction: THREE.Vector3,
+    maxDistance: number
+  ): { distance: number; hit: boolean } => {
+    // Check multiple points along the ray for collisions
+    const steps = 5;
+    const stepSize = maxDistance / steps;
+    
+    for (let i = 1; i <= steps; i++) {
+      const checkPos = origin.clone().add(
+        direction.clone().multiplyScalar(stepSize * i)
+      );
+      
+      // Use BVH collision if available, otherwise use legacy
+      if (MeshCollisionRegistry.isInitialized()) {
+        const collision = BVHCollisionService.checkSphereCollision(
+          checkPos, 
+          SHIP_PHYSICS.ENEMY_COLLISION_RADIUS
+        );
+        if (collision.isColliding) {
+          return { distance: stepSize * i, hit: true };
+        }
+      } else {
+        // Check against collision handler features
+        const features = collisionHandler.getFeatures();
+        for (const feature of features) {
+          const dx = checkPos.x - feature.x;
+          const dz = checkPos.z - feature.z;
+          const distSq = dx * dx + dz * dz;
+          const featureRadius = (feature.scale || 1) * 8; // Approximate feature radius
+          const combinedRadius = featureRadius + SHIP_PHYSICS.ENEMY_COLLISION_RADIUS;
+          if (distSq < combinedRadius * combinedRadius) {
+            return { distance: stepSize * i, hit: true };
+          }
+        }
+      }
+    }
+    
+    return { distance: Infinity, hit: false };
+  }, []);
+  
+  /**
+   * Calculate obstacle avoidance steering
+   * Returns an angle offset to apply to the current heading
+   */
+  const calculateObstacleAvoidance = useCallback((
+    position: THREE.Vector3,
+    currentHeading: number,
+    targetAngle: number
+  ): number => {
+    // Forward direction based on current heading
+    const forwardDir = new THREE.Vector3(
+      Math.sin(currentHeading),
+      0,
+      Math.cos(currentHeading)
+    );
+    
+    // Check forward
+    const forwardCheck = checkObstacleInDirection(position, forwardDir, lookAheadDistance);
+    
+    // If no obstacle ahead, no avoidance needed
+    if (!forwardCheck.hit) {
+      // Gradually reduce avoidance steering
+      return currentAvoidanceSteer.current * (1 - steerSmoothing * 2);
+    }
+    
+    // Check left whisker
+    const leftAngle = currentHeading - whiskerAngle;
+    const leftDir = new THREE.Vector3(
+      Math.sin(leftAngle),
+      0,
+      Math.cos(leftAngle)
+    );
+    const leftCheck = checkObstacleInDirection(position, leftDir, whiskerLength);
+    
+    // Check right whisker
+    const rightAngle = currentHeading + whiskerAngle;
+    const rightDir = new THREE.Vector3(
+      Math.sin(rightAngle),
+      0,
+      Math.cos(rightAngle)
+    );
+    const rightCheck = checkObstacleInDirection(position, rightDir, whiskerLength);
+    
+    // Determine which way to steer
+    let steerDirection = 0;
+    
+    // If both sides are clear, pick the one that's more aligned with target
+    if (!leftCheck.hit && !rightCheck.hit) {
+      // Normalize target angle difference
+      let angleDiffToTarget = targetAngle - currentHeading;
+      while (angleDiffToTarget > Math.PI) angleDiffToTarget -= Math.PI * 2;
+      while (angleDiffToTarget < -Math.PI) angleDiffToTarget += Math.PI * 2;
+      
+      // Steer toward the target direction
+      steerDirection = angleDiffToTarget > 0 ? 1 : -1;
+      
+      // Remember which way we're going to maintain consistency
+      lastObstacleDirection.current = steerDirection > 0 ? 'right' : 'left';
+    }
+    // If only left is clear, steer left
+    else if (!leftCheck.hit) {
+      steerDirection = -1;
+      lastObstacleDirection.current = 'left';
+    }
+    // If only right is clear, steer right
+    else if (!rightCheck.hit) {
+      steerDirection = 1;
+      lastObstacleDirection.current = 'right';
+    }
+    // Both sides blocked - steer harder in the direction with more space
+    else {
+      steerDirection = leftCheck.distance > rightCheck.distance ? -1 : 1;
+      lastObstacleDirection.current = steerDirection > 0 ? 'right' : 'left';
+    }
+    
+    // Calculate avoidance intensity based on distance to obstacle
+    // Closer obstacles = stronger avoidance
+    const closestDistance = Math.min(forwardCheck.distance, leftCheck.distance, rightCheck.distance);
+    const urgency = 1 - (closestDistance / lookAheadDistance);
+    const avoidanceIntensity = urgency * avoidanceStrength;
+    
+    // Return the steering angle offset
+    return steerDirection * avoidanceIntensity;
+  }, [checkObstacleInDirection, lookAheadDistance, whiskerAngle, whiskerLength, avoidanceStrength, steerSmoothing]);
   
   // Peaceful start timer (seconds) - when positive, ship won't attack
   const peacefulStartTimerRef = useRef<number | undefined>(undefined);
@@ -158,7 +302,7 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       
     }
     
-    // Improved AI behavior with tactical movement
+    // Improved AI behavior with tactical movement and obstacle avoidance
     if (distanceToPlayer < detectionRange) {
       // Calculate angle to player - direction we need to either face or flee from
       const angleToPlayer = Math.atan2(
@@ -199,17 +343,42 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
         movementSpeed = speed * ENEMY_AI.APPROACH_SPEED_MULTIPLIER; // Slightly slower approach
       }
       
-      // Gradually rotate toward the target angle with smooth turning
+      // ========================================
+      // OBSTACLE AVOIDANCE LOGIC
+      // ========================================
+      // Periodically check for obstacles and calculate avoidance steering
+      avoidanceCheckTimer.current += delta;
+      if (avoidanceCheckTimer.current >= avoidanceCheckInterval) {
+        avoidanceCheckTimer.current = 0;
+        
+        const avoidanceOffset = calculateObstacleAvoidance(
+          currentPos,
+          currentRot.y,
+          targetAngle
+        );
+        
+        // Smooth the avoidance steering to prevent jerky movement
+        currentAvoidanceSteer.current = currentAvoidanceSteer.current * (1 - steerSmoothing) + 
+                                         avoidanceOffset * steerSmoothing;
+      }
+      
+      // Apply obstacle avoidance to the target angle
+      // The stronger the avoidance, the more we deviate from the target
+      const avoidanceAdjustedAngle = targetAngle + currentAvoidanceSteer.current;
+      
+      // Gradually rotate toward the avoidance-adjusted target angle with smooth turning
       const currentAngle = currentRot.y;
-      let angleDiff = targetAngle - currentAngle;
+      let angleDiff = avoidanceAdjustedAngle - currentAngle;
       
       // Normalize angle difference to [-PI, PI]
       while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
       while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
       
       // Apply smooth rotation toward target angle
+      // When avoiding obstacles, turn faster for more responsive navigation
+      const turnMultiplier = Math.abs(currentAvoidanceSteer.current) > 0.1 ? 2.0 : 1.0;
       const newRotY = currentAngle + Math.sign(angleDiff) * 
-                      Math.min(Math.abs(angleDiff), rotationSpeed * delta * 60);
+                      Math.min(Math.abs(angleDiff), rotationSpeed * delta * 60 * turnMultiplier);
       
       // Update rotation
       currentRot.set(0, newRotY, 0);

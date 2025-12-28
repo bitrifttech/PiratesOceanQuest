@@ -99,6 +99,15 @@ export const ENEMY_AI = {
   BOUNCE_FORCE: 2.5, // Force applied when ships collide
   BOUNCE_FACTOR: 0.5, // Factor for environment collision bounce
 
+  // Obstacle Avoidance (pathfinding)
+  AVOIDANCE_LOOK_AHEAD: 25, // How far ahead to check for obstacles (units)
+  AVOIDANCE_WHISKER_ANGLE: Math.PI / 4, // Angle of side "whisker" rays (45 degrees)
+  AVOIDANCE_WHISKER_LENGTH: 15, // Length of side whisker rays
+  AVOIDANCE_STRENGTH: 2.0, // How strongly to steer away from obstacles
+  AVOIDANCE_CHECK_INTERVAL: 0.1, // Seconds between avoidance checks (performance)
+  AVOIDANCE_STEER_SMOOTHING: 0.15, // Smoothing factor for avoidance steering (0-1)
+  WANDER_ANGLE_CHANGE: 0.3, // Max angle change per frame when wandering
+
   // Stats
   BASE_HEALTH: 100,
 } as const;
