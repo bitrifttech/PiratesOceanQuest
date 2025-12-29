@@ -26,6 +26,12 @@ export interface CannonFireEffectInfo {
   direction: THREE.Vector3;
 }
 
+export interface WaterSplashEffectInfo {
+  id: number;
+  position: THREE.Vector3;
+  createdAt: number;
+}
+
 // Constants
 const CANNONBALL_SPEED = 40;
 const CANNONBALL_MAX_RANGE = 100;
@@ -44,6 +50,7 @@ export function useCannonSystem() {
   // Cannonball and effect tracking
   const cannonballs = useRef<CannonballInfo[]>([]);
   const cannonFireEffects = useRef<CannonFireEffectInfo[]>([]);
+  const waterSplashEffects = useRef<WaterSplashEffectInfo[]>([]);
 
   /**
    * Fire all cannons in a broadside
@@ -124,12 +131,35 @@ export function useCannonSystem() {
     });
   }, []);
 
+  /**
+   * Add a water splash effect at the specified position
+   */
+  const addSplashEffect = useCallback((splashPosition: THREE.Vector3) => {
+    waterSplashEffects.current.push({
+      id: CannonService.getNextId(),
+      position: splashPosition.clone(),
+      createdAt: Date.now(),
+    });
+  }, []);
+
+  /**
+   * Remove a splash effect by ID (called when effect completes)
+   */
+  const removeSplashEffect = useCallback((id: number) => {
+    waterSplashEffects.current = waterSplashEffects.current.filter(
+      (effect) => effect.id !== id
+    );
+  }, []);
+
   return {
     fireAllCannons,
     updateCannonballs,
     updateFireEffects,
+    addSplashEffect,
+    removeSplashEffect,
     // Expose refs for rendering
     cannonballsRef: cannonballs,
     fireEffectsRef: cannonFireEffects,
+    waterSplashEffectsRef: waterSplashEffects,
   };
 }

@@ -13,7 +13,6 @@ import { BVHCollisionService } from "../lib/services/BVHCollisionService";
 import { logger } from "../lib/utils/logger";
 import { WEAPONS } from "../lib/config/gameBalance";
 import ExplosionEffect from "./ExplosionEffect";
-import WaterSplashEffect from "./WaterSplashEffect";
 import ShipExplosionEffect from "./ShipExplosionEffect";
 
 interface CannonballProps {
@@ -21,6 +20,7 @@ interface CannonballProps {
   direction: THREE.Vector3;
   speed?: number;
   onHit?: () => void;
+  onSplash?: (position: THREE.Vector3) => void; // Callback to trigger water splash at parent level
   lifespan?: number; // seconds before auto-removal
   sourceId?: string; // ID of the entity that fired this cannonball (for avoiding self-damage)
 }
@@ -35,6 +35,7 @@ const Cannonball = ({
   direction,
   speed = 30,
   onHit,
+  onSplash,
   lifespan = 2.0,
   sourceId
 }: CannonballProps) => {
@@ -92,7 +93,6 @@ const Cannonball = ({
   // Track effect states
   const [showExplosion, setShowExplosion] = useState<boolean>(false);
   const [showShipExplosion, setShowShipExplosion] = useState<boolean>(false);
-  const [showSplash, setShowSplash] = useState<boolean>(false);
   const [effectPosition, setEffectPosition] = useState<THREE.Vector3 | null>(null);
 
   // Update cannonball position and apply physics independently of ship
@@ -123,47 +123,57 @@ const Cannonball = ({
     const cannonballPosition = ballRef.current.position.clone();
     
     // Check if cannonball has fallen into the water FIRST (before environment collision)
-    // Use elapsed time check to avoid triggering on first frame (when ball spawns near water level)
+    // Simple check: if below water level and has flown for a bit, splash
     const flightTime = elapsedTime;
     
-    if (cannonballPosition.y < 0.5 && flightTime > 0.15 && !hitDetected.current) {
+    if (cannonballPosition.y < 0.5 && flightTime > 0.1 && !hitDetected.current) {
       hitDetected.current = true;
       
-      // Set splash position slightly above water surface so it's visible
+      // Create splash position at water surface
       const splashPos = cannonballPosition.clone();
-      splashPos.y = 0.5;
-      setEffectPosition(splashPos);
-      setShowSplash(true);
+      splashPos.y = 0.3;
       
-      // Hide cannonball immediately
+      // Emit splash to parent (renders independently of this component)
+      if (onSplash) {
+        onSplash(splashPos);
+      }
+      
+      // Hide cannonball and remove immediately (splash is handled by parent)
       if (ballRef.current) {
         ballRef.current.visible = false;
+      }
+      
+      // Call onHit to remove from parent array
+      if (onHit) {
+        onHit();
       }
       return;
     }
     
     // Check for collisions with environmental features
-    // Cannonball collision radius from gameBalance config
+    // Skip if near water level - water splash check already handles this
     const cannonballRadius = WEAPONS.CANNONBALL_RADIUS;
-    
-    // Use BVH for precise mesh-level collision if available
-    const useBVH = MeshCollisionRegistry.isInitialized();
     let hasEnvironmentCollision = false;
     let collisionType = '';
     
-    if (useBVH) {
-      // Use BVH mesh-level collision for accurate environment hits
-      const bvhCollision = BVHCollisionService.checkSphereCollision(cannonballPosition, cannonballRadius);
-      if (bvhCollision.isColliding) {
-        hasEnvironmentCollision = true;
-        collisionType = bvhCollision.featureType || 'environment';
-      }
-    } else {
-      // Fallback to legacy 2D circle collision
-      const legacyCollision = environmentCollisions.checkPointCollision(cannonballPosition, cannonballRadius);
-      if (legacyCollision) {
-        hasEnvironmentCollision = true;
-        collisionType = legacyCollision.type;
+    // Only check environment collision if cannonball is above water level
+    if (cannonballPosition.y > 1.0) {
+      const useBVH = MeshCollisionRegistry.isInitialized();
+      
+      if (useBVH) {
+        // Use BVH mesh-level collision for accurate environment hits
+        const bvhCollision = BVHCollisionService.checkSphereCollision(cannonballPosition, cannonballRadius);
+        if (bvhCollision.isColliding) {
+          hasEnvironmentCollision = true;
+          collisionType = bvhCollision.featureType || 'environment';
+        }
+      } else {
+        // Fallback to legacy 2D circle collision
+        const legacyCollision = environmentCollisions.checkPointCollision(cannonballPosition, cannonballRadius);
+        if (legacyCollision) {
+          hasEnvironmentCollision = true;
+          collisionType = legacyCollision.type;
+        }
       }
     }
     
@@ -370,24 +380,6 @@ const Cannonball = ({
         />
       )}
       
-      {/* Water splash effect when cannonball hits water */}
-      {showSplash && effectPosition && (
-        <WaterSplashEffect
-          position={effectPosition}
-          size={1.5}
-          duration={1.8}
-          onComplete={() => {
-            setShowSplash(false);
-            
-            // Now remove the cannonball completely
-            if (ballRef.current && ballRef.current.parent) {
-              ballRef.current.parent.remove(ballRef.current);
-            }
-            
-            if (onHit) onHit();
-          }}
-        />
-      )}
     </group>
   );
 };

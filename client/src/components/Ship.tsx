@@ -14,6 +14,7 @@ import { useShipMovement } from "../hooks/useShipMovement";
 import { useCannonSystem } from "../hooks/useCannonSystem";
 import Cannonball from "./Cannonball";
 import CannonFireEffect from "./CannonFireEffect";
+import WaterSplashEffect from "./WaterSplashEffect";
 import CustomModel from "./CustomModel";
 
 // Ship models are preloaded in ModelService
@@ -46,8 +47,11 @@ const Ship = () => {
     fireAllCannons,
     updateCannonballs,
     updateFireEffects,
+    addSplashEffect,
+    removeSplashEffect,
     cannonballsRef: cannonballs,
     fireEffectsRef: cannonFireEffects,
+    waterSplashEffectsRef: waterSplashEffects,
   } = useCannonSystem();
   
   // Track initialization status
@@ -182,6 +186,10 @@ const Ship = () => {
           speed={35}
           lifespan={2.5}
           sourceId="player" // Add player as source ID to prevent friendly fire
+          onSplash={(splashPos) => {
+            // Add splash to effect queue (renders independently of cannonball)
+            addSplashEffect(splashPos);
+          }}
           onHit={() => {
             // Remove this cannonball from the array when it's done
             cannonballs.current = cannonballs.current.filter(b => b.id !== ball.id);
@@ -195,6 +203,20 @@ const Ship = () => {
           key={effect.id}
           position={effect.position}
           direction={effect.direction}
+        />
+      ))}
+      
+      {/* Render water splash effects (independent of cannonball lifecycle) */}
+      {waterSplashEffects.current.map((splash) => (
+        <WaterSplashEffect
+          key={splash.id}
+          position={splash.position}
+          size={1.5}
+          duration={1.8}
+          onComplete={() => {
+            // Remove splash from queue when effect completes
+            removeSplashEffect(splash.id);
+          }}
         />
       ))}
     </>

@@ -7,6 +7,7 @@ import { useGameState } from "../lib/stores/useGameState";
 import { useShipEvents } from "../lib/stores/useShipEvents";
 import CustomModel from "./CustomModel";
 import Cannonball from "./Cannonball";
+import WaterSplashEffect from "./WaterSplashEffect";
 import { SCALE, MODEL_ADJUSTMENT, STATIC } from "../lib/constants";
 import { collisionHandler } from "../lib/services/CollisionHandler";
 import { BVHCollisionService } from "../lib/services/BVHCollisionService";
@@ -218,6 +219,11 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
       speed={35}
       lifespan={6.0}
       sourceId={id}
+      onSplash={(splashPos) => {
+        // Add splash to effect queue (renders independently of cannonball)
+        const splashId = `${cannonballId}-splash`;
+        setSplashEffects(prev => [...prev, { id: splashId, position: splashPos.clone() }]);
+      }}
       onHit={() => {
         setCannonballs(prev => prev.filter(ball => ball.key !== cannonballId));
       }}
@@ -226,6 +232,9 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
 
   // State to manage cannonballs - memoized to prevent unnecessary re-renders
   const [cannonballs, setCannonballs] = useState<JSX.Element[]>([]);
+  
+  // State for water splash effects (independent of cannonball lifecycle)
+  const [splashEffects, setSplashEffects] = useState<{ id: string; position: THREE.Vector3 }[]>([]);
   
   // Initialize on first render
   useEffect(() => {
@@ -545,6 +554,20 @@ const EnemyShip = memo(({ id, initialPosition, initialRotation }: EnemyShipProps
     <>
       {/* Render all cannonballs fired by this enemy ship */}
       {cannonballs}
+      
+      {/* Render water splash effects (independent of cannonball lifecycle) */}
+      {splashEffects.map((splash) => (
+        <WaterSplashEffect
+          key={splash.id}
+          position={splash.position}
+          size={1.5}
+          duration={1.8}
+          onComplete={() => {
+            // Remove splash from queue when effect completes
+            setSplashEffects(prev => prev.filter(s => s.id !== splash.id));
+          }}
+        />
+      ))}
       
       <group 
         ref={shipRef} 
