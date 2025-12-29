@@ -388,10 +388,13 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
   updatePowerUps: (delta) => {
     const { activePowerUps } = get();
     
+    // Skip if no active power-ups
+    if (activePowerUps.length === 0) return;
+    
     // Update durations and remove expired power-ups
     const updatedPowerUps = activePowerUps
       .map(powerUp => {
-        // Skip shot-based power-ups
+        // Skip shot-based power-ups (they don't have time-based expiration)
         if (powerUp.shots) return powerUp;
         
         // Update time remaining
@@ -416,10 +419,8 @@ export const usePowerUps = create<PowerUpsState>((set, get) => ({
         return false;
       });
     
-    // Only update state if there's a change
-    if (updatedPowerUps.length !== activePowerUps.length) {
-      set({ activePowerUps: updatedPowerUps });
-    }
+    // Always update state to save the decremented timer values
+    set({ activePowerUps: updatedPowerUps });
   },
   
   // Consume a shot for shot-based power-ups
