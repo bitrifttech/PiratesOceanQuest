@@ -7,12 +7,12 @@ import { useEnemies } from "../lib/stores/useEnemies";
  */
 const GameOverScreen = () => {
   const gameState = useGameState((state) => state.gameState);
-  const resetMission = useGameState((state) => state.resetMission);
-  const gold = useGameState((state) => state.gold);
+  const resetGame = useGameState((state) => state.resetGame);
+  const currentLevel = useGameState((state) => state.currentLevel);
+  const totalGold = useGameState((state) => state.totalGold);
   const enemiesKilled = useGameState((state) => state.enemiesKilled);
   const resetPlayer = usePlayer((state) => state.resetPlayer);
   const resetEnemies = useEnemies((state) => state.resetEnemies);
-  const spawnEnemies = useEnemies((state) => state.spawnEnemies);
 
   if (gameState !== 'gameOver') return null;
 
@@ -20,9 +20,7 @@ const GameOverScreen = () => {
     // Reset all game state
     resetPlayer();
     resetEnemies();
-    resetMission();
-    // Spawn new enemies
-    spawnEnemies(5);
+    resetGame(); // This will reset to level 1
   };
 
   return (
@@ -42,12 +40,16 @@ const GameOverScreen = () => {
         {/* Stats */}
         <div className="bg-gray-800 rounded-lg p-4 mb-6">
           <div className="flex justify-between text-lg mb-2">
+            <span className="text-gray-400">Final Level:</span>
+            <span className="text-red-400 font-bold">{currentLevel}</span>
+          </div>
+          <div className="flex justify-between text-lg mb-2">
             <span className="text-gray-400">Ships Destroyed:</span>
             <span className="text-white font-bold">{enemiesKilled}</span>
           </div>
           <div className="flex justify-between text-lg">
-            <span className="text-gray-400">Gold Earned:</span>
-            <span className="text-yellow-400 font-bold">🪙 {gold}</span>
+            <span className="text-gray-400">Final Score:</span>
+            <span className="text-yellow-400 font-bold">🪙 {totalGold}</span>
           </div>
         </div>
         

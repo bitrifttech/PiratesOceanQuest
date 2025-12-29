@@ -17,10 +17,11 @@ const HUD = () => {
   const enemies = useEnemies((state) => state.enemies);
   const gameState = useGameState((state) => state.gameState);
   
-  // Mission tracking
-  const gold = useGameState((state) => state.gold);
-  const enemiesKilled = useGameState((state) => state.enemiesKilled);
-  const missionTarget = useGameState((state) => state.missionTarget);
+  // Level progression tracking
+  const currentLevel = useGameState((state) => state.currentLevel);
+  const shipsKilledThisLevel = useGameState((state) => state.shipsKilledThisLevel);
+  const shipsRequiredThisLevel = useGameState((state) => state.shipsRequiredThisLevel);
+  const totalGold = useGameState((state) => state.totalGold);
   
   // Get active power-ups and inventory
   const activePowerUps = usePowerUps((state) => state.activePowerUps);
@@ -222,14 +223,14 @@ const HUD = () => {
   
   return (
     <>
-      {/* Top center - Mission objective */}
+      {/* Top center - Level and objective */}
       <div className="absolute top-5 left-1/2 transform -translate-x-1/2 pointer-events-none">
         <div className="bg-gray-900 bg-opacity-80 px-6 py-3 rounded-lg border-2 border-yellow-600">
           <div className="text-yellow-400 font-['Pirata_One'] text-2xl text-center">
-            ⚔️ MISSION: Sink {missionTarget} Enemy Ships ⚔️
+            ⚔️ LEVEL {currentLevel} ⚔️
           </div>
           <div className="text-white text-xl text-center mt-1">
-            Ships Destroyed: <span className="text-green-400 font-bold">{enemiesKilled}</span> / {missionTarget}
+            Ships: <span className="text-green-400 font-bold">{shipsKilledThisLevel}</span> / {shipsRequiredThisLevel}
           </div>
         </div>
       </div>
@@ -239,7 +240,7 @@ const HUD = () => {
         <div className="bg-gray-900 bg-opacity-80 px-4 py-2 rounded-lg border border-yellow-600">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🪙</span>
-            <span className="text-yellow-400 font-['Pirata_One'] text-2xl">{gold}</span>
+            <span className="text-yellow-400 font-['Pirata_One'] text-2xl">{totalGold}</span>
           </div>
         </div>
       </div>

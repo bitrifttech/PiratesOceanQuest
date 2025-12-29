@@ -7,6 +7,7 @@ import Game from "./components/Game";
 import GameUI from "./components/GameUI";
 import GameOverScreen from "./components/GameOverScreen";
 import VictoryScreen from "./components/VictoryScreen";
+import LevelCompleteScreen from "./components/LevelCompleteScreen";
 import { PortHealingIndicator } from "./components/PortHealingSystem";
 import ModelTestScene from "./components/ModelTestScene";
 import { MODEL_ADJUSTMENT } from "./lib/constants";
@@ -137,6 +138,7 @@ function App() {
                   <PortHealingIndicator />
                   
                   {/* Game Over and Victory screens */}
+                  {gameState === 'levelComplete' && <LevelCompleteScreen />}
                   <GameOverScreen />
                   <VictoryScreen />
                 </>

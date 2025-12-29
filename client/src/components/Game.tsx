@@ -22,6 +22,7 @@ import { usePowerUps } from "../lib/stores/usePowerUps";
 import { EnvironmentGenerator } from "../lib/services/EnvironmentGenerator";
 import { collisionHandler } from "../lib/services/CollisionHandler";
 import { MISSION_CONFIG } from "../lib/stores/useGameState";
+import { LEVEL_PROGRESSION } from "../lib/config/gameBalance";
 
 // WorldPowerUpCollector component to handle collection logic
 // We separate this to avoid React hooks conditional calling issues
@@ -84,6 +85,8 @@ const Game = () => {
   // Game state
   const setGameOver = useGameState((state) => state.setGameOver);
   const playerHealth = usePlayer((state) => state.health);
+  const currentLevel = useGameState((state) => state.currentLevel);
+  const gameState = useGameState((state) => state.gameState);
   
   // Island positions and other environment features (generated to avoid overlaps)
   // Only create this data once and never update it
@@ -94,6 +97,9 @@ const Game = () => {
 
   // Track if game was already initialized to prevent multiple initializations
   const initialized = useRef(false);
+  
+  // Throttle enemy spawning to avoid spawning too frequently
+  const lastSpawnTime = useRef(0);
   
   // Initialize game on first load - only once
   useEffect(() => {
@@ -108,8 +114,15 @@ const Game = () => {
     // Initialize player
     initializePlayer();
     
-    // Spawn enemy ships for the mission
-    spawnEnemies(MISSION_CONFIG.ENEMIES_TO_KILL);
+    // Spawn initial enemy ships based on level
+    // Get current level from state to ensure we have the latest value
+    const initialLevel = useGameState.getState().currentLevel;
+    const maxSimultaneous = Math.min(
+      LEVEL_PROGRESSION.BASE_SIMULTANEOUS_ENEMIES + (initialLevel - 1) * LEVEL_PROGRESSION.ENEMIES_INCREMENT_PER_LEVEL,
+      LEVEL_PROGRESSION.MAX_SIMULTANEOUS_ENEMIES
+    );
+    logger.debug('game', `Initializing game: Level ${initialLevel}, spawning ${maxSimultaneous} enemies`);
+    spawnEnemies(maxSimultaneous);
     
     // Play background music
     playBackgroundMusic();
@@ -183,6 +196,25 @@ const Game = () => {
     
     // Update active power-ups
     usePowerUps.getState().updatePowerUps(delta);
+    
+    // Maintain enemy count based on current level (only during playing state)
+    // Throttle to check every 2 seconds to avoid constant spawning attempts
+    const now = Date.now();
+    if (gameState === 'playing' && now - lastSpawnTime.current > 2000) {
+      const maxSimultaneous = Math.min(
+        LEVEL_PROGRESSION.BASE_SIMULTANEOUS_ENEMIES + (currentLevel - 1) * LEVEL_PROGRESSION.ENEMIES_INCREMENT_PER_LEVEL,
+        LEVEL_PROGRESSION.MAX_SIMULTANEOUS_ENEMIES
+      );
+      
+      // Spawn new enemies if below the target count
+      const currentEnemyCount = enemies.length;
+      if (currentEnemyCount < maxSimultaneous) {
+        const toSpawn = maxSimultaneous - currentEnemyCount;
+        logger.debug('game', `Level ${currentLevel}: Spawning ${toSpawn} enemies (have ${currentEnemyCount}, need ${maxSimultaneous})`);
+        spawnEnemies(toSpawn);
+        lastSpawnTime.current = now;
+      }
+    }
     
     // Update orbit controls target to follow the player
     if (orbitControlsRef.current) {

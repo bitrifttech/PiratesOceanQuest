@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { POSITION } from "../constants";
 import { logger } from "../utils/logger";
 
-export type GameState = 'title' | 'menu' | 'settings' | 'help' | 'upgrade' | 'playing' | 'gameOver' | 'victory';
+export type GameState = 'title' | 'menu' | 'settings' | 'help' | 'upgrade' | 'playing' | 'levelComplete' | 'gameOver' | 'victory';
 
 // Mission configuration
 export const MISSION_CONFIG = {
@@ -18,14 +18,25 @@ interface GameStateStore {
   setGameOver: () => void;
   setVictory: () => void;
   
-  // Mission tracking
+  // Level progression tracking
+  currentLevel: number;
+  shipsKilledThisLevel: number;
+  shipsRequiredThisLevel: number;
+  totalGold: number;
+  goldEarnedThisLevel: number;
+  
+  // Legacy mission tracking (for compatibility)
   gold: number;
   enemiesKilled: number;
   missionTarget: number;
   
-  // Mission actions
+  // Level progression actions
   addGold: (amount: number) => void;
   incrementKills: () => void;
+  advanceLevel: () => void;
+  resetGame: () => void;
+  
+  // Legacy mission actions (for compatibility)
   resetMission: () => void;
   
   // Model and environment parameters
@@ -64,36 +75,79 @@ export const useGameState = create<GameStateStore>((set, get) => ({
     logger.debug('game', 'Victory!');
   },
   
-  // Mission tracking
+  // Level progression tracking
+  currentLevel: 1,
+  shipsKilledThisLevel: 0,
+  shipsRequiredThisLevel: 5, // Will be updated based on level config
+  totalGold: 0,
+  goldEarnedThisLevel: 0,
+  
+  // Legacy mission tracking (for compatibility)
   gold: 0,
   enemiesKilled: 0,
   missionTarget: MISSION_CONFIG.ENEMIES_TO_KILL,
   
   // Mission actions
   addGold: (amount) => {
-    set((state) => ({ gold: state.gold + amount }));
-    logger.debug('game', `Gold added: ${amount}. Total: ${get().gold + amount}`);
+    set((state) => ({ 
+      totalGold: state.totalGold + amount,
+      goldEarnedThisLevel: state.goldEarnedThisLevel + amount,
+      gold: state.gold + amount // Keep legacy gold synced
+    }));
+    logger.debug('game', `Gold added: ${amount}. Total: ${get().totalGold}`);
   },
   
   incrementKills: () => {
-    const { enemiesKilled, missionTarget, setVictory } = get();
-    const newKills = enemiesKilled + 1;
-    set({ enemiesKilled: newKills });
-    logger.debug('game', `Enemy killed! ${newKills}/${missionTarget}`);
+    const { shipsKilledThisLevel, shipsRequiredThisLevel, currentLevel } = get();
+    const newKills = shipsKilledThisLevel + 1;
+    set({ 
+      shipsKilledThisLevel: newKills,
+      enemiesKilled: get().enemiesKilled + 1 // Keep legacy counter synced
+    });
+    logger.debug('game', `Level ${currentLevel}: Ship killed! ${newKills}/${shipsRequiredThisLevel}`);
     
-    // Check for victory
-    if (newKills >= missionTarget) {
-      setVictory();
+    // Check for level completion
+    if (newKills >= shipsRequiredThisLevel) {
+      set({ gameState: 'levelComplete' });
+      logger.debug('game', `Level ${currentLevel} complete!`);
     }
   },
   
-  resetMission: () => {
+  advanceLevel: () => {
+    const { currentLevel } = get();
+    const newLevel = currentLevel + 1;
+    
+    // Calculate ships required for new level (base 5, +2 per level)
+    const shipsRequired = 5 + (newLevel - 1) * 2;
+    
     set({
+      currentLevel: newLevel,
+      shipsKilledThisLevel: 0,
+      shipsRequiredThisLevel: shipsRequired,
+      goldEarnedThisLevel: 0,
+      gameState: 'playing'
+    });
+    
+    logger.debug('game', `Advanced to level ${newLevel}. Ships required: ${shipsRequired}`);
+  },
+  
+  resetGame: () => {
+    set({
+      currentLevel: 1,
+      shipsKilledThisLevel: 0,
+      shipsRequiredThisLevel: 5,
+      totalGold: 0,
+      goldEarnedThisLevel: 0,
       gold: 0,
       enemiesKilled: 0,
       gameState: 'playing',
     });
-    logger.debug('game', 'Mission reset');
+    logger.debug('game', 'Game reset to level 1');
+  },
+  
+  resetMission: () => {
+    // Legacy method - now calls resetGame
+    get().resetGame();
   },
   
   // Initial parameters with standardized values - using constants from STATIC

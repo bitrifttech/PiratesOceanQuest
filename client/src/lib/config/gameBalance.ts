@@ -113,6 +113,29 @@ export const ENEMY_AI = {
 } as const;
 
 // =============================================================================
+// LEVEL PROGRESSION
+// =============================================================================
+export const LEVEL_PROGRESSION = {
+  // Ships to kill scaling
+  BASE_SHIPS_TO_KILL: 5, // Level 1
+  SHIPS_INCREMENT_PER_LEVEL: 2, // +2 ships per level
+  
+  // Simultaneous enemy scaling
+  BASE_SIMULTANEOUS_ENEMIES: 2, // Level 1
+  MAX_SIMULTANEOUS_ENEMIES: 8, // Cap at 8 enemies on screen
+  ENEMIES_INCREMENT_PER_LEVEL: 1, // +1 enemy per level (until max)
+  
+  // Gold rewards
+  GOLD_PER_KILL: 100,
+  LEVEL_COMPLETE_BONUS_BASE: 500,
+  LEVEL_COMPLETE_BONUS_MULTIPLIER: 1.5, // Multiplied by level number
+  
+  // Health management
+  HEAL_ON_LEVEL_COMPLETE: true,
+  HEAL_AMOUNT_PERCENT: 100, // Full heal
+} as const;
+
+// =============================================================================
 // POWER-UPS
 // =============================================================================
 export const POWER_UPS = {
