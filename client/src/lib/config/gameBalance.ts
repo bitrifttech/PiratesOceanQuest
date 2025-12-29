@@ -166,8 +166,8 @@ export const POWER_UPS = {
   TRIPLE_SHOT_COUNT: 3,
   TRIPLE_SHOT_SHOTS: 5,
 
-  // Long range
-  LONG_RANGE_MULTIPLIER: 2.0,
+  // Long range (1.41 = √2, so 1.41 × 1.41 ≈ 2x effective range)
+  LONG_RANGE_MULTIPLIER: 1.41,
   LONG_RANGE_DURATION: 15, // seconds
 
   // Gold bonus
