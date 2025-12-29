@@ -122,7 +122,27 @@ const Cannonball = ({
     // Get current cannonball position
     const cannonballPosition = ballRef.current.position.clone();
     
-    // Check for collisions with environmental features first
+    // Check if cannonball has fallen into the water FIRST (before environment collision)
+    // Use elapsed time check to avoid triggering on first frame (when ball spawns near water level)
+    const flightTime = elapsedTime;
+    
+    if (cannonballPosition.y < 0.5 && flightTime > 0.15 && !hitDetected.current) {
+      hitDetected.current = true;
+      
+      // Set splash position slightly above water surface so it's visible
+      const splashPos = cannonballPosition.clone();
+      splashPos.y = 0.5;
+      setEffectPosition(splashPos);
+      setShowSplash(true);
+      
+      // Hide cannonball immediately
+      if (ballRef.current) {
+        ballRef.current.visible = false;
+      }
+      return;
+    }
+    
+    // Check for collisions with environmental features
     // Cannonball collision radius from gameBalance config
     const cannonballRadius = WEAPONS.CANNONBALL_RADIUS;
     
@@ -150,8 +170,6 @@ const Cannonball = ({
     if (hasEnvironmentCollision && !hitDetected.current) {
       // Mark as hit to prevent multiple hits
       hitDetected.current = true;
-      
-      logger.debug('cannonball', `Hit ${collisionType} at (${cannonballPosition.x.toFixed(1)}, ${cannonballPosition.z.toFixed(1)})`);
       
       // Create explosion effect at the impact point
       setEffectPosition(cannonballPosition.clone());
@@ -268,34 +286,10 @@ const Cannonball = ({
       }
     }
     
-    // Auto-remove when lifespan is up
-    if (lifeRef.current <= 0) {
-      // Execute callback if provided
-      if (onHit) onHit();
-    }
-    
-    // Check if cannonball has fallen into the water - raised to -1 for better visibility
-    // Allow cannonballs to travel further out before hitting the water
-    if (ballRef.current.position.y < -1 && !hitDetected.current) {
-      // Mark as hit to prevent multiple splashes
+    // Auto-remove when lifespan is up (but only if no effect is showing)
+    if (lifeRef.current <= 0 && !hitDetected.current) {
       hitDetected.current = true;
-      
-      // Create splash effect at the water surface
-      // Set Y to 0 for proper water level
-      const splashPosition = new THREE.Vector3(
-        ballRef.current.position.x,
-        0, // Always at water level
-        ballRef.current.position.z
-      );
-      
-      // Set effect position and show splash
-      setEffectPosition(splashPosition);
-      setShowSplash(true);
-      
-      // Hide cannonball immediately but keep object for effect completion
-      if (ballRef.current) {
-        ballRef.current.visible = false;
-      }
+      if (onHit) onHit();
     }
   });
   
@@ -338,8 +332,8 @@ const Cannonball = ({
       {showExplosion && effectPosition && (
         <ExplosionEffect
           position={effectPosition}
-          size={3.5}
-          duration={0.8}
+          size={3.0}
+          duration={1.5}
           onComplete={() => {
             // Clean up when explosion finishes
             setShowExplosion(false);
@@ -360,7 +354,7 @@ const Cannonball = ({
         <ShipExplosionEffect
           position={effectPosition}
           size={4.0}
-          duration={1.2}
+          duration={2.0}
           onComplete={() => {
             // Clean up when explosion finishes
             setShowShipExplosion(false);
@@ -376,14 +370,13 @@ const Cannonball = ({
         />
       )}
       
-      {/* Splash effect when cannonball hits water */}
+      {/* Water splash effect when cannonball hits water */}
       {showSplash && effectPosition && (
         <WaterSplashEffect
           position={effectPosition}
-          size={2.5}
-          duration={1.2}
+          size={1.5}
+          duration={1.8}
           onComplete={() => {
-            // Clean up when splash finishes
             setShowSplash(false);
             
             // Now remove the cannonball completely
@@ -391,7 +384,6 @@ const Cannonball = ({
               ballRef.current.parent.remove(ballRef.current);
             }
             
-            // Execute callback if provided
             if (onHit) onHit();
           }}
         />

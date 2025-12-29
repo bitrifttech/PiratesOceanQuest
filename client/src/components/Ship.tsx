@@ -182,6 +182,10 @@ const Ship = () => {
           speed={35}
           lifespan={2.5}
           sourceId="player" // Add player as source ID to prevent friendly fire
+          onHit={() => {
+            // Remove this cannonball from the array when it's done
+            cannonballs.current = cannonballs.current.filter(b => b.id !== ball.id);
+          }}
         />
       ))}
       

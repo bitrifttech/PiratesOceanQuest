@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useMemo, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -9,258 +9,372 @@ interface WaterSplashEffectProps {
   onComplete?: () => void;
 }
 
-// Define particleData type for better type checking
-interface ParticleData {
-  direction: THREE.Vector3;
-  speed: number;
-  initialScale: number;
-  initialY: number;
+// Physics-based water droplet
+interface Droplet {
+  pos: THREE.Vector3;
+  vel: THREE.Vector3;
+  size: number;
+  life: number;
+  maxLife: number;
+  type: 'column' | 'droplet' | 'spray' | 'mist';
 }
 
-interface ParticleMesh extends THREE.Mesh {
-  userData: ParticleData;
-  material: THREE.Material;
+// Ripple ring data
+interface Ripple {
+  radius: number;
+  maxRadius: number;
+  opacity: number;
+  speed: number;
+  delay: number;
 }
 
 /**
- * A component that renders a water splash effect
- * Used when cannonballs hit water surface
+ * Realistic physics-based water splash effect
+ * Features: water column, ballistic droplets, spray mist, expanding ripples
  */
 const WaterSplashEffect: React.FC<WaterSplashEffectProps> = ({
   position,
-  size = 2.5,
-  duration = 1.2,
+  size = 1,
+  duration = 2.0,
   onComplete
 }) => {
   const groupRef = useRef<THREE.Group>(null);
-  const startTime = useRef(Date.now());
-  const [particles, setParticles] = useState<JSX.Element[]>([]);
+  const elapsed = useRef(0);
+  const done = useRef(false);
+  const init = useRef(false);
+  const [frame, setFrame] = useState(0);
   
-  // Generate water particles on first render (optimized for performance)
+  // Particle data stored in refs for performance
+  const droplets = useRef<Droplet[]>([]);
+  const ripples = useRef<Ripple[]>([]);
+  const columnHeight = useRef(0);
+  const columnOpacity = useRef(1);
+  
+  // Water colors
+  const waterColor = useMemo(() => new THREE.Color(0x4A9FD8), []); // Caribbean blue
+  const foamColor = useMemo(() => new THREE.Color(0xFFFFFF), []); // White foam
+  const mistColor = useMemo(() => new THREE.Color(0xCCEEFF), []); // Light blue mist
+  
+  // Gravity constant
+  const GRAVITY = 15;
+  
+  // Initialize particles on mount
   useEffect(() => {
-    const particleCount = 12; // Reduced from 25 for better performance
-    const newParticles = [];
+    const d: Droplet[] = [];
     
-    // Create spray of water droplets in upward direction with outward spread
-    for (let i = 0; i < particleCount; i++) {
-      // Random direction with strong upward bias
+    // Main water column particles (shoot straight up)
+    for (let i = 0; i < 6; i++) {
+      const offsetAngle = Math.random() * Math.PI * 2;
+      const offsetDist = Math.random() * 0.1 * size;
+      d.push({
+        pos: new THREE.Vector3(
+          Math.cos(offsetAngle) * offsetDist,
+          0.15, // Start above water
+          Math.sin(offsetAngle) * offsetDist
+        ),
+        vel: new THREE.Vector3(
+          (Math.random() - 0.5) * 0.4,
+          6 + Math.random() * 3, // Moderate upward velocity
+          (Math.random() - 0.5) * 0.4
+        ).multiplyScalar(size),
+        size: (0.08 + Math.random() * 0.06) * size,
+        life: 1,
+        maxLife: 0.5 + Math.random() * 0.2,
+        type: 'column'
+      });
+    }
+    
+    // Primary droplets - ballistic trajectories
+    for (let i = 0; i < 18; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const radius = Math.random() * 0.8;
-      
-      const direction = new THREE.Vector3(
-        Math.cos(angle) * radius,
-        0.8 + Math.random() * 0.7,
-        Math.sin(angle) * radius
-      ).normalize();
-      
-      const speed = 2 + Math.random() * 4;
-      const particleSize = (Math.random() * 0.3 + 0.2) * size / 3;
-      
-      // Simplified color selection
-      const colors = [0x3498db, 0x2980b9, 0x7fc7ff, 0xffffff];
-      const color = new THREE.Color(colors[Math.floor(Math.random() * colors.length)]);
-      
-      const initialY = 0.1 + Math.random() * 0.1;
-      
-      newParticles.push(
-        <mesh 
-          key={`splash-${i}`}
-          position={[0, initialY, 0]}
-          userData={{ direction, speed, initialScale: particleSize, initialY }}
-        >
-          <sphereGeometry args={[particleSize, 4, 4]} />
-          <meshBasicMaterial color={color} transparent={true} opacity={0.8} />
-        </mesh>
-      );
+      const upAngle = 0.3 + Math.random() * 0.5; // 30-80 degrees up
+      const speed = 3 + Math.random() * 5;
+      d.push({
+        pos: new THREE.Vector3(0, 0.2, 0), // Start above water
+        vel: new THREE.Vector3(
+          Math.cos(angle) * Math.cos(upAngle) * speed,
+          Math.sin(upAngle) * speed,
+          Math.sin(angle) * Math.cos(upAngle) * speed
+        ).multiplyScalar(size),
+        size: (0.04 + Math.random() * 0.05) * size,
+        life: 1,
+        maxLife: 0.4 + Math.random() * 0.3,
+        type: 'droplet'
+      });
     }
     
-    // Add circular ripple effect on water surface (reduced to 2 ripples)
-    for (let i = 0; i < 2; i++) {
-      const scale = (i + 1) * 0.8;
-      const delay = i * 0.15;
-      
-      newParticles.push(
-        <mesh 
-          key={`ripple-${i}`}
-          position={[0, 0.05, 0]}
-          rotation={[-Math.PI / 2, 0, 0]}
-          userData={{ 
-            isRipple: true,
-            initialScale: 0.2,
-            maxScale: scale * 3,
-            delay,
-            duration: duration * 0.8
-          }}
-          scale={[0.001, 0.001, 0.001]}
-        >
-          <ringGeometry args={[0.8, 1.0, 8]} />
-          <meshBasicMaterial color={0xffffff} transparent={true} opacity={0.7} side={THREE.DoubleSide} />
-        </mesh>
-      );
-    }
-    
-    // Add some foam particles around impact area (reduced from 10 to 5)
-    for (let i = 0; i < 5; i++) {
+    // Secondary spray - smaller, wider spread
+    for (let i = 0; i < 12; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const radius = Math.random() * 1.5;
-      const xPos = Math.cos(angle) * radius;
-      const zPos = Math.sin(angle) * radius;
-      const foamScale = (Math.random() * 0.6 + 0.4) * size / 2;
-      
-      newParticles.push(
-        <mesh 
-          key={`foam-${i}`}
-          position={[xPos, 0.1, zPos]}
-          rotation={[-Math.PI / 2, 0, Math.random() * Math.PI * 2]}
-          userData={{ isFoam: true, initialScale: foamScale, lifespan: 0.4 + Math.random() * 0.6 }}
-        >
-          <circleGeometry args={[0.3, 6]} />
-          <meshBasicMaterial color={0xffffff} transparent={true} opacity={0.5} />
-        </mesh>
-      );
+      const upAngle = 0.1 + Math.random() * 0.4;
+      const speed = 2 + Math.random() * 3;
+      d.push({
+        pos: new THREE.Vector3(0, 0.15, 0), // Start above water
+        vel: new THREE.Vector3(
+          Math.cos(angle) * Math.cos(upAngle) * speed,
+          Math.sin(upAngle) * speed,
+          Math.sin(angle) * Math.cos(upAngle) * speed
+        ).multiplyScalar(size),
+        size: (0.02 + Math.random() * 0.03) * size,
+        life: 1,
+        maxLife: 0.3 + Math.random() * 0.3,
+        type: 'spray'
+      });
     }
     
-    // Add vertical water column at center (main splash)
-    newParticles.push(
-      <mesh 
-        key="water-column"
-        position={[0, 0.1, 0]}
-        userData={{ isColumn: true, initialHeight: 0.1, maxHeight: size * 0.8 }}
-        scale={[0.5, 0.1, 0.5]}
-      >
-        <cylinderGeometry args={[0.3, 0.8, 1, 8]} />
-        <meshBasicMaterial color={0x2980b9} transparent={true} opacity={0.8} />
-      </mesh>
-    );
+    // Fine mist - floats and drifts
+    for (let i = 0; i < 8; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * 0.2 * size;
+      d.push({
+        pos: new THREE.Vector3(
+          Math.cos(angle) * dist,
+          0.2 + Math.random() * 0.3, // Start above water
+          Math.sin(angle) * dist
+        ),
+        vel: new THREE.Vector3(
+          (Math.random() - 0.5) * 0.4,
+          0.3 + Math.random() * 0.5,
+          (Math.random() - 0.5) * 0.4
+        ).multiplyScalar(size),
+        size: (0.06 + Math.random() * 0.08) * size,
+        life: 1,
+        maxLife: 0.6 + Math.random() * 0.4,
+        type: 'mist'
+      });
+    }
     
-    setParticles(newParticles);
-  }, [size, duration]);
+    droplets.current = d;
+    
+    // Initialize ripples with staggered delays
+    const r: Ripple[] = [];
+    for (let i = 0; i < 3; i++) {
+      r.push({
+        radius: 0.05 * size,
+        maxRadius: (1.2 + i * 0.6) * size,
+        opacity: 0,
+        speed: (2.0 - i * 0.2) * size,
+        delay: i * 0.08
+      });
+    }
+    ripples.current = r;
+    
+    // Reset column
+    columnHeight.current = 0;
+    columnOpacity.current = 1;
+    
+    // Mark as initialized
+    init.current = true;
+  }, [size, position]);
   
-  // Animate splash effect
-  useFrame(() => {
-    if (!groupRef.current) return;
+  // Animation loop
+  useFrame((_, delta) => {
+    if (!init.current || done.current) return;
     
-    const elapsedTime = (Date.now() - startTime.current) / 1000;
-    const progress = Math.min(elapsedTime / duration, 1);
+    elapsed.current += delta;
+    const t = elapsed.current;
     
-    // If animation is complete, call onComplete callback
-    if (progress >= 1 && onComplete) {
-      onComplete();
+    if (t >= duration) {
+      done.current = true;
+      onComplete?.();
       return;
     }
     
-    // Update each particle/element
-    groupRef.current.children.forEach((child) => {
-      // Handle regular particles (water droplets)
-      if (child.userData.direction && child.userData.speed) {
-        // Type assertion for proper mesh access
-        const mesh = child as ParticleMesh;
-        const userData = mesh.userData;
-        
-        // Apply parabolic motion with gravity
-        const particleElapsed = elapsedTime;
-        
-        // Initial upward velocity
-        const initialVelocity = userData.speed;
-        
-        // Calculate height using physics formula: h = v0*t - 0.5*g*t^2
-        const gravity = 9.8;
-        const height = (initialVelocity * particleElapsed) - 
-                      (0.5 * gravity * particleElapsed * particleElapsed);
-        
-        // Apply horizontal movement (decreases as splash progresses)
-        const horizontalFactor = 0.2 * (1 - Math.pow(progress, 2));
-        
-        mesh.position.x += userData.direction.x * horizontalFactor;
-        mesh.position.y = userData.initialY + height * 0.4; // Scale down height for better visuals
-        mesh.position.z += userData.direction.z * horizontalFactor;
-        
-        // Fade out particles as they fall
-        if (mesh.material && mesh.material.opacity !== undefined) {
-          // More opacity at peak, fades as it falls
-          const heightRatio = Math.max(0, mesh.position.y / (userData.initialY + 1));
-          mesh.material.opacity = 0.8 * (heightRatio + 0.2) * (1 - progress * 0.7);
-        }
-        
-        // Remove particles that go below water
-        if (mesh.position.y < 0) {
-          mesh.visible = false;
-        }
-      }
-      // Handle ripple rings
-      else if (child.userData.isRipple) {
-        const rippleDelay = child.userData.delay || 0;
-        const rippleDuration = child.userData.duration || duration;
-        
-        // Only start animation after delay
-        if (elapsedTime > rippleDelay) {
-          const rippleProgress = Math.min((elapsedTime - rippleDelay) / rippleDuration, 1);
-          
-          // Grow from initial to max scale
-          const currentScale = child.userData.initialScale + 
-                             (child.userData.maxScale - child.userData.initialScale) * rippleProgress;
-          
-          // Set scale
-          child.scale.set(currentScale, currentScale, 1);
-          
-          // Fade out as it expands
-          if ('material' in child && child.material instanceof THREE.Material) {
-            child.material.opacity = 0.7 * (1 - rippleProgress);
-          }
-        }
-      }
-      // Handle foam particles
-      else if (child.userData.isFoam) {
-        const foamLifespan = child.userData.lifespan || 0.5;
-        const foamProgress = Math.min(elapsedTime / (duration * foamLifespan), 1);
-        
-        // Fade out foam
-        if ('material' in child && child.material instanceof THREE.Material) {
-          child.material.opacity = 0.5 * (1 - foamProgress);
-        }
-      }
-      // Handle water column (main splash)
-      else if (child.userData.isColumn) {
-        // Quick rise and fall
-        const riseTime = duration * 0.15; // 15% of duration for rise
-        const columnProgress = elapsedTime / riseTime;
-        
-        if (columnProgress < 1) {
-          // Rising phase
-          const heightProgress = Math.min(columnProgress, 1);
-          const currentHeight = child.userData.initialHeight + 
-                              (child.userData.maxHeight - child.userData.initialHeight) * heightProgress;
-          
-          // Set scale (x and z remain constant)
-          child.scale.set(0.5, currentHeight, 0.5);
-          child.position.y = currentHeight / 2; // Adjust position to match scaled height
-        } else {
-          // Falling phase
-          const fallProgress = (columnProgress - 1) / 1; // Remaining time for fall
-          
-          // Shrink back down
-          const shrinkFactor = 1 - Math.min(fallProgress, 1);
-          
-          if (shrinkFactor > 0) {
-            const currentHeight = child.userData.maxHeight * shrinkFactor;
-            child.scale.set(0.5 * (1 + shrinkFactor * 0.5), currentHeight, 0.5 * (1 + shrinkFactor * 0.5));
-            child.position.y = currentHeight / 2;
-            
-            // Fade out water column
-            if ('material' in child && child.material instanceof THREE.Material) {
-              child.material.opacity = 0.8 * shrinkFactor;
-            }
-          } else {
-            child.visible = false;
-          }
-        }
+    // Update water column (quick rise, slow fall)
+    const columnRiseTime = 0.1;
+    const columnPeakHeight = 1.8 * size;
+    
+    if (t < columnRiseTime) {
+      // Rising phase - quick
+      const riseProgress = t / columnRiseTime;
+      columnHeight.current = columnPeakHeight * Math.pow(riseProgress, 0.5);
+      columnOpacity.current = 0.8;
+    } else {
+      // Falling phase - slower with gravity
+      const fallTime = t - columnRiseTime;
+      const fallProgress = Math.min(fallTime / 0.5, 1);
+      columnHeight.current = columnPeakHeight * (1 - fallProgress * fallProgress);
+      columnOpacity.current = 0.8 * (1 - fallProgress);
+    }
+    
+    // Update droplets with physics
+    droplets.current.forEach(drop => {
+      if (drop.life <= 0) return;
+      
+      const dt = delta / drop.maxLife;
+      drop.life -= dt;
+      
+      // Apply gravity (less for mist)
+      const gravityScale = drop.type === 'mist' ? 0.1 : 1;
+      drop.vel.y -= GRAVITY * gravityScale * delta;
+      
+      // Apply drag (more for mist)
+      const drag = drop.type === 'mist' ? 0.98 : 0.995;
+      drop.vel.multiplyScalar(drag);
+      
+      // Update position
+      drop.pos.add(drop.vel.clone().multiplyScalar(delta));
+      
+      // Kill droplets that hit water surface
+      if (drop.pos.y < 0 && drop.type !== 'mist') {
+        drop.life = 0;
       }
     });
+    
+    // Update ripples
+    ripples.current.forEach(ripple => {
+      if (t < ripple.delay) return;
+      
+      const rippleTime = t - ripple.delay;
+      const rippleProgress = rippleTime * ripple.speed / ripple.maxRadius;
+      
+      if (rippleProgress < 1) {
+        ripple.radius = ripple.maxRadius * rippleProgress;
+        // Fade out as it expands
+        ripple.opacity = 0.6 * (1 - rippleProgress) * (1 - rippleProgress);
+          } else {
+        ripple.opacity = 0;
+      }
+    });
+    
+    // Force React to re-render
+    setFrame(f => f + 1);
   });
+  
+  // Calculate droplet stretch based on velocity (realistic water droplet deformation)
+  const getDropletScale = (drop: Droplet): [number, number, number] => {
+    if (drop.type === 'mist') {
+      // Mist just fades/grows
+      const scale = drop.size * (1 + (1 - drop.life) * 2);
+      return [scale, scale, scale];
+    }
+    
+    const speed = drop.vel.length();
+    const stretch = Math.min(speed / 8, 2); // Max 2x stretch
+    const baseScale = drop.size * Math.max(drop.life, 0.1);
+    
+    // Stretch along velocity direction
+    return [
+      baseScale * (1 / (1 + stretch * 0.3)),
+      baseScale * (1 + stretch * 0.5),
+      baseScale * (1 / (1 + stretch * 0.3))
+    ];
+  };
+  
+  // Get droplet opacity
+  const getDropletOpacity = (drop: Droplet): number => {
+    if (drop.type === 'mist') {
+      return drop.life * 0.4;
+    }
+    if (drop.type === 'spray') {
+      return drop.life * 0.7;
+    }
+    return Math.min(drop.life * 0.9, 0.9);
+  };
   
   return (
     <group ref={groupRef} position={position.toArray()}>
-      {particles}
+      {/* Central water column */}
+      {columnHeight.current > 0.05 && (
+        <mesh position={[0, columnHeight.current / 2 + 0.15, 0]}>
+          <cylinderGeometry args={[
+            0.08 * size, // top radius (narrower)
+            0.18 * size, // bottom radius (wider)
+            columnHeight.current,
+            8
+          ]} />
+          <meshBasicMaterial
+            color={waterColor}
+            transparent
+            opacity={columnOpacity.current}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
+      
+      {/* Water droplets */}
+      {droplets.current.filter(d => d.life > 0 && d.type !== 'mist').map((drop, i) => {
+        const scale = getDropletScale(drop);
+        const opacity = getDropletOpacity(drop);
+        return (
+          <mesh
+            key={`drop-${i}`}
+            position={[drop.pos.x, drop.pos.y, drop.pos.z]}
+            scale={scale}
+          >
+            <sphereGeometry args={[1, 6, 4]} />
+            <meshBasicMaterial
+              color={drop.type === 'column' ? foamColor : waterColor}
+              transparent
+              opacity={opacity}
+              depthWrite={false}
+            />
+          </mesh>
+        );
+      })}
+      
+      {/* Fine mist particles */}
+      {droplets.current.filter(d => d.life > 0 && d.type === 'mist').map((drop, i) => {
+        const scale = getDropletScale(drop);
+        return (
+          <mesh
+            key={`mist-${i}`}
+            position={[drop.pos.x, drop.pos.y, drop.pos.z]}
+            scale={scale}
+          >
+            <sphereGeometry args={[1, 4, 3]} />
+            <meshBasicMaterial
+              color={mistColor}
+              transparent
+              opacity={drop.life * 0.35}
+              depthWrite={false}
+            />
+          </mesh>
+        );
+      })}
+      
+      {/* Ripple rings on water surface */}
+      {ripples.current.filter(r => r.opacity > 0.01).map((ripple, i) => (
+        <mesh
+          key={`ripple-${i}`}
+          position={[0, 0.1, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <ringGeometry args={[
+            ripple.radius * 0.85, // inner radius
+            ripple.radius,        // outer radius
+            32
+          ]} />
+          <meshBasicMaterial
+            color={foamColor}
+            transparent
+            opacity={ripple.opacity}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+      
+      {/* Central foam splash at base */}
+      {elapsed.current < 0.3 && (
+        <mesh
+          position={[0, 0.12, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          scale={[
+            0.25 * size * (1 + elapsed.current * 2.5),
+            0.25 * size * (1 + elapsed.current * 2.5),
+            1
+          ]}
+        >
+          <circleGeometry args={[1, 12]} />
+          <meshBasicMaterial
+            color={foamColor}
+            transparent
+            opacity={0.5 * (1 - elapsed.current / 0.3)}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
     </group>
   );
 };

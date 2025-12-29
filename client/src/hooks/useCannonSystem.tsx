@@ -97,19 +97,11 @@ export function useCannonSystem() {
     (delta: number) => {
       if (!position) return;
 
+      // Note: Cannonball component handles its own physics, position updates, and lifecycle
+      // We only do basic cleanup here for cannonballs that somehow weren't removed
       cannonballs.current = cannonballs.current.filter((ball) => {
-        // Move the cannonball
-        ball.position.add(
-          ball.direction.clone().multiplyScalar(CANNONBALL_SPEED * delta)
-        );
-
-        // Remove if below grid level
-        if (ball.position.y < 0) {
-          return false;
-        }
-
-        // Remove if out of range
-        if (ball.position.distanceTo(position) > CANNONBALL_MAX_RANGE) {
+        // Remove if extremely far out of range (fallback cleanup)
+        if (ball.position.distanceTo(position) > CANNONBALL_MAX_RANGE * 2) {
           return false;
         }
 

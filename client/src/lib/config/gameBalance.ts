@@ -235,10 +235,98 @@ export const VISUALS = {
 
   // Shadows
   SHADOW_MAP_SIZE: 1024,
+} as const;
 
-  // Effects
-  SPLASH_PARTICLE_COUNT: 12,
-  EXPLOSION_PARTICLE_COUNT: 10,
+// =============================================================================
+// EXPLOSION EFFECTS
+// =============================================================================
+export const EXPLOSION_EFFECTS = {
+  // Duration
+  DURATION: 1.2, // Total effect duration in seconds
+  
+  // Flash
+  FLASH_INTENSITY: 5.0,
+  FLASH_COLOR: 0xffaa00,
+  FLASH_DECAY: 0.2, // How quickly flash fades (seconds)
+  
+  // Fire particles - LARGER for visibility
+  FIRE_COUNT: 12,
+  FIRE_SIZE_MIN: 0.6,
+  FIRE_SIZE_MAX: 1.5,
+  FIRE_SPEED: 4.0,
+  FIRE_COLORS: [0xffff00, 0xffaa00, 0xff6600, 0xff3300], // Yellow -> Orange -> Red
+  
+  // Smoke particles - LARGER billowing smoke
+  SMOKE_COUNT: 8,
+  SMOKE_SIZE_MIN: 0.8,
+  SMOKE_SIZE_MAX: 2.0,
+  SMOKE_SPEED: 2.0,
+  SMOKE_COLORS: [0x333333, 0x555555, 0x777777], // Dark to light gray
+  SMOKE_RISE_SPEED: 3.0, // Upward drift
+  
+  // Wood debris - LARGER pieces
+  DEBRIS_COUNT: 15,
+  DEBRIS_SIZE_MIN: 0.2,
+  DEBRIS_SIZE_MAX: 0.6,
+  DEBRIS_SPEED_MIN: 5.0,
+  DEBRIS_SPEED_MAX: 12.0,
+  DEBRIS_GRAVITY: 12.0,
+  DEBRIS_COLORS: [0x8B4513, 0xA0522D, 0xD2691E, 0xCD853F], // Brown shades
+  
+  // Sparks - MORE and BRIGHTER
+  SPARK_COUNT: 20,
+  SPARK_SIZE: 0.15,
+  SPARK_SPEED: 15.0,
+  SPARK_COLOR: 0xffcc00,
+  SPARK_LIFESPAN: 0.4,
+  
+  // Shockwave - BIGGER
+  SHOCKWAVE_SIZE: 6.0,
+  SHOCKWAVE_SPEED: 10.0,
+  SHOCKWAVE_COLOR: 0xffffff,
+} as const;
+
+// =============================================================================
+// WATER SPLASH EFFECTS
+// =============================================================================
+export const SPLASH_EFFECTS = {
+  // Duration
+  DURATION: 1.8, // Total effect duration in seconds
+  
+  // Water column - TALLER and WIDER
+  COLUMN_WIDTH: 0.8,
+  COLUMN_MAX_HEIGHT: 5.0,
+  COLUMN_RISE_TIME: 0.15, // Faster rise
+  COLUMN_COLOR: 0x4A9FD8,
+  
+  // Primary droplets - LARGER and MORE
+  DROPLET_COUNT: 25,
+  DROPLET_SIZE_MIN: 0.2,
+  DROPLET_SIZE_MAX: 0.6,
+  DROPLET_SPEED_MIN: 6.0,
+  DROPLET_SPEED_MAX: 14.0,
+  DROPLET_GRAVITY: 10.0,
+  DROPLET_COLORS: [0x4A9FD8, 0x5DADE2, 0x85C1E9, 0xAED6F1], // Blue shades
+  
+  // Mist particles - MORE and LARGER
+  MIST_COUNT: 15,
+  MIST_SIZE: 0.3,
+  MIST_SPEED: 1.5,
+  MIST_COLOR: 0xffffff,
+  MIST_OPACITY: 0.4,
+  
+  // Ripple waves - BIGGER
+  RIPPLE_COUNT: 5,
+  RIPPLE_SPEED: 4.0,
+  RIPPLE_MAX_SIZE: 8.0,
+  RIPPLE_COLOR: 0xffffff,
+  RIPPLE_DELAY: 0.1, // Delay between each ripple
+  
+  // Foam - BIGGER
+  FOAM_SIZE: 3.0,
+  FOAM_EXPAND_SPEED: 2.5,
+  FOAM_COLOR: 0xffffff,
+  FOAM_OPACITY: 0.7,
 } as const;
 
 // =============================================================================

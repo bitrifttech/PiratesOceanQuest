@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -9,145 +9,237 @@ interface ExplosionEffectProps {
   onComplete?: () => void;
 }
 
-// Define particleData type for better type checking
-interface ParticleData {
-  direction: THREE.Vector3;
-  speed: number;
-  initialScale: number;
-  isSmoke?: boolean;
-}
-
-interface ParticleMesh extends THREE.Mesh {
-  userData: ParticleData;
-  material: THREE.Material;
+// Realistic explosion particle
+interface Particle {
+  pos: THREE.Vector3;
+  vel: THREE.Vector3;
+  life: number;
+  maxLife: number;
+  size: number;
+  type: 'fire' | 'smoke' | 'ember';
+  rotSpeed: number;
 }
 
 /**
- * A component that renders a particle-based explosion effect
- * Used when cannonballs hit targets
+ * Realistic explosion effect - fiery burst with rising smoke
  */
 const ExplosionEffect: React.FC<ExplosionEffectProps> = ({
   position,
-  size = 3,
-  duration = 0.8,
+  size = 1,
+  duration = 1.5,
   onComplete
 }) => {
   const groupRef = useRef<THREE.Group>(null);
-  const startTime = useRef(Date.now());
-  const [particles, setParticles] = useState<JSX.Element[]>([]);
+  const lightRef = useRef<THREE.PointLight>(null);
+  const elapsed = useRef(0);
+  const done = useRef(false);
+  const [frame, setFrame] = useState(0);
+  const init = useRef(false);
   
-  // Generate particles on first render (optimized for performance)
+  // Particle refs
+  const particles = useRef<Particle[]>([]);
+  
+  // Create shared geometries and materials
+  const geo = useMemo(() => new THREE.SphereGeometry(1, 8, 6), []);
+  
+  // Initialize particles
   useEffect(() => {
-    const particleCount = 10; // Reduced from 20 for better performance
-    const newParticles = [];
+    const p: Particle[] = [];
     
-    // Create a burst of particles in random directions
-    for (let i = 0; i < particleCount; i++) {
-      const direction = new THREE.Vector3(
-        (Math.random() - 0.5) * 2,
-        Math.random() * 2,
-        (Math.random() - 0.5) * 2
-      ).normalize();
-      
-      const speed = 2 + Math.random() * 3;
-      const particleSize = (Math.random() * 0.5 + 0.5) * size / 3;
-      
-      // Simplified color selection
-      const colors = [0xff4500, 0xff8c00, 0xffcc00, 0xff0000];
-      const color = new THREE.Color(colors[Math.floor(Math.random() * colors.length)]);
-      
-      newParticles.push(
-        <mesh 
-          key={`particle-${i}`}
-          position={[0, 0, 0]}
-          userData={{ direction, speed, initialScale: particleSize }}
-        >
-          <sphereGeometry args={[particleSize, 4, 4]} />
-          <meshBasicMaterial color={color} transparent={true} opacity={1} />
-        </mesh>
-      );
+    // Fire core particles - bright, fast expanding
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2 + Math.random() * 0.5;
+      const upAngle = Math.random() * 0.8;
+      p.push({
+        pos: new THREE.Vector3(0, 0, 0),
+        vel: new THREE.Vector3(
+          Math.cos(angle) * Math.cos(upAngle) * (2 + Math.random()),
+          Math.sin(upAngle) * (1.5 + Math.random() * 2),
+          Math.sin(angle) * Math.cos(upAngle) * (2 + Math.random())
+        ),
+        life: 1,
+        maxLife: 0.3 + Math.random() * 0.2,
+        size: (0.15 + Math.random() * 0.1) * size,
+        type: 'fire',
+        rotSpeed: 0
+      });
     }
     
-    // Add some smoke particles (reduced from 10 to 5)
-    for (let i = 0; i < 5; i++) {
-      const direction = new THREE.Vector3(
-        (Math.random() - 0.5) * 1.5,
-        Math.random() * 1.5 + 0.5,
-        (Math.random() - 0.5) * 1.5
-      ).normalize();
-      
-      const speed = 1 + Math.random() * 2;
-      const particleSize = (Math.random() * 0.7 + 0.8) * size / 2;
-      
-      newParticles.push(
-        <mesh 
-          key={`smoke-${i}`}
-          position={[0, 0, 0]}
-          userData={{ direction, speed, initialScale: particleSize, isSmoke: true }}
-        >
-          <sphereGeometry args={[particleSize, 4, 4]} />
-          <meshBasicMaterial color={0x444444} transparent={true} opacity={0.5} />
-        </mesh>
-      );
+    // Smoke particles - dark, slow rising
+    for (let i = 0; i < 12; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const spread = Math.random() * 0.3;
+      p.push({
+        pos: new THREE.Vector3(
+          Math.cos(angle) * spread * size,
+          Math.random() * 0.2 * size,
+          Math.sin(angle) * spread * size
+        ),
+        vel: new THREE.Vector3(
+          (Math.random() - 0.5) * 0.3,
+          0.8 + Math.random() * 0.5,
+          (Math.random() - 0.5) * 0.3
+        ),
+        life: 1,
+        maxLife: 0.8 + Math.random() * 0.7,
+        size: (0.1 + Math.random() * 0.15) * size,
+        type: 'smoke',
+        rotSpeed: (Math.random() - 0.5) * 2
+      });
     }
     
-    setParticles(newParticles);
-  }, [size]);
+    // Ember particles - tiny bright specs
+    for (let i = 0; i < 15; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const upAngle = Math.random() * Math.PI * 0.4;
+      const speed = 3 + Math.random() * 4;
+      p.push({
+        pos: new THREE.Vector3(0, 0, 0),
+        vel: new THREE.Vector3(
+          Math.cos(angle) * Math.cos(upAngle) * speed,
+          Math.sin(upAngle) * speed + 1,
+          Math.sin(angle) * Math.cos(upAngle) * speed
+        ),
+        life: 1,
+        maxLife: 0.4 + Math.random() * 0.3,
+        size: (0.02 + Math.random() * 0.02) * size,
+        type: 'ember',
+        rotSpeed: 0
+      });
+    }
+    
+    particles.current = p;
+    init.current = true;
+    
+    return () => {
+      geo.dispose();
+    };
+  }, [size, geo]);
   
-  // Animate particles
-  useFrame(() => {
-    if (!groupRef.current) return;
+  useFrame((_, delta) => {
+    if (!init.current || done.current) return;
     
-    const elapsedTime = (Date.now() - startTime.current) / 1000;
-    const progress = Math.min(elapsedTime / duration, 1);
+    elapsed.current += delta;
     
-    // If animation is complete, call onComplete callback
-    if (progress >= 1 && onComplete) {
-      onComplete();
+    if (elapsed.current >= duration) {
+      done.current = true;
+      onComplete?.();
       return;
     }
     
-    // Update each particle
-    groupRef.current.children.forEach((child) => {
-      // Type assertion to handle the proper mesh type
-      const mesh = child as ParticleMesh;
-      const userData = mesh.userData;
+    // Update light
+    if (lightRef.current) {
+      const lightLife = Math.max(0, 1 - elapsed.current / 0.15);
+      lightRef.current.intensity = lightLife * 8 * size;
+    }
+    
+    // Update particles
+    particles.current.forEach(p => {
+      const dt = delta / p.maxLife;
+      p.life -= dt;
       
-      if (!userData.direction || !userData.speed) return;
-      
-      // Move particle outward
-      const movementFactor = userData.speed * 0.1 * (1 - Math.pow(progress, 2));
-      mesh.position.x += userData.direction.x * movementFactor;
-      mesh.position.y += userData.direction.y * movementFactor;
-      mesh.position.z += userData.direction.z * movementFactor;
-      
-      // Scale down fire particles, scale up smoke particles
-      if (userData.isSmoke) {
-        // Smoke grows and fades
-        const scale = userData.initialScale * (1 + progress * 2);
-        mesh.scale.set(scale, scale, scale);
-        
-        // Update opacity
-        if (mesh.material && mesh.material.opacity !== undefined) {
-          mesh.material.opacity = 0.6 * (1 - progress);
+      if (p.life > 0) {
+        // Gravity and drag
+        if (p.type === 'ember') {
+          p.vel.y -= 12 * delta;
+          p.vel.multiplyScalar(0.98);
+        } else if (p.type === 'smoke') {
+          p.vel.y += 0.5 * delta; // Buoyancy
+          p.vel.multiplyScalar(0.97);
+        } else {
+          p.vel.multiplyScalar(0.92);
         }
-      } else {
-        // Fire shrinks and fades
-        const fireProgress = Math.min(elapsedTime / (duration * 0.7), 1); // Fire is shorter
-        const scale = userData.initialScale * (1 - fireProgress);
-        mesh.scale.set(scale, scale, scale);
         
-        // Update opacity
-        if (mesh.material && mesh.material.opacity !== undefined) {
-          mesh.material.opacity = 1 - fireProgress;
-        }
+        p.pos.add(p.vel.clone().multiplyScalar(delta));
       }
     });
+    
+    setFrame(f => f + 1);
   });
   
+  // Get fire color based on life
+  const getFireColor = (life: number) => {
+    if (life > 0.7) return new THREE.Color(1, 1, 0.6); // Yellow-white
+    if (life > 0.4) return new THREE.Color(1, 0.6, 0.1); // Orange
+    return new THREE.Color(0.8, 0.2, 0.05); // Red
+  };
+  
+  // Get smoke color/opacity
+  const getSmokeColor = (life: number) => {
+    const gray = 0.15 + (1 - life) * 0.25;
+    return new THREE.Color(gray, gray, gray);
+  };
+
   return (
     <group ref={groupRef} position={position.toArray()}>
-      {particles}
+      {/* Initial flash light */}
+      <pointLight
+        ref={lightRef}
+        color={0xffaa44}
+        intensity={8 * size}
+        distance={6 * size}
+        decay={2}
+      />
+      
+      {/* Fire particles - additive blending for glow */}
+      {particles.current.filter(p => p.type === 'fire' && p.life > 0).map((p, i) => {
+        const scale = p.size * (0.5 + p.life * 1.5);
+        return (
+          <mesh
+            key={`fire-${i}`}
+            position={[p.pos.x, p.pos.y, p.pos.z]}
+            scale={scale}
+          >
+            <sphereGeometry args={[1, 6, 4]} />
+            <meshBasicMaterial
+              color={getFireColor(p.life)}
+              transparent
+              opacity={p.life * 0.9}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
+          </mesh>
+        );
+      })}
+      
+      {/* Smoke particles */}
+      {particles.current.filter(p => p.type === 'smoke' && p.life > 0).map((p, i) => {
+        const scale = p.size * (1 + (1 - p.life) * 3);
+        const opacity = p.life * 0.5;
+        return (
+          <mesh
+            key={`smoke-${i}`}
+            position={[p.pos.x, p.pos.y, p.pos.z]}
+            scale={scale}
+          >
+            <sphereGeometry args={[1, 5, 4]} />
+            <meshBasicMaterial
+              color={getSmokeColor(p.life)}
+              transparent
+              opacity={opacity}
+              depthWrite={false}
+            />
+          </mesh>
+        );
+      })}
+      
+      {/* Ember particles - bright glowing specs */}
+      {particles.current.filter(p => p.type === 'ember' && p.life > 0).map((p, i) => (
+        <mesh
+          key={`ember-${i}`}
+          position={[p.pos.x, p.pos.y, p.pos.z]}
+          scale={p.size}
+        >
+          <sphereGeometry args={[1, 4, 3]} />
+          <meshBasicMaterial
+            color={new THREE.Color(1, 0.7, 0.2)}
+            transparent
+            opacity={p.life}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
     </group>
   );
 };
